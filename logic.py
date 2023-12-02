@@ -69,7 +69,7 @@ def get_matches():
     api_url = "https://v3.football.api-sports.io/fixtures"
     headers = {
         "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": "9881a82d215b4e078ad5b739563663af"  # Be cautious with your API key
+        "x-rapidapi-key": "API-Key"  # Be cautious with your API key
     }
     query_fixtures = {
         "league": "103",
