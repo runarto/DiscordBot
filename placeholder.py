@@ -1,49 +1,78 @@
-"""
-async def check_reactions(ctx):
-    for message.id in logic.tracked_messages:
-        # Fetch the message object from its ID
-        channel = client.get_channel(1180502757162102804)  # Replace with your channel ID
-        try:
-            message = await channel.fetch_message(message.id)
-        except discord.NotFound:
-            print(f"Message with ID {message.id} not found.")
-            continue
+import json
 
-        # Iterate over each reaction in the message
-        for reaction in message.reactions:
-            users = await reaction.users().flatten()
-            user_names = [user.name for user in users if not user.bot]  # Exclude bots
+def check_multiple_reactions(file):
 
-    
-    
-
-
-
-
-def save_prediction(ctx, ser_id, match_id, prediction):
+    # Denne funksjonen sjekker hvorvidt en bruker har reagert mer enn én gang. 
+    # Kan benyttes til å implementere en funksjon for fjerning av reaksjoner i Discord eller JSON
     try:
-        # Load existing predictions
-        with open(predictions_file, 'r') as file:
-            predictions = json.load(file)
+        with open(file, 'r') as file:
+            if file.read(1):  # Read the first character to check if the file is empty
+                file.seek(0)  # Reset file read position
+                data = json.load(file)
+            else:
+                print(f"The file {file} is empty.")
+                return
     except FileNotFoundError:
-        predictions = {}
+        print(f"File not found: {file}")
+        return
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from the file: {file}")
+        print(f"JSON error: {e}")
+        return
+    
+    print("Now here\n")
+    list_of_users = []
+    for message_content, reactions in data.items():
+        user_reactions = {}
+        for reaction in reactions:
+            username = reaction['username']
+            reaction_type = reaction['reaction']
+            if username not in user_reactions:
+                user_reactions[username] = []
+            user_reactions[username].append(reaction_type)
 
-    # Update the prediction
-    predictions[str(user_id)] = {'match_id': match_id, 'prediction': prediction}
+        # Check if any user reacted with multiple types
 
-    # Save predictions back to the file
-    with open(predictions_file, 'w') as file:
-        json.dump(predictions, file)
+        for username, user_reaction_types in user_reactions.items():
+            if len(user_reaction_types) > 1:
+                list_of_users.append((message_content, username))
+    return list_of_users
 
-client.run('YOUR_BOT_TOKEN')
 
-# Function to check match results and update scores
-async def check_match_results(ctx):
-    # Code to check match results and update user scores
 
-# Function to announce scores
-async def announce_scores(ctx):
-    # Code to announce the scores in the Discord channel
 
-client.run('your token')  # Replace 'your token' with your actual Discord bot token
-"""
+def remove_duplicate_reactions_per_message(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+    except FileNotFoundError:
+        print(f"File not found: {file_path}")
+        return
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON from the file: {file_path}")
+        print(f"JSON error: {e}")
+        return
+
+    updated_data = {}
+    for message_content, reactions in data.items():
+        user_reaction_seen = set()
+        filtered_reactions = []
+
+        for reaction in reactions:
+            username = reaction['username']
+            # If we've seen the user already for this message, skip
+            if username in user_reaction_seen:
+                continue
+
+            # Add to filtered reactions and mark user as seen
+            filtered_reactions.append(reaction)
+            user_reaction_seen.add(username)
+
+        updated_data[message_content] = filtered_reactions
+
+    # Write the updated data back to the JSON file
+    with open(file_path, 'w') as file:
+        json.dump(updated_data, file, indent=4)
+
+    print("Duplicate reactions removed per message.")
+        

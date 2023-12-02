@@ -1,5 +1,5 @@
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz  # This library is used for time zone conversions
 
 
@@ -44,13 +44,24 @@ emoji_list = [
 
 tracked_messages = {}
 predictions_file = 'predictions.json'
+today_date = datetime.now().strftime("%Y-%m-%d")
+
+print(today_date)
+
+# Number of days to add
+x_days = 7  # Replace with the number of days you want to add
+
+# Calculate the new date
+new_date = datetime.now() + timedelta(days=x_days)
+formatted_new_date = new_date.strftime("%Y-%m-%d")
+print(formatted_new_date)
 
 
 def get_round():
     api_url = "https://v3.football.api-sports.io/fixtures/rounds"
     headers = {
         "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": "API-Key"  # Be cautious with your API key
+        "x-rapidapi-key": "apikey"  # Be cautious with your API key
     }
     query_round = {
         "league": "103",
@@ -69,12 +80,14 @@ def get_matches():
     api_url = "https://v3.football.api-sports.io/fixtures"
     headers = {
         "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": "API-Key"  # Be cautious with your API key
+        "x-rapidapi-key": "apikey"  # Be cautious with your API key
     }
     query_fixtures = {
         "league": "103",
         "season": "2023",
-        "timezone": "Europe/Oslo"
+        "timezone": "Europe/Oslo",
+        "from": today_date,
+        "to": formatted_new_date 
     }
     current_round = get_round()
     response = requests.get(api_url, headers=headers, params=query_fixtures)
@@ -85,10 +98,15 @@ def get_matches():
             match_info = {
                 'date': fixture['fixture']['date'],
                 'home_team': fixture['teams']['home']['name'],
+                'home_team_win': fixture['teams']['home']['winner'],
+                #hvis uavgjort gir dette none, ellers true/false for seier/tap. 
                 'away_team': fixture['teams']['away']['name'],
+                'away_team_win': fixture['teams']['away']['winner'],
+                'halftime_score': fixture['score']['halftime'],
                 'fulltime_score': fixture['score']['fulltime'],
                 'round': fixture['league']['round']
             }
+            
             if current_round == match_info['round']:
                 match_details.append(match_info)
         return match_details
@@ -102,12 +120,14 @@ def fixture_status(match_details):
 
     # Get the current time in UTC+1
     current_time_utc_plus_one = datetime.now(utc_plus_one)
+    print(current_time_utc_plus_one)
 
     started_matches = []
 
     for match in match_details:
         # Parse the match date-time string
         match_time_utc = datetime.fromisoformat(match['date'])
+        print(match_time_utc)
 
         # Check if the current time is past the match time
         if current_time_utc_plus_one > match_time_utc:
@@ -143,6 +163,9 @@ def print_match_table(match_list):
             match['round'].center(column_lengths[4])
         ])
         print(row)
+
+matches = get_matches()
+fixture_status(matches)
 
 
 
