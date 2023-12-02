@@ -3,7 +3,7 @@ import logic
 import asyncio
 import json
 
-TOKEN = 'MTE4MDQ5OTczMTcyNjczMzMyMg.Gk-Wv7.9P5Lo7o80mhDauIBZo-Jtn8L9fGsuu0x45Mxl4'
+TOKEN = 'secret'
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -15,7 +15,7 @@ def run_bot():
     async def on_ready():
         print(f'We have logged in as {client.user}')
     
-        channel_id = 1180502757162102804  # Replace with your Discord channel ID
+        channel_id = SOME_ID  # Replace with your Discord channel ID
         channel = client.get_channel(channel_id)
     
         if channel is None:
