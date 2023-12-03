@@ -58,10 +58,10 @@ print(formatted_new_date)
 
 
 def get_round():
-    api_url = "https://v3.football.api-sports.io/fixtures/rounds"
+    api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds"
     headers = {
-        "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": "apikey"  # Be cautious with your API key
+        "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        "x-rapidapi-key": "efbbaba02amsh32c2285c04b49f7p1a4bf4jsn9ce3878a8799"  # Be cautious with your API key
     }
     query_round = {
         "league": "103",
@@ -71,16 +71,17 @@ def get_round():
     response = requests.get(api_url, headers=headers, params=query_round)
     if response.status_code == 200:
         data = response.json()
-        return data['response'][0]
+
+        return data["response"][0]
     else:
         return None
 
 
 def get_matches():
-    api_url = "https://v3.football.api-sports.io/fixtures"
+    api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
     headers = {
-        "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": "apikey"  # Be cautious with your API key
+        "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        "x-rapidapi-key": "efbbaba02amsh32c2285c04b49f7p1a4bf4jsn9ce3878a8799"  # Be cautious with your API key
     }
     query_fixtures = {
         "league": "103",
@@ -134,6 +135,9 @@ def fixture_status(match_details):
             started_matches.append(match)
 
     return started_matches
+
+
+
 
 def print_match_table(match_list):
     # Define the table headers
