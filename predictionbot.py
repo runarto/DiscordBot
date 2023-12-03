@@ -8,7 +8,7 @@ import datetime
 import perms
 
 
-channel_id = 1180502757162102804
+channel_id = perms.CHANNEL_ID
 
 intents = discord.Intents.default()
 intents.members = True

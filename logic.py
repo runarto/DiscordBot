@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime, timedelta
 import pytz  # This library is used for time zone conversions
+from perms import API_TOKEN
 
 
 
@@ -61,7 +62,7 @@ def get_round():
     api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds"
     headers = {
         "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-        "x-rapidapi-key": "efbbaba02amsh32c2285c04b49f7p1a4bf4jsn9ce3878a8799"  # Be cautious with your API key
+        "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_round = {
         "league": "103",
@@ -81,7 +82,7 @@ def get_matches():
     api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
     headers = {
         "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
-        "x-rapidapi-key": "efbbaba02amsh32c2285c04b49f7p1a4bf4jsn9ce3878a8799"  # Be cautious with your API key
+        "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
         "league": "103",
