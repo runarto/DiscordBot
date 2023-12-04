@@ -8,6 +8,7 @@ import datetime
 import perms
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from functools import partial
+from collections import defaultdict
 
 
 channel_id = perms.CHANNEL_ID
@@ -18,6 +19,9 @@ intents.reactions = True
 intents.message_content = True
 client = discord.Client(intents=intents)
 scheduler = AsyncIOScheduler()
+
+def run_bot():
+    client.run(perms.TOKEN)
 
 async def main_bot():
     
@@ -30,36 +34,48 @@ async def main_bot():
     await client.start(perms.TOKEN)
 
 
-    await client.start(perms.TOKEN)
-
 async def update_jobs(scheduler):
     
     date_start, hour_start, minute_start, messages = get_day_hour_minute()
 
     
     for job in scheduler.get_jobs():
-        if job.name == 'save_predictions_to_db_job':
+        if job.name == 'save_predictions_to_json':
             job.remove()
 
     
     for date, hour, minute, message in zip(date_start, hour_start, minute_start, messages):
-        job_function = partial(file_functions.save_predictions_to_db, 'predictions.json', 'predictions.db', message)
-        scheduler.add_job(job_function, 'cron', day_of_week=date, hour=hour, minute=minute, timezone=perms.timezone, name='save_predictions_to_db_job')
+        job_function = partial(file_functions.save_predictions_to_json, 'input_predictions.json', 'output_predictions.json', message)
+        scheduler.add_job(job_function, 'cron', day_of_week=date, hour=hour, minute=minute, timezone=perms.timezone, name='save_predictions_to_json')
+
+#trenger å resette input_predictions-fila typ hver tirsdag. samme gjelder output predictions
 
 
 
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
+    await send_message_to_channel()
     print(logic.tracked_messages)
 
+
+#Sender melding ut til kanalen med kampene for oppkommende uke, og legger til reaksjoner
+
 @client.event
-async def send_message_to_channel(client, channel_id):
+async def send_message_to_channel():
+    with open(logic.predictions_file, 'w') as file:
+        json.dump({}, file)
     try:
         channel = client.get_channel(channel_id)
         if channel:
+            message = format_leaderboard_message()
+            await channel.send(message)
 
-            fixtures = logic.get_matches()
+            with open(logic.output_predictions_file, 'w') as file:
+                json.dump({}, file)
+
+
+            fixtures = logic.get_matches(7)
 
             for fixture in fixtures:
                 # Format the message with fixture details
@@ -87,16 +103,17 @@ async def send_message_to_channel(client, channel_id):
 
 
 async def send_scheduled_matches():
-    await send_message_to_channel(client, perms.CHANNEL_ID)
+    await send_message_to_channel()
 
 
+#Brukes bare til å returnere hvilken dag det er, time, minutt og melding
 
 def get_day_hour_minute():
 
     day_of_week = []
     hour = []
     minute = []
-    data = logic.get_matches()
+    data = logic.get_matches(7)
     messages = []
     for date in data:
      # Parse the date string into a datetime object
@@ -116,7 +133,7 @@ def get_day_hour_minute():
     return day_of_week, hour, minute, messages
 
 
-
+#Legger til i input_predictions-fila
 
 @client.event
 async def on_reaction_add(reaction, user):
@@ -147,7 +164,8 @@ async def on_reaction_add(reaction, user):
 
 
 
-
+#Denne funksjonen sjekker bare om en bruker allerede har reagert, og fjerner isåfall den forrige reaksjonen,
+#og oppdaterer med den nye. 
 
 async def user_already_reacted(reaction, user):
     for reactions in reaction.message.reactions:
@@ -164,7 +182,7 @@ async def user_already_reacted(reaction, user):
     return False  # Return False if no previous reaction was found
 
 
-
+#Denne funksjonen fjerner data fra input_predictions-fila dersom noen fjerner en reaksjon
 
 @client.event
 async def on_reaction_remove(reaction, user):
@@ -176,3 +194,86 @@ async def on_reaction_remove(reaction, user):
             print(f"Reaction removed by {user.name}: {reaction.emoji} from message {reaction.message.content}")
     except Exception as e:
         print(f"Error in on_reaction_remove: {e}")
+
+#Denne funksjonen kjører 7 dager etter meldingen om kamper blir sendt.
+def update_user_scores():
+    try:
+        predictions = file_functions.read_predictions("output_predictions.json")
+        if not predictions:
+            return {}, {}, 0
+        actual_results = logic.get_match_results()
+        num_of_games = len(actual_results)
+        logic.user_scores = {}
+        this_week_user_score = defaultdict(int)  # Using defaultdict for automatic handling of new keys
+
+        for game, user_predictions in predictions.items():
+            actual_result = actual_results.get(game)
+            if actual_result is not None:
+                for prediction in user_predictions:
+                    username = prediction['username']
+                    predicted_result = "\ud83c\udfe0" if actual_result is True else ("\u2708\ufe0f" if actual_result is False else "\ud83c\udff3\ufe0f")
+                    if predicted_result == prediction['reaction']:
+                        logic.user_scores[username] = logic.user_scores.get(username, 0) + 1
+                        this_week_user_score[username] += 1
+
+        return logic.user_scores, dict(this_week_user_score), num_of_games
+
+    except (FileNotFoundError, KeyError, TypeError) as e:
+        print(f"An error occurred: {e}")
+        # Return empty data or handle the error as needed
+        return {}, {}, 0
+
+#Sorterer 
+
+def sort_user_scores(user_scores):
+    if user_scores is None:
+        return
+    # Convert dictionary into a list of tuples and sort by score in descending order
+    sorted_scores = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
+    return sorted_scores
+
+
+
+def format_leaderboard_message():
+    # Sort this week's scores in descending order
+    user_scores, this_week_user_scores, num_of_games = update_user_scores()
+    
+    if not user_scores:
+        return
+    
+    if not this_week_user_scores:
+        return
+
+
+    sorted_user_score = sort_user_scores(user_scores)
+    sorted_this_week_user_scores = sort_user_scores(this_week_user_scores)
+
+
+    # Start the message with the total number of games
+    message_parts = [f"Av {num_of_games} mulige:"]
+
+    # Add this week's scores and corresponding users to the message
+    for score, users in sorted_this_week_user_scores:
+        users_str = ', '.join(users)
+        message_parts.append(f"{score} poeng denne uken: {users_str}")
+
+    # Add the congratulatory note for this week's winner
+    weekly_winner = sorted_this_week_user_scores[0][0]  # username of this week's top scorer
+    message_parts.append(f"Gratulerer til ukas vinner {weekly_winner}!")
+
+    # Add the overall leaderboard
+    message_parts.append("Total poeng:")
+    for rank, (username, score) in enumerate(sorted_user_score, start=1):
+        message_parts.append(f"{rank}. {username}: - {score}p")
+
+    return '\n'.join(message_parts)
+
+@client.event
+async def send_leaderboard_message():
+        channel = client.get_channel(channel_id)
+        message = format_leaderboard_message()
+        await channel.send(message)
+
+
+
+

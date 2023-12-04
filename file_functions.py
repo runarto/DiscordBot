@@ -60,40 +60,60 @@ def save_reaction_data(reaction_type, username, message_content):
 
 
 
+
+
+
 import json
-import sqlite3
 
-def save_predictions_to_db(json_file_path, db_path, target_message):
-    # Connect to the SQLite database
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    # Create table if it doesn't exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS predictions (
-            message TEXT,
-            username TEXT,
-            reaction TEXT
-        )
-    ''')
-
-    # Read and parse the JSON file
-    with open(json_file_path, 'r') as file:
+def save_predictions_to_json(input_json_file_path, output_json_file_path, target_message):
+    # Read and parse the input JSON file
+    with open(input_json_file_path, 'r') as file:
         predictions = json.load(file)
+        print(predictions)
+        print("Read input file successfully")
 
-    # Check if the target message exists in the JSON data
     if target_message in predictions:
-        # Insert data for the target message into the table
-        for reaction in predictions[target_message]:
-            cursor.execute('''
-                INSERT INTO predictions (message, username, reaction) 
-                VALUES (?, ?, ?)
-            ''', (target_message, reaction['username'], reaction['reaction']))
+        print(f"Found target message: {target_message}")
+        # Extract data for the target message
+        data_to_save = {target_message: predictions[target_message]}
 
-    # Commit changes and close the connection
-    conn.commit()
-    conn.close()
+        # Initialize variable to hold the existing data
+        existing_data = {}
 
-# Example usage
-save_predictions_to_db('predictions.json', 'predictions.db', 'Message content 1')
+        # Try to read the existing data from the output file
+        try:
+            with open(output_json_file_path, 'r') as outfile:
+                existing_data = json.load(outfile)
+            print("Read existing data from output file")
+        except (FileNotFoundError, json.JSONDecodeError):
+            print("Output file not found or is empty/invalid, starting fresh")
+            pass
+
+        # Append the new data to existing data
+        existing_data.update(data_to_save)
+
+        # Write the updated/initial data to the output JSON file
+        with open(output_json_file_path, 'w') as outfile:
+            json.dump(existing_data, outfile, indent=4)
+            print("Written data to output file")
+
+        # Remove the target message from the input data
+        del predictions[target_message]
+        print("Removed target message from input data")
+
+        # Write the updated data back to the input JSON file
+        with open(input_json_file_path, 'w') as file:
+            json.dump(predictions, file, indent=4)
+            print("Updated input file")
+    else:
+        print(f"Target message '{target_message}' not found in input file")
+
+
+
+def read_predictions(file_path):
+    with open(file_path, 'r') as file:
+        return json.load(file)
+
+
+
 

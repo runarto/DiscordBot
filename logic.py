@@ -44,17 +44,13 @@ emoji_list = [
     "<:Aalesund:1039831454353457254>"
 ]
 
+user_scores = {}
 tracked_messages = {}
-predictions_file = 'predictions.json'
-today_date = datetime.now().strftime("%Y-%m-%d")
+predictions_file = 'input_predictions.json'
+output_predictions_file = 'output_predictions.json'
 
-# Number of days to add
-x_days = -7  # Replace with the number of days you want to add
 
-# Calculate the new date
-new_date = datetime.now() + timedelta(days=x_days)
-formatted_new_date = new_date.strftime("%Y-%m-%d")
-
+#Returnerer hvilken runde det er. Overflødig funksjon. 
 
 def get_round():
     api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds"
@@ -63,9 +59,9 @@ def get_round():
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_round = {
-        "league": "103",
-        "season": "2023",
-        "current": "true"
+        "league": "39",
+        "season": "2023"
+        #"current": "true"
     }
     response = requests.get(api_url, headers=headers, params=query_round)
     if response.status_code == 200:
@@ -76,18 +72,27 @@ def get_round():
         return None
 
 
-def get_matches():
+#Returnerer kamp-detaljer for aktuelle kamper x dager frem i tid. 
+
+def get_matches(x_days):
+    today_date = datetime.now().strftime("%Y-%m-%d")
+
+    new_date = datetime.now() + timedelta(days=x_days)
+    formatted_new_date = new_date.strftime("%Y-%m-%d")  
+
+    #Hver gang get_matches() kjører henter vi inn kamper som er fra denne dagen, og 7 dager frem i tid
+
     api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
     headers = {
         "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
-        "league": "103",
+        "league": "39",
         "season": "2023",
         "timezone": "Europe/Oslo",
-        "to": today_date,
-        "from": formatted_new_date 
+        "from": today_date,
+        "to": formatted_new_date 
     }
     current_round = get_round()
     response = requests.get(api_url, headers=headers, params=query_fixtures)
@@ -107,12 +112,64 @@ def get_matches():
                 'round': fixture['league']['round']
             }
             
-            if current_round == match_info['round']:
-                match_details.append(match_info)
+            #if current_round == match_info['round']:
+            match_details.append(match_info)
         return match_details
     
 
+import requests
 
+#get_match_results() blir kalt 7 dager etter get_matches()
+
+#Returnerer resultater for kamper de siste sju dagene. 
+
+def get_match_results():
+
+    today_date = datetime.now().strftime("%Y-%m-%d")
+
+    x_days = -7 
+
+    new_date = datetime.now() + timedelta(days=x_days)
+    formatted_new_date = new_date.strftime("%Y-%m-%d")  
+
+
+    api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+    headers = {
+        "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        "x-rapidapi-key": API_TOKEN # Be cautious with your API key
+    }
+    params = {
+        'league': 39,
+        'season': 2023,
+        'from': formatted_new_date,
+        'to': today_date,
+        'status': 'FT' 
+    }
+
+    response = requests.get(api_url, headers=headers, params=params)
+    data = response.json()
+
+    results = {}
+    for fixture in data['response']:
+        home_win = fixture['teams']['home']['winner']
+
+        if home_win is True:
+            result = True  # Home win
+        elif home_win is False:
+            result = False  # Away win
+        else:
+            result = None  # Draw or data not available
+
+        message = f"{fixture['fixture']['date']}\n{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
+
+        results[message] = result
+        
+
+    return results
+
+
+
+#Overflødig. 
 
 def fixture_status(match_details):
     # Define the UTC+1 time zone
@@ -135,7 +192,7 @@ def fixture_status(match_details):
     return started_matches
 
 
-
+#Bare for testing. 
 
 def print_match_table(match_list):
     # Define the table headers
@@ -179,7 +236,5 @@ def check_time(reaction):
         return True
     else:
         return False
-
-
-
+    
 
