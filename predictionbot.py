@@ -6,6 +6,7 @@ import file_functions
 from dateutil import parser
 import datetime
 import perms
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 channel_id = perms.CHANNEL_ID
@@ -15,14 +16,28 @@ intents.members = True
 intents.reactions = True
 intents.message_content = True
 client = discord.Client(intents=intents)
+scheduler = AsyncIOScheduler()
 
-def run_bot():
-    client.run(perms.TOKEN)
+async def main_bot():
+
+    date_start, hour_start, minute_start = get_day_hour_minute()
+
+    for date, hour, minute in zip(date_start, hour_start, minute_start):
+        scheduler.add_job(some_function, 'cron', day_of_week = date, hour = hour, minute = minute, timezone=perms.timezone)
+
+
+
+
+    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='mon', hour=1, minute = 1, timezone=perms.timezone)
+    
+    scheduler.start()
+
+
+    await client.start(perms.TOKEN)
 
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
-    await send_message_to_channel(client, channel_id)
     print(logic.tracked_messages)
 
 @client.event
@@ -56,6 +71,34 @@ async def send_message_to_channel(client, channel_id):
         print(f"Missing permissions to send message in channel {channel_id}")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+
+async def send_scheduled_matches():
+    await send_message_to_channel(client, perms.CHANNEL_ID)
+
+
+
+def get_day_hour_minute():
+
+    day_of_week = []
+    hour = []
+    minute = []
+    data = logic.get_matches()
+    for date in data:
+     # Parse the date string into a datetime object
+        date_time = datetime.fromisoformat(date['date'])
+        # Get the day of the week
+        day_of_week_add = date_time.strftime('%A')[:3].lower()
+        day_of_week.append(day_of_week_add)
+        # Get the hour and minute
+        hour_add = date_time.strftime('%H')
+        hour.append(hour_add)
+
+        minute_add = date_time.strftime('%M')[:1]
+        minute.append(minute_add)
+
+    return day_of_week, hour, minute
+
 
 
 
@@ -117,9 +160,3 @@ async def on_reaction_remove(reaction, user):
             print(f"Reaction removed by {user.name}: {reaction.emoji} from message {reaction.message.content}")
     except Exception as e:
         print(f"Error in on_reaction_remove: {e}")
-
-
-
-
-
-

@@ -76,3 +76,34 @@ def remove_duplicate_reactions_per_message(file_path):
 
     print("Duplicate reactions removed per message.")
         
+"""
+def run_bot():
+    scheduler.start()
+    client.run(perms.TOKEN)
+"""
+
+async def on_reaction_add(reaction, user):
+    # Ignore the bot's own reactions
+    
+    if user == client.user:
+            return
+    
+    message_content = reaction.message.content
+    datetime_str = message_content.split('\n')[0].strip()
+    
+    # Parse the datetime string into a datetime object
+    match_start = parser.isoparse(datetime_str)
+
+    # Check if current time is before the match start time
+    if datetime.datetime.now(datetime.timezone.utc) < match_start:
+
+        if reaction.message.author == client.user:
+            # Check if the user already reacted with a different emoji
+            if (await user_already_reacted(reaction, user)):
+                return
+            else:
+                file_functions.save_reaction_data(str(reaction.emoji), user.name, reaction.message.content)
+                print(f"Reaction added by {user.name}: {reaction.emoji} from message {reaction.message.content}")
+    else:
+        print(f"User {user.name} tried to react with {reaction.emoji} on the message {reaction.message.content}, but the game was already started\n.")
+        await reaction.remove(user)

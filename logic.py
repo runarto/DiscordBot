@@ -1,7 +1,8 @@
 import requests
-from datetime import datetime, timedelta
+from datetime import timedelta, datetime
 import pytz  # This library is used for time zone conversions
 from perms import API_TOKEN
+from dateutil import parser
 
 
 
@@ -47,15 +48,12 @@ tracked_messages = {}
 predictions_file = 'predictions.json'
 today_date = datetime.now().strftime("%Y-%m-%d")
 
-print(today_date)
-
 # Number of days to add
-x_days = 7  # Replace with the number of days you want to add
+x_days = -7  # Replace with the number of days you want to add
 
 # Calculate the new date
 new_date = datetime.now() + timedelta(days=x_days)
 formatted_new_date = new_date.strftime("%Y-%m-%d")
-print(formatted_new_date)
 
 
 def get_round():
@@ -88,8 +86,8 @@ def get_matches():
         "league": "103",
         "season": "2023",
         "timezone": "Europe/Oslo",
-        "from": today_date,
-        "to": formatted_new_date 
+        "to": today_date,
+        "from": formatted_new_date 
     }
     current_round = get_round()
     response = requests.get(api_url, headers=headers, params=query_fixtures)
@@ -129,7 +127,6 @@ def fixture_status(match_details):
     for match in match_details:
         # Parse the match date-time string
         match_time_utc = datetime.fromisoformat(match['date'])
-        print(match_time_utc)
 
         # Check if the current time is past the match time
         if current_time_utc_plus_one > match_time_utc:
@@ -169,8 +166,19 @@ def print_match_table(match_list):
         ])
         print(row)
 
-matches = get_matches()
-fixture_status(matches)
+
+def check_time(reaction):
+    message_content = reaction.message.content
+    datetime_str = message_content.split('\n')[0].strip()
+    
+    # Parse the datetime string into a datetime object
+    match_start = parser.isoparse(datetime_str)
+
+    # Check if current time is before the match start time
+    if datetime.datetime.now(datetime.timezone.utc) < match_start:
+        return True
+    else:
+        return False
 
 
 
