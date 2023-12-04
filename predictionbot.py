@@ -7,6 +7,7 @@ from dateutil import parser
 import datetime
 import perms
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from functools import partial
 
 
 channel_id = perms.CHANNEL_ID
@@ -19,21 +20,33 @@ client = discord.Client(intents=intents)
 scheduler = AsyncIOScheduler()
 
 async def main_bot():
-
-    date_start, hour_start, minute_start = get_day_hour_minute()
-
-    for date, hour, minute in zip(date_start, hour_start, minute_start):
-        scheduler.add_job(some_function, 'cron', day_of_week = date, hour = hour, minute = minute, timezone=perms.timezone)
-
-
-
-
-    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='mon', hour=1, minute = 1, timezone=perms.timezone)
     
+    scheduler.add_job(update_jobs, 'cron', day_of_week='tue', hour=0, minute=0, args=[scheduler], name='update_jobs')
+
+    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='tue', hour=15, minute=0, timezone=perms.timezone, name='send_scheduled_matches')
+
     scheduler.start()
+
+    await client.start(perms.TOKEN)
 
 
     await client.start(perms.TOKEN)
+
+async def update_jobs(scheduler):
+    
+    date_start, hour_start, minute_start, messages = get_day_hour_minute()
+
+    
+    for job in scheduler.get_jobs():
+        if job.name == 'save_predictions_to_db_job':
+            job.remove()
+
+    
+    for date, hour, minute, message in zip(date_start, hour_start, minute_start, messages):
+        job_function = partial(file_functions.save_predictions_to_db, 'predictions.json', 'predictions.db', message)
+        scheduler.add_job(job_function, 'cron', day_of_week=date, hour=hour, minute=minute, timezone=perms.timezone, name='save_predictions_to_db_job')
+
+
 
 @client.event
 async def on_ready():
@@ -50,7 +63,7 @@ async def send_message_to_channel(client, channel_id):
 
             for fixture in fixtures:
                 # Format the message with fixture details
-                message_content = f" {fixture['date']}\n{fixture['home_team']} vs {fixture['away_team']}"
+                message_content = f"{fixture['date']}\n{fixture['home_team']} vs {fixture['away_team']}"
                 # Send the message to the channel
                 message = await channel.send(message_content)
                 logic.tracked_messages[message.id] = fixture['home_team'] + " " + fixture['away_team']
@@ -84,6 +97,7 @@ def get_day_hour_minute():
     hour = []
     minute = []
     data = logic.get_matches()
+    messages = []
     for date in data:
      # Parse the date string into a datetime object
         date_time = datetime.fromisoformat(date['date'])
@@ -97,7 +111,9 @@ def get_day_hour_minute():
         minute_add = date_time.strftime('%M')[:1]
         minute.append(minute_add)
 
-    return day_of_week, hour, minute
+        messages.append(f"{date['date']}\n{date['home_team']} vs {date['away_team']}")
+
+    return day_of_week, hour, minute, messages
 
 
 
@@ -116,18 +132,18 @@ async def on_reaction_add(reaction, user):
     match_start = parser.isoparse(datetime_str)
 
     # Check if current time is before the match start time
-    if datetime.datetime.now(datetime.timezone.utc) < match_start:
+    #if datetime.datetime.now(datetime.timezone.utc) < match_start:
 
-        if reaction.message.author == client.user:
+    if reaction.message.author == client.user:
             # Check if the user already reacted with a different emoji
-            if (await user_already_reacted(reaction, user)):
-                return
-            else:
-                file_functions.save_reaction_data(str(reaction.emoji), user.name, reaction.message.content)
-                print(f"Reaction added by {user.name}: {reaction.emoji} from message {reaction.message.content}")
-    else:
-        print(f"User {user.name} tried to react with {reaction.emoji} on the message {reaction.message.content}, but the game was already started\n.")
-        await reaction.remove(user)
+        if (await user_already_reacted(reaction, user)):
+            return
+        else:
+            file_functions.save_reaction_data(str(reaction.emoji), user.name, reaction.message.content)
+            print(f"Reaction added by {user.name}: {reaction.emoji} from message {reaction.message.content}")
+    #else:
+        #print(f"User {user.name} tried to react with {reaction.emoji} on the message {reaction.message.content}, but the game was already started\n.")
+        #await reaction.remove(user)
 
 
 
