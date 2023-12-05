@@ -63,19 +63,18 @@ def save_reaction_data(reaction_type, username, message_content):
 
 
 
-import json
 
 def save_predictions_to_json(input_json_file_path, output_json_file_path, target_message):
     # Read and parse the input JSON file
-    with open(input_json_file_path, 'r') as file:
+    with open(input_json_file_path, 'r') as file: #Laster inn input_fila og lagrer det som en dict
         predictions = json.load(file)
         print(predictions)
         print("Read input file successfully")
 
-    if target_message in predictions:
+    if target_message in predictions: #Itererer over meldinger som ligger i predictions
         print(f"Found target message: {target_message}")
         # Extract data for the target message
-        data_to_save = {target_message: predictions[target_message]}
+        data_to_save = {target_message: predictions[target_message]} 
 
         # Initialize variable to hold the existing data
         existing_data = {}
@@ -110,10 +109,16 @@ def save_predictions_to_json(input_json_file_path, output_json_file_path, target
 
 
 
-def read_predictions(file_path):
-    with open(file_path, 'r') as file:
-        return json.load(file)
+def read_file(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    except json.JSONDecodeError:
+        return {}  # Return an empty dictionary if the file is empty
+    except FileNotFoundError:
+        return {}  # Return an empty dictionary if the file does not exist
 
 
-
-
+def write_file(file_path, data):
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=4)

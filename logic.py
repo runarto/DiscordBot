@@ -9,7 +9,7 @@ from dateutil import parser
 emoji_dictionary = {
     "Bodo/Glimt": "<:Glimt:1039831920978169857>",
     "Ham-Kam": "<:Hamkam:1039832337032163358>",
-    "Brann": "<:Brann:1039844066487185429>",
+    "Aston Villa": ":brannbad:819294515755745281:",
     "Rosenborg": "<:Rosenborg:1059898578883051561>",
     "Lillestrom": "<:Lillestroem:1039835160125902908>",
     "Tromso": "<:Tromsoe:1039842401025527868>",
@@ -44,7 +44,7 @@ emoji_list = [
     "<:Aalesund:1039831454353457254>"
 ]
 
-user_scores = {}
+user_scores = "user_scores.json"
 tracked_messages = {}
 predictions_file = 'input_predictions.json'
 output_predictions_file = 'output_predictions.json'
@@ -80,6 +80,8 @@ def get_matches(x_days):
     new_date = datetime.now() + timedelta(days=x_days)
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
 
+
+
     #Hver gang get_matches() kjører henter vi inn kamper som er fra denne dagen, og 7 dager frem i tid
 
     api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
@@ -94,7 +96,7 @@ def get_matches(x_days):
         "from": today_date,
         "to": formatted_new_date 
     }
-    current_round = get_round()
+    
     response = requests.get(api_url, headers=headers, params=query_fixtures)
     if response.status_code == 200:
         data = response.json()
@@ -103,21 +105,16 @@ def get_matches(x_days):
             match_info = {
                 'date': fixture['fixture']['date'],
                 'home_team': fixture['teams']['home']['name'],
-                'home_team_win': fixture['teams']['home']['winner'],
-                #hvis uavgjort gir dette none, ellers true/false for seier/tap. 
                 'away_team': fixture['teams']['away']['name'],
-                'away_team_win': fixture['teams']['away']['winner'],
-                'halftime_score': fixture['score']['halftime'],
-                'fulltime_score': fixture['score']['fulltime'],
-                'round': fixture['league']['round']
+                'round': fixture['league']['round'],
+                'match_id': fixture['fixture']['id']
             }
-            
             #if current_round == match_info['round']:
+            print(f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}")
+            print(match_info["date"])
             match_details.append(match_info)
         return match_details
     
-
-import requests
 
 #get_match_results() blir kalt 7 dager etter get_matches()
 
@@ -127,7 +124,7 @@ def get_match_results():
 
     today_date = datetime.now().strftime("%Y-%m-%d")
 
-    x_days = -7 
+    x_days = -7
 
     new_date = datetime.now() + timedelta(days=x_days)
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
@@ -160,7 +157,9 @@ def get_match_results():
         else:
             result = None  # Draw or data not available
 
-        message = f"{fixture['fixture']['date']}\n{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
+        message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
+        print(f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}")
+        print(fixture['fixture']["date"])
 
         results[message] = result
         
@@ -236,5 +235,8 @@ def check_time(reaction):
         return True
     else:
         return False
-    
+
+
+
+
 
