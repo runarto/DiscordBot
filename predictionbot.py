@@ -27,9 +27,11 @@ def run_bot():
 
 async def main_bot():
     
-    scheduler.add_job(update_jobs, 'cron', day_of_week='tue', hour=0, minute=0, args=[scheduler], name='update_jobs')
+    scheduler.add_job(update_jobs, 'cron', day_of_week='tue', hour=19, minute=45, args=[scheduler], name='update_jobs')
 
-    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='tue', hour=17, minute=45, timezone=perms.timezone, name='send_scheduled_matches')
+    scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='tue', hour = 23, minute=30, name='test_run')
+
+    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='tue', hour=20, minute=00, timezone=perms.timezone, name='send_scheduled_matches')
 
     scheduler.start()
 
@@ -55,13 +57,13 @@ async def update_jobs(scheduler):
         except Exception as e:
             print(f"An error occurred while removing job {job_id}: {e}")
 
-    if not date_start:
+    if not date_start: #Hvis date_start er tom så er det ingen kamper. 
         print("No new jobs to schedule.")
         return
     
     
     for date, hour, minute, message in zip(date_start, hour_start, minute_start, messages):
-        job_function = partial(file_functions.save_predictions_to_json, 'input_predictions.json', 'output_predictions.json', message)
+        job_function = partial(file_functions.save_predictions_to_json, logic.predictions_file, logic.output_predictions_file, message)
         scheduler.add_job(job_function, 'cron', day_of_week=date, hour=hour, minute=minute, timezone=perms.timezone, name=job_id)
     
     jobs = scheduler.get_jobs()
@@ -86,6 +88,8 @@ async def on_ready():
 
 @client.event
 async def send_message_to_channel():
+    file_functions.write_file(logic.predictions_file, {})
+
     with open(logic.predictions_file, 'w') as file: #Tømmer input_predictions-fila
         json.dump({}, file)
         print("Dumped old predictions 1/2\n")
@@ -101,8 +105,6 @@ async def send_message_to_channel():
 
             with open(logic.output_predictions_file, 'w') as file: #Tømmer output_predictions
                 json.dump({}, file)
-
-
             
             print("Dumped old predictions 2/2\n")
 
@@ -160,7 +162,7 @@ def get_day_hour_minute():
         minute_add = date_time.strftime('%M')[:1]
         minute.append(minute_add)
 
-        messages.append(f"{date['date']}\n{date['home_team']} vs {date['away_team']}")
+        messages.append(f"{date['home_team']} vs {date['away_team']}")
 
     return day_of_week, hour, minute, messages
 
@@ -315,5 +317,23 @@ def format_leaderboard_message():
         file_functions.write_file(logic.user_scores, user_scores)
 
     return '\n'.join(message_parts)
+
+
+@client.event
+async def send_leaderboard_message():
+    while True:
+        message = format_leaderboard_message()
+        if message:
+            channel = client.get_channel(channel_id)
+            if channel:  # Check if channel is found
+                await channel.send(message)
+                return
+            else:
+                print(f"Could not find channel with ID {channel_id}")
+        else:
+            print("No message to send.")
+
+        # Wait for 60 seconds (1 minute) before checking again
+        await asyncio.sleep(60)
 
 
