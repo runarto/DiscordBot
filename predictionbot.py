@@ -27,11 +27,11 @@ def run_bot():
 
 async def main_bot():
     
-    scheduler.add_job(update_jobs, 'cron', day_of_week='tue', hour=22, minute=14, args=[scheduler], name='update_jobs')
+    scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=18, minute=25, args=[scheduler], name='update_jobs')
 
-    scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='tue', hour = 23, minute=30, name='test_run')
+    scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='wed', hour = 23, minute=30, name='test_run')
 
-    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='tue', hour=22, minute=15, timezone=perms.timezone, name='send_scheduled_matches')
+    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour=18, minute=30, timezone=perms.timezone, name='send_scheduled_matches')
 
     scheduler.start()
 
