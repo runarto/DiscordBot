@@ -155,7 +155,7 @@ def get_day_hour_minute():
         day_of_week_add = date_time.strftime('%A')[:3].lower()
         day_of_week.append(day_of_week_add)
         # Get the hour and minute
-        hour_add = int(date_time.strftime('%H')) + 2
+        hour_add = int(date_time.strftime('%H'))
         hour.append(str(hour_add))
 
         minute_add = int(date_time.strftime('%M'))
