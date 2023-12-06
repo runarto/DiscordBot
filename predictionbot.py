@@ -27,11 +27,11 @@ def run_bot():
 
 async def main_bot():
     
-    scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=18, minute=35, args=[scheduler], name='update_jobs')
+    scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=19, minute=10, args=[scheduler], name='update_jobs')
 
     scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='wed', hour = 23, minute=33, name='test_run')
 
-    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour=18, minute=36, timezone=perms.timezone, name='send_scheduled_matches')
+    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour=19, minute=15, timezone=perms.timezone, name='send_scheduled_matches')
 
     scheduler.start()
 
@@ -155,10 +155,10 @@ def get_day_hour_minute():
         day_of_week_add = date_time.strftime('%A')[:3].lower()
         day_of_week.append(day_of_week_add)
         # Get the hour and minute
-        hour_add = int(date_time.strftime('%H'))
+        hour_add = int(date_time.strftime('%H')) + 1
         hour.append(str(hour_add))
 
-        minute_add = int(date_time.strftime('%M'))
+        minute_add = int(date_time.strftime('%M')) 
         minute.append(str(minute_add))
 
         messages.append(f"{date['home_team']} vs {date['away_team']}")
@@ -199,9 +199,9 @@ async def user_already_reacted(reaction, user):
             async for users in reactions.users():
                 if users == user:
                     # Remove the previous reaction data
-                    file_functions.remove_reaction_data(str(reactions.emoji), user.id, reaction.message.content)
+                    file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name,reaction.message.content)
                     # Save the new reaction data
-                    file_functions.save_reaction_data(str(reaction.emoji), user.id, user.display_name, reaction.message.content)
+                    file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, reaction.message.content)
                     # Remove the user's previous reaction
                     await reactions.remove(user)
                     return True
@@ -216,7 +216,7 @@ async def on_reaction_remove(reaction, user):
         if user == client.user:
             return
         if (reaction.message.author == client.user) and (reaction.message.channel.id == channel_id):
-            file_functions.remove_reaction_data(str(reaction.emoji), user.name, reaction.message.content)
+            file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, reaction.message.content)
             print(f"Reaction removed by {user.name}: {reaction.emoji} from message {reaction.message.content}")
     except Exception as e:
         print(f"Error in on_reaction_remove: {e}")
