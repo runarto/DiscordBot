@@ -3,7 +3,7 @@ import logic
 import os
 
 
-def remove_reaction_data(reaction_type, username, message_content):
+def remove_reaction_data(reaction_type, user_id, message_content):
     try:
         # Load existing data
         data = read_file(logic.predictions_file)
@@ -16,7 +16,7 @@ def remove_reaction_data(reaction_type, username, message_content):
     if message_content in data:
         # Filter out the reaction data to be removed
         data[message_content] = [reaction for reaction in data[message_content]
-                                 if not (reaction['username'] == username and reaction['reaction'] == reaction_type)]
+                                 if not (reaction['username'] == user_id and reaction['reaction'] == reaction_type)]
 
         # If the list for this message is now empty, remove the key entirely
         if not data[message_content]:
@@ -30,11 +30,12 @@ def remove_reaction_data(reaction_type, username, message_content):
 
 
 
-def save_reaction_data(reaction_type, username, message_content):
+def save_reaction_data(reaction_type, user_id, user_nick, message_content):
     
     # Structure to hold the new reaction data
     new_reaction_data = {
-        'username': username,
+        'user_id': user_id,
+        'user_nick': user_nick,
         'reaction': reaction_type
     }
 

@@ -27,11 +27,11 @@ def run_bot():
 
 async def main_bot():
     
-    scheduler.add_job(update_jobs, 'cron', day_of_week='tue', hour=19, minute=45, args=[scheduler], name='update_jobs')
+    scheduler.add_job(update_jobs, 'cron', day_of_week='tue', hour=22, minute=14, args=[scheduler], name='update_jobs')
 
     scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='tue', hour = 23, minute=30, name='test_run')
 
-    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='tue', hour=20, minute=00, timezone=perms.timezone, name='send_scheduled_matches')
+    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='tue', hour=22, minute=15, timezone=perms.timezone, name='send_scheduled_matches')
 
     scheduler.start()
 
@@ -81,7 +81,6 @@ async def update_jobs(scheduler):
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
-    await send_message_to_channel()
 
 
 #Sender melding ut til kanalen med kampene for oppkommende uke, og legger til reaksjoner
@@ -108,7 +107,7 @@ async def send_message_to_channel():
             
             print("Dumped old predictions 2/2\n")
 
-            fixtures = logic.get_matches(1) #Henter inn kamper de neste x dagene
+            fixtures = logic.get_matches(0) #Henter inn kamper de neste x dagene
 
             for fixture in fixtures: #Itererer omver kampenee
                 print(fixture)
@@ -147,7 +146,7 @@ def get_day_hour_minute():
     day_of_week = []
     hour = []
     minute = []
-    data = logic.get_matches(1)
+    data = logic.get_matches(0)
     messages = []
     for date in data:
      # Parse the date string into a datetime object
@@ -156,11 +155,11 @@ def get_day_hour_minute():
         day_of_week_add = date_time.strftime('%A')[:3].lower()
         day_of_week.append(day_of_week_add)
         # Get the hour and minute
-        hour_add = date_time.strftime('%H')
-        hour.append(hour_add)
+        hour_add = int(date_time.strftime('%H')) + 2
+        hour.append(str(hour_add))
 
-        minute_add = date_time.strftime('%M')[:1]
-        minute.append(minute_add)
+        minute_add = int(date_time.strftime('%M'))
+        minute.append(str(minute_add))
 
         messages.append(f"{date['home_team']} vs {date['away_team']}")
 
@@ -176,8 +175,6 @@ async def on_reaction_add(reaction, user):
     if user == client.user:
         return
 
-
-
     else:
         if reaction.message.channel.id == channel_id:
             print("now hereeeeee")
@@ -186,7 +183,7 @@ async def on_reaction_add(reaction, user):
             if (await user_already_reacted(reaction, user)):
                 return
             else:
-                file_functions.save_reaction_data(str(reaction.emoji), user.name, message_content)
+                file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, message_content)
                 print(f"Reaction added by {user.name}: {reaction.emoji} from message {message_content}")
         else:
             return
@@ -203,9 +200,9 @@ async def user_already_reacted(reaction, user):
             async for users in reactions.users():
                 if users == user:
                     # Remove the previous reaction data
-                    file_functions.remove_reaction_data(str(reactions.emoji), user.name, reaction.message.content)
+                    file_functions.remove_reaction_data(str(reactions.emoji), user.id, reaction.message.content)
                     # Save the new reaction data
-                    file_functions.save_reaction_data(str(reaction.emoji), user.name, reaction.message.content)
+                    file_functions.save_reaction_data(str(reaction.emoji), user.id, user.display_name, reaction.message.content)
                     # Remove the user's previous reaction
                     await reactions.remove(user)
                     return True
@@ -230,50 +227,55 @@ async def on_reaction_remove(reaction, user):
 
 def update_user_scores():
     try:
-        predictions = file_functions.read_file("output_predictions.json") #
+        predictions = file_functions.read_file(logic.output_predictions_file) #
+
+        predictions = dict(sorted(predictions.items()))
         
         if not predictions:
-            return {}, {}, 0
+            return {}, [], 0
         #actual_results = logic.get_match_results()
-        actual_results = {"Message content 1": True, 
-                          "Message content 2": False, 
-                          "Message content 3": None}
+        actual_results = {
+            "Message content 1": True,
+            "Message content 2": None   
+        }
         num_of_games = len(actual_results)
         
         user_scores = file_functions.read_file(logic.user_scores) #Laster inn json fil med user_scores
-       
 
-        this_week_user_score = defaultdict(int)  # Using defaultdict for automatic handling of new keys
+
+
+        this_week_user_score = []  # Using defaultdict for automatic handling of new keys
 
         for game_id, user_predictions in predictions.items():
             for prediction in user_predictions:
-                username = prediction['username']
+                user_id = prediction['user_id']
+                user_display_name = prediction['user_nick']
 
         # Initialize score for each user if not already present
-                if username not in user_scores:
-                    user_scores[username] = 0
+                if user_display_name not in user_scores:
+                    user_scores[user_display_name] = 0
 
         # Rest of your scoring logic
                 actual_result = actual_results.get(game_id)
                 actual_result = "🏠" if actual_result is True else ("✈️" if actual_result is False else "🏳️")
                 predicted_result = prediction['reaction']
 
+                user_score_entry = next((item for item in this_week_user_score if item['user_id'] == user_id), None)
+                if not user_score_entry:
+                    user_score_entry = {'user_id': user_id, 'points': 0, 'user_nick': user_display_name}
+                    this_week_user_score.append(user_score_entry)
+
+
                 if predicted_result == actual_result:
-                    user_scores[username] += 1
-                    this_week_user_score[username] += 1
-        # If you want to track weekly participation even without correct answers:
-                elif username not in this_week_user_score:
-                    this_week_user_score[username] = 0
-
-
-        actual_result = "🏠" if actual_result is True else ("✈️" if actual_result is False else "🏳️")
+                    user_scores[user_display_name] += 1
+                    user_score_entry['points'] += 1
         
-        return user_scores, dict(this_week_user_score), num_of_games
+        return user_scores, this_week_user_score, num_of_games
 
     except (FileNotFoundError, KeyError, TypeError) as e:
         print(f"An error occurred: {e}")
         # Return empty data or handle the error as needed
-        return {}, {}, 0
+        return {}, [], 0
 
 
 
@@ -282,11 +284,21 @@ def update_user_scores():
 def sort_user_scores(user_scores):
     if user_scores is None:
         return
-    # Convert dictionary into a list of tuples and sort by score in descending order
-    sorted_scores = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
-    return sorted_scores
 
+    # Check if user_scores is a dictionary
+    if isinstance(user_scores, dict):
+        # Sorting the dictionary by its values (scores) in descending order
+        sorted_scores = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
+        return sorted_scores
 
+    # Check if user_scores is a list of dictionaries
+    elif isinstance(user_scores, list):
+        # Sorting the list of dictionaries by 'points' in each dictionary in descending order
+        sorted_scores = sorted(user_scores, key=lambda x: x['points'], reverse=True)
+        return sorted_scores
+
+    # Return an empty list if user_scores is neither a dict nor a list of dicts
+    return  
 
 
 def format_leaderboard_message():
@@ -299,14 +311,16 @@ def format_leaderboard_message():
 
     if this_week_user_scores:
         sorted_this_week_user_scores = sort_user_scores(this_week_user_scores)
+        print(sorted_this_week_user_scores)
 
         message_parts.append(f"**Av {num_of_games} mulige:**")
-        for username, score in sorted_this_week_user_scores:
-            message_parts.append(f"{score} poeng: {username}")
+        for user in sorted_this_week_user_scores:
+            message_parts.append(f"{user['points']} poeng: {user['user_nick']}")
 
         if sorted_this_week_user_scores:
-            weekly_winner = sorted_this_week_user_scores[0][0]  # username of this week's top scorer
-            message_parts.append(f"Gratulerer til ukas vinner @{weekly_winner}!\n")
+            weekly_winner_user = sorted_this_week_user_scores[0]
+            weekly_winner_id = weekly_winner_user['user_id'] # username of this week's top scorer
+            message_parts.append(f"Gratulerer til ukas vinner {weekly_winner_id}!\n")
 
     if user_scores:
         sorted_user_score = sort_user_scores(user_scores)

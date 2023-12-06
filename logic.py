@@ -61,7 +61,6 @@ def get_round():
     query_round = {
         "league": "39",
         "season": "2023"
-        #"current": "true"
     }
     response = requests.get(api_url, headers=headers, params=query_round)
     if response.status_code == 200:
@@ -124,7 +123,7 @@ def get_match_results():
 
     today_date = datetime.now().strftime("%Y-%m-%d")
 
-    x_days = -7
+    x_days = -1
 
     new_date = datetime.now() + timedelta(days=x_days)
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
@@ -162,9 +161,10 @@ def get_match_results():
         print(fixture['fixture']["date"])
 
         results[message] = result
+
         
 
-    return results
+    return dict(sorted(results.items()))
 
 
 
@@ -238,5 +238,4 @@ def check_time(reaction):
 
 
 
-
-
+print(get_match_results())
