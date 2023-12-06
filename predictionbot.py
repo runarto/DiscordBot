@@ -26,12 +26,20 @@ def run_bot():
     client.run(perms.TOKEN)
 
 async def main_bot():
+
+    update_hour = int(input("Update jobs hour: "))
+
+    update_minute = int(input("Update jobs minute"))
+
+    hour_leaderboard = int(input("Send leaderboard hour"))
+
+    minute_leaderbaord = int(input("Send leaderboard mintue"))
     
-    scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=19, minute=10, args=[scheduler], name='update_jobs')
+    scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=update_hour, minute=update_minute, args=[scheduler], name='update_jobs')
 
-    scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='wed', hour = 23, minute=33, name='test_run')
+    scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='wed', hour = hour_leaderboard, minute=minute_leaderbaord, name='test_run')
 
-    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour=19, minute=15, timezone=perms.timezone, name='send_scheduled_matches')
+    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour= update_hour, minute=update_minute+2, timezone=perms.timezone, name='send_scheduled_matches')
 
     scheduler.start()
 
@@ -155,7 +163,7 @@ def get_day_hour_minute():
         day_of_week_add = date_time.strftime('%A')[:3].lower()
         day_of_week.append(day_of_week_add)
         # Get the hour and minute
-        hour_add = int(date_time.strftime('%H')) + 1
+        hour_add = int(date_time.strftime('%H'))
         hour.append(str(hour_add))
 
         minute_add = int(date_time.strftime('%M')) 
