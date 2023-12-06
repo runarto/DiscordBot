@@ -177,7 +177,6 @@ async def on_reaction_add(reaction, user):
 
     else:
         if reaction.message.channel.id == channel_id:
-            print("now hereeeeee")
             message_content = reaction.message.content
                 # Check if the user already reacted with a different emoji
             if (await user_already_reacted(reaction, user)):

@@ -109,8 +109,6 @@ def get_matches(x_days):
                 'match_id': fixture['fixture']['id']
             }
             #if current_round == match_info['round']:
-            print(f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}")
-            print(match_info["date"])
             match_details.append(match_info)
         return match_details
     
@@ -157,8 +155,6 @@ def get_match_results():
             result = None  # Draw or data not available
 
         message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
-        print(f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}")
-        print(fixture['fixture']["date"])
 
         results[message] = result
 
@@ -238,4 +234,3 @@ def check_time(reaction):
 
 
 
-print(get_match_results())
