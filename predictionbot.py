@@ -240,11 +240,8 @@ def update_user_scores():
         
         if not predictions:
             return {}, [], 0
-        #actual_results = logic.get_match_results()
-        actual_results = {
-            "Message content 1": True,
-            "Message content 2": None   
-        }
+        
+        actual_results = logic.get_match_results(0)
         num_of_games = len(actual_results)
         
         user_scores = file_functions.read_file(logic.user_scores) #Laster inn json fil med user_scores

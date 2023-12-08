@@ -117,11 +117,9 @@ def get_matches(x_days):
 
 #Returnerer resultater for kamper de siste sju dagene. 
 
-def get_match_results():
+def get_match_results(x_days):
 
     today_date = datetime.now().strftime("%Y-%m-%d")
-
-    x_days = -1
 
     new_date = datetime.now() + timedelta(days=x_days)
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
