@@ -1,6 +1,4 @@
-import json
-import logic
-import os
+from importFile import *
 
 
 def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
@@ -27,7 +25,6 @@ def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
     
     else:
         print("Message content not found in data.")
-
 
 
 def save_reaction_data(reaction_type, user_id, user_nick, message_content):
@@ -67,6 +64,7 @@ def save_reaction_data(reaction_type, user_id, user_nick, message_content):
 def save_predictions_to_json(input_json_file_path, output_json_file_path, target_message):
     # Read and parse the input JSON file
     predictions = read_file(input_json_file_path)
+
 
     if target_message in predictions: #Itererer over meldinger som ligger i predictions
         print(f"Found target message: {target_message}")

@@ -1,9 +1,4 @@
-import requests
-from datetime import timedelta, datetime
-import pytz  # This library is used for time zone conversions
-from perms import API_TOKEN
-from dateutil import parser
-
+from importFile import *
 
 
 emoji_dictionary = {
@@ -45,7 +40,7 @@ emoji_list = [
 ]
 
 user_scores = "user_scores.json"
-tracked_messages = {}
+tracked_messages = "match_messages.json"
 predictions_file = 'input_predictions.json'
 output_predictions_file = 'output_predictions.json'
 
@@ -152,13 +147,13 @@ def get_match_results(x_days):
         else:
             result = None  # Draw or data not available
 
-        message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
+        #message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
 
-        results[message] = result
+        results[fixture['id']] = result
 
         
 
-    return dict(sorted(results.items()))
+    return dict(sorted(results.items())) #Returnerer en sortert dictionary, etter match_id
 
 
 

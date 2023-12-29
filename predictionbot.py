@@ -1,79 +1,47 @@
-import discord
-import logic
-import asyncio
-import json
-import file_functions
-from dateutil import parser
-import perms
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from functools import partial
-from collections import defaultdict
-from datetime import datetime
-from apscheduler.jobstores.base import JobLookupError
+from importFile import *
 
-
-
-channel_id = perms.CHANNEL_ID
-
-intents = discord.Intents.default()
-intents.members = True
-intents.reactions = True
-intents.message_content = True
-client = discord.Client(intents=intents)
-scheduler = AsyncIOScheduler()
 
 def run_bot():
     client.run(perms.TOKEN)
 
 async def main_bot():
 
-    update_hour = int(input("Update jobs hour: "))
-
-    update_minute = int(input("Update jobs minute"))
-
-    hour_leaderboard = int(input("Send leaderboard hour"))
-
-    minute_leaderbaord = int(input("Send leaderboard mintue"))
+    # update_hour = int(input("Update jobs hour: "))
+    # update_minute = int(input("Update jobs minute"))
+    # hour_leaderboard = int(input("Send leaderboard hour"))
+    # minute_leaderbaord = int(input("Send leaderboard mintue"))
     
-    scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=update_hour, minute=update_minute, args=[scheduler], name='update_jobs')
-
-    scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='wed', hour = hour_leaderboard, minute=minute_leaderbaord, name='test_run')
-
-    scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour= update_hour, minute=update_minute+2, timezone=perms.timezone, name='send_scheduled_matches')
-
+    #scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=update_hour, minute=update_minute, args=[scheduler], name='update_jobs')
+    #scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='wed', hour = hour_leaderboard, minute=minute_leaderbaord, name='test_run')
+    #scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour= update_hour, minute=update_minute+2, timezone=perms.timezone, name='send_scheduled_matches')
     scheduler.start()
 
     await client.start(perms.TOKEN)
 
 
-async def update_jobs(scheduler):
-    
-    date_start, hour_start, minute_start, messages = get_day_hour_minute()
+async def update_jobs(date_start, hour_start, minute_start, message_ids):
 
-    for message in messages:
-        job_id = message
-
-    for job in scheduler.get_jobs():
-        try:
-            if job.id == job_id:
-                scheduler.remove_job(job_id)
-                print(f"Job {job_id} removed successfully.")
-        except JobLookupError:
-            print(f"Job {job_id} could not be found.")
-        except UnboundLocalError:
-            pass
-        except Exception as e:
-            print(f"An error occurred while removing job {job_id}: {e}")
-
-    if not date_start: #Hvis date_start er tom så er det ingen kamper. 
+    if not date_start:  # Check if there are no new jobs to schedule
         print("No new jobs to schedule.")
         return
+
+    # Remove existing jobs
+    for job in scheduler.get_jobs():
+        if job.id in message_ids:
+            try:
+                scheduler.remove_job(job.id)
+                print(f"Job {job.id} removed successfully.")
+            except JobLookupError:
+                print(f"Job {job.id} could not be found.")
+            except Exception as e:
+                print(f"An error occurred while removing job {job.id}: {e}")
+
+    # Schedule new jobs
+    for date, hour, minute, message_id in zip(date_start, hour_start, minute_start, message_ids):
+        job_function = partial(compare_and_update_reaction_for_message, message_id)
+        scheduler.add_job(job_function, 'cron', day_of_week=date, hour=hour, minute=minute, timezone=perms.timezone, id=message_id)
     
-    
-    for date, hour, minute, message in zip(date_start, hour_start, minute_start, messages):
-        job_function = partial(file_functions.save_predictions_to_json, logic.predictions_file, logic.output_predictions_file, message)
-        scheduler.add_job(job_function, 'cron', day_of_week=date, hour=hour, minute=minute, timezone=perms.timezone, name=job_id)
-    
+    # Print scheduled jobs
     jobs = scheduler.get_jobs()
     print("Scheduled Jobs:")
     for job in jobs:
@@ -117,24 +85,30 @@ async def send_message_to_channel():
 
             fixtures = logic.get_matches(0) #Henter inn kamper de neste x dagene
 
+            data = []
             for fixture in fixtures: #Itererer omver kampenee
                 print(fixture)
                 # Format the message with fixture details
-                emoji = "<:brannbad:819294515755745281>"
                 message_content = f"{fixture['home_team']} vs {fixture['away_team']}" #Genererer melding
+
                 # Send the message to the channel
                 message = await channel.send(message_content) #Sender melding om kamp
-                logic.tracked_messages[message.id] = fixture['match_id'] #fixture['home_team'] + " " + fixture['away_team']
+                data.append((message.id ,fixture['match_id']))
 
-                home_team = fixture['home_team'] #Vet ikke hvorfor jeg har dette her
-                away_team = fixture['away_team']
+
+    
         
                 
                 await message.add_reaction('🏠') #Legger til reaksjoner. 
                 await message.add_reaction('🏳️') #Benytter disse tre fast for å gjøre det lettere
                 await message.add_reaction('✈️')
+            
+            file_functions.write_file(logic.tracked_messages, data) #Lagrer meldinger i en JSON. 
 
+            
 
+            
+        
         else:
             print(f"Could not find channel with ID {channel_id}")
     except discord.errors.Forbidden:
@@ -149,13 +123,18 @@ async def send_scheduled_matches(): #Egentlig overflødig
 
 #Brukes bare til å returnere hvilken dag det er, time, minutt og melding
 
-def get_day_hour_minute():
+def get_day_hour_minute(days):
 
     day_of_week = []
     hour = []
     minute = []
-    data = logic.get_matches(0)
-    messages = []
+    data = logic.get_matches(days)
+    message_id_and_match_id = file_functions.read_file(logic.tracked_messages)
+    message_ids = [message_id for message_id, _ in message_id_and_match_id]
+
+# Extract the message IDs as a list
+
+
     for date in data:
      # Parse the date string into a datetime object
         date_time = datetime.fromisoformat(date['date'])
@@ -169,9 +148,7 @@ def get_day_hour_minute():
         minute_add = int(date_time.strftime('%M')) 
         minute.append(str(minute_add))
 
-        messages.append(f"{date['home_team']} vs {date['away_team']}")
-
-    return day_of_week, hour, minute, messages
+    return day_of_week, hour, minute, message_ids
 
 
 #Legger til i input_predictions-fila
@@ -185,13 +162,13 @@ async def on_reaction_add(reaction, user):
 
     else:
         if reaction.message.channel.id == channel_id:
-            message_content = reaction.message.content
+            message_id = reaction.message.id
                 # Check if the user already reacted with a different emoji
             if (await user_already_reacted(reaction, user)):
                 return
             else:
-                file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, message_content)
-                print(f"Reaction added by {user.name}: {reaction.emoji} from message {message_content}")
+                file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, message_id)
+                print(f"Reaction added by {user.name}: {reaction.emoji} from message {reaction.message.content}")
         else:
             return
     
@@ -207,9 +184,9 @@ async def user_already_reacted(reaction, user):
             async for users in reactions.users():
                 if users == user:
                     # Remove the previous reaction data
-                    file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name,reaction.message.content)
+                    file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name,reaction.message.id)
                     # Save the new reaction data
-                    file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, reaction.message.content)
+                    file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, reaction.message.id)
                     # Remove the user's previous reaction
                     await reactions.remove(user)
                     return True
@@ -224,7 +201,7 @@ async def on_reaction_remove(reaction, user):
         if user == client.user:
             return
         if (reaction.message.author == client.user) and (reaction.message.channel.id == channel_id):
-            file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, reaction.message.content)
+            file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, reaction.message.id)
             print(f"Reaction removed by {user.name}: {reaction.emoji} from message {reaction.message.content}")
     except Exception as e:
         print(f"Error in on_reaction_remove: {e}")
@@ -232,37 +209,53 @@ async def on_reaction_remove(reaction, user):
 #Funksjonene under blir brukt implisitt for å sende ut en melding med informasjon 
 #resultater. Selve meldingen blir sendt i send_message_to_channel() funksjonen
 
-def update_user_scores():
+def update_user_scores(days):
     try:
-        predictions = file_functions.read_file(logic.output_predictions_file) #
+        predictions = file_functions.read_file(logic.output_predictions_file) #{message_id, [data]}
 
-        predictions = dict(sorted(predictions.items()))
+        sorted_predictions = {}
+
+        # Sort the order_tuple based on match_id
+        order_tuple = file_functions.read_file(logic.tracked_messages)
+        order_tuple.sort(key=lambda x: x[1])
+
+        # Iterate through the sorted order_tuple and populate the sorted_data dictionary
+        for message_content_id, _ in order_tuple:
+            if message_content_id in predictions:
+                sorted_predictions[message_content_id] = predictions[message_content_id]
         
         if not predictions:
             return {}, [], 0
         
-        actual_results = logic.get_match_results(0)
+        actual_results = logic.get_match_results(days) 
         num_of_games = len(actual_results)
         
-        user_scores = file_functions.read_file(logic.user_scores) #Laster inn json fil med user_scores
+        user_scores = file_functions.read_file(logic.user_scores) #Total poengsum all-time
+
+        if len(actual_results) != len(predictions):
+            # If they don't have the same size, remove elements from predictions
+            keys_to_remove = [key for key in predictions if key not in actual_results]
+            for key in keys_to_remove:
+                del predictions[key]
 
 
 
-        this_week_user_score = []  # Using defaultdict for automatic handling of new keys
+        this_week_user_score = []  #Ukens poeng
 
-        for game_id, user_predictions in predictions.items():
+        for message_id, user_predictions in predictions.items():
             for prediction in user_predictions:
                 user_id = prediction['user_id']
                 user_display_name = prediction['user_nick']
+                user_prediction = prediction['reaction']
 
         # Initialize score for each user if not already present
                 if user_display_name not in user_scores:
                     user_scores[user_display_name] = 0
 
         # Rest of your scoring logic
-                actual_result = actual_results.get(game_id)
+                actual_result = actual_results.keys()
                 actual_result = "🏠" if actual_result is True else ("✈️" if actual_result is False else "🏳️")
-                predicted_result = prediction['reaction']
+                predicted_result = user_prediction
 
                 user_score_entry = next((item for item in this_week_user_score if item['user_id'] == user_id), None)
                 if not user_score_entry:
@@ -305,8 +298,8 @@ def sort_user_scores(user_scores):
     return  
 
 
-def format_leaderboard_message():
-    user_scores, this_week_user_scores, num_of_games = update_user_scores()
+def format_leaderboard_message(days):
+    user_scores, this_week_user_scores, num_of_games = update_user_scores(days)
     
     if not user_scores or not this_week_user_scores:
         return
@@ -338,9 +331,9 @@ def format_leaderboard_message():
 
 
 @client.event
-async def send_leaderboard_message():
+async def send_leaderboard_message(days):
     while True:
-        message = format_leaderboard_message()
+        message = format_leaderboard_message(days)
         if message:
             channel = client.get_channel(channel_id)
             if channel:  # Check if channel is found
@@ -351,7 +344,133 @@ async def send_leaderboard_message():
         else:
             print("No message to send.")
 
-        # Wait for 60 seconds (1 minute) before checking again
-        await asyncio.sleep(60)
+        # Wait for 180 seconds (3 minutes) before checking again
+        await asyncio.sleep(180)
+
+
+
+
+async def compare_and_update_reaction_for_message(message_id):
+    """
+    Compares stored reaction data with current reactions on Discord for a specific message and updates as necessary.
+
+    :param message_id: ID of the message to compare reactions for.
+    """
+    # Load reaction data from the JSON file
+    with open(logic.predictions_file, 'r') as file:
+        stored_reactions = json.load(file)
+
+    # Check if the specific message_id is in the stored reactions
+    if message_id not in stored_reactions:
+        print(f"No stored reactions found for message ID {message_id}")
+        return
+
+    # Fetch the current reactions from Discord for this message ID
+    current_reactions = await fetch_current_reactions(message_id)
+
+    # Dictionary to track reactions for each user
+    user_reactions = {}
+    for reaction_type, user_ids in current_reactions.items():
+        for user_id in user_ids:
+            user_reactions.setdefault(user_id, []).append(reaction_type)
+
+    # List to hold the updated reaction data for this message
+    updated_reactions_list = []
+
+    # Process reactions for each user in the stored reactions
+    for stored_user_data in stored_reactions[message_id]:
+        stored_user_id = stored_user_data['user_id']
+        stored_reaction_type = stored_user_data['reaction_type']
+        current_user_reactions = user_reactions.get(stored_user_id, [])
+
+        # Apply logic based on the number of current reactions for the user
+        if len(current_user_reactions) == 1 and current_user_reactions[0] != stored_reaction_type:
+            updated_reactions_list.append({
+                "user_id": stored_user_id, 
+                "user_nick": stored_user_data["user_nick"], 
+                "reaction": current_user_reactions[0]
+            })
+        elif len(current_user_reactions) == 2:
+            if stored_reaction_type in current_user_reactions:
+                new_reaction = next(reaction for reaction in current_user_reactions if reaction != stored_reaction_type)
+                updated_reactions_list.append({
+                    "user_id": stored_user_id, 
+                    "user_nick": stored_user_data["user_nick"], 
+                    "reaction": new_reaction
+                })
+            else:
+                updated_reactions_list.append({
+                    "user_id": stored_user_id, 
+                    "user_nick": stored_user_data["user_nick"], 
+                    "reaction": '🏠'
+                })
+        elif len(current_user_reactions) >= 3:
+            updated_reactions_list.append({
+                "user_id": stored_user_id, 
+                "user_nick": stored_user_data["user_nick"], 
+                "reaction": '🏠'
+            })
+
+    # Save the updated reactions list for the specific message
+    outputData = {}
+    outputData[message_id] = updated_reactions_list
+    logic.write_file(logic.output_predictions_file, outputData)
+
+
+
+
+
+
+
+# Function to fetch message by ID and content
+async def fetch_current_reactions(message_id):
+    """
+    Fetches the current reactions for a message and structures them as
+    reaction_type -> list of user IDs who reacted with that type.
+
+    :param client: Discord client object.
+    :param channel_id: ID of the channel where the message is located.
+    :param message_id: ID of the message to fetch reactions for.
+    :return: Dictionary with reaction types as keys and lists of user IDs as values.
+    """
+    try:
+        # Get the channel object from its ID
+        channel = client.get_channel(channel_id)
+        if channel is None:
+            print("Channel not found.")
+            return {}
+
+        # Fetch the message from the channel
+        message = await channel.fetch_message(message_id)
+
+        # Dictionary to hold the reactions data
+        reactions_data = {}
+
+        # Iterate over each reaction in the message
+        for reaction in message.reactions:
+            # Ignore reactions added by the bot itself
+            if reaction.me:
+                continue
+
+            # List to hold user IDs for this reaction type
+            user_ids = []
+
+            # Fetch the users who reacted with this emoji
+            users = await reaction.users().flatten()
+            for user in users:
+                if user != client.user:  # Ignore bot's own reactions
+                    user_ids.append(user.id)
+
+            # Assign the list of user IDs to the reaction type
+            reactions_data[str(reaction.emoji)] = user_ids
+
+        return reactions_data
+    except discord.NotFound:
+        print("Message not found.")
+    except discord.Forbidden:
+        print("Missing permissions to read this message.")
+    except discord.HTTPException as e:
+        print(f"HTTP exception: {e}")
+        return {}
 
 

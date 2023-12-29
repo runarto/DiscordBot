@@ -1,0 +1,6 @@
+python-dateutil
+discord.py
+APScheduler
+pytz
+requests
+
