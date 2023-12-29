@@ -2,6 +2,8 @@ from importFile import *
 
 
 def run_bot():
+
+    on_ready()
     client.run(perms.TOKEN)
 
 async def main_bot():
@@ -14,7 +16,7 @@ async def main_bot():
     #scheduler.add_job(update_jobs, 'cron', day_of_week='wed', hour=update_hour, minute=update_minute, args=[scheduler], name='update_jobs')
     #scheduler.add_job(send_leaderboard_message, 'cron', day_of_week='wed', hour = hour_leaderboard, minute=minute_leaderbaord, name='test_run')
     #scheduler.add_job(send_scheduled_matches, 'cron', day_of_week='wed', hour= update_hour, minute=update_minute+2, timezone=perms.timezone, name='send_scheduled_matches')
-    scheduler.start()
+    
 
     await client.start(perms.TOKEN)
 

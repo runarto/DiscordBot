@@ -67,6 +67,7 @@ async def send_ukens_kupong(ctx, days: Option(int, "Enter the number of days")):
             file_functions.write_file(logic.tracked_messages, data) #Lagrer meldinger i en JSON. 
             date_start, hour_start, minute_start, messages_id = get_day_hour_minute(days)
             update_jobs(date_start, hour_start, minute_start, messages_id)
+            scheduler.start()
         
         else:
             print(f"Could not find channel with ID {channel_id}")
