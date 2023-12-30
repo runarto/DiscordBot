@@ -1,43 +1,8 @@
-from importFile import *
+from perms import API_TOKEN
+import requests
+from datetime import datetime, timedelta
+import pytz
 
-
-emoji_dictionary = {
-    "Bodo/Glimt": "<:Glimt:1039831920978169857>",
-    "Ham-Kam": "<:Hamkam:1039832337032163358>",
-    "Aston Villa": ":brannbad:819294515755745281:",
-    "Rosenborg": "<:Rosenborg:1059898578883051561>",
-    "Lillestrom": "<:Lillestroem:1039835160125902908>",
-    "Tromso": "<:Tromsoe:1039842401025527868>",
-    "Viking": "<:Viking:1039842907894599760>",
-    "Valerenga": "<:Vaalerenga:1039843306043080735>",
-    "Sandefjord": "<:Sandefjord:1039840813544378418>",
-    "Stromsgodset": "<:Stroemsgodset:1039841950079143937>",
-    "ODD Ballklubb": "<:Odd:1039839692373368872>",
-    "Molde": "<:Molde:1039836329502052444>",
-    "Stabaek": "<:Stabaek:1039844256304595014>",
-    "Sarpsborg 08 FF": "<:Sarpsborg:1039841407134867516>",
-    "Haugesund": "<:Haugesund:1039832977158443058>",
-    "Aalesund": "<:Aalesund:1039831454353457254>"
-}
-
-emoji_list = [
-    "<:Glimt:1039831920978169857>",
-    "<:Hamkam:1039832337032163358>",
-    "<:Brann:1039844066487185429>",
-    "<:Rosenborg:1059898578883051561>",
-    "<:Lillestroem:1039835160125902908>",
-    "<:Tromsoe:1039842401025527868>",
-    "<:Viking:1039842907894599760>",
-    "<:Vaalerenga:1039843306043080735>",
-    "<:Sandefjord:1039840813544378418>",
-    "<:Stroemsgodset:1039841950079143937>",
-    "<:Odd:1039839692373368872>",
-    "<:Molde:1039836329502052444>",
-    "<:Stabaek:1039844256304595014>",
-    "<:Sarpsborg:1039841407134867516>",
-    "<:Haugesund:1039832977158443058>",
-    "<:Aalesund:1039831454353457254>"
-]
 
 user_scores = "user_scores.json"
 tracked_messages = "match_messages.json"
@@ -48,9 +13,9 @@ output_predictions_file = 'output_predictions.json'
 #Returnerer hvilken runde det er. Overflødig funksjon. 
 
 def get_round():
-    api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds"
+    api_url = "https://v3.football.api-sports.io/fixtures/rounds"
     headers = {
-        "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        "x-rapidapi-host": "v3.football.api-sports.io",
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_round = {
@@ -78,9 +43,9 @@ def get_matches(x_days):
 
     #Hver gang get_matches() kjører henter vi inn kamper som er fra denne dagen, og 7 dager frem i tid
 
-    api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+    api_url = "https://v3.football.api-sports.io/fixtures"
     headers = {
-        "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        "x-rapidapi-host": "v3.football.api-sports.io",
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
@@ -120,9 +85,9 @@ def get_match_results(x_days):
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
 
 
-    api_url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+    api_url = "https://v3.football.api-sports.io/fixtures"
     headers = {
-        "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        "x-rapidapi-host": "v3.football.api-sports.io",
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     params = {
@@ -212,18 +177,8 @@ def print_match_table(match_list):
         print(row)
 
 
-def check_time(reaction):
-    message_content = reaction.message.content
-    datetime_str = message_content.split('\n')[0].strip()
-    
-    # Parse the datetime string into a datetime object
-    match_start = parser.isoparse(datetime_str)
 
-    # Check if current time is before the match start time
-    if datetime.datetime.now(datetime.timezone.utc) < match_start:
-        return True
-    else:
-        return False
+
 
 
 
