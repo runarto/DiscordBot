@@ -135,22 +135,22 @@ async def send_ukens_kupong(interaction: discord.Interaction, days: int, channel
 
 
 
-@bot.tree.command(name = "total_ledertavle",  description="Vis totale resultater")
+@bot.tree.command(name="total_ledertavle", description="Vis totale resultater")
 async def total_leaderboard(interaction: discord.Interaction):
-
     await interaction.response.defer(ephemeral=True)
 
     if interaction.guild_id != perms.guild_id:
         await interaction.followup.send("Denne kommandoen kan kun brukes i en spesifikk server", ephemeral=True)
         return
+
     # Sort user scores by points (descending order)
     scores = file_functions.read_file(logic.user_scores)
-    
+
     if isinstance(scores, dict):
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     else:
         print("scores is not a dictionary:", type(scores), scores)
-        return 
+        return
         # Handle the error or convert 'scores' to a dictionary
 
     # Format the leaderboard message
@@ -160,7 +160,10 @@ async def total_leaderboard(interaction: discord.Interaction):
 
     # Send the leaderboard message to the Discord channel
     await interaction.response.send_message(leaderboard_message, ephemeral=True)
-    await interaction.followup.send("Task completed!", ephemeral=True)
+
+# Remove the following line that sends a follow-up response:
+# await interaction.followup.send("Task completed!", ephemeral=True)
+
 
 
 @bot.tree.command(name = "ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
