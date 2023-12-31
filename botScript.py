@@ -53,7 +53,7 @@ async def on_reaction_add(reaction, user):
             if (await user_already_reacted(reaction, user)):
                 return
             else:
-                file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, message_id)
+                file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(message_id))
                 print(f"Reaction added by {user.name}: {reaction.emoji} from message {reaction.message.content}")
         else:
             return
@@ -65,7 +65,7 @@ async def on_reaction_remove(reaction, user):
         if user == bot.user:
             return
         if (reaction.message.author == bot.user) and (reaction.message.channel.id == channel_id):
-            file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, reaction.message.id)
+            file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, str(reaction.message.id))
             print(f"Reaction removed by {user.name}: {reaction.emoji} from message {reaction.message.content}")
     except Exception as e:
         print(f"Error in on_reaction_remove: {e}")
@@ -77,9 +77,9 @@ async def user_already_reacted(reaction, user):
             async for users in reactions.users():
                 if users == user:
                     # Remove the previous reaction data
-                    file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name,reaction.message.id)
+                    file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name, str(reaction.message.id))
                     # Save the new reaction data
-                    file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, reaction.message.id)
+                    file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(reaction.message.id))
                     # Remove the user's previous reaction
                     await reactions.remove(user)
                     return True
@@ -90,8 +90,8 @@ async def user_already_reacted(reaction, user):
 @commands.has_permissions(manage_messages=True)  # Ensure only authorized users use this command
 async def send_message(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
     try:
-        await channel.send(message)
-        await interaction.response.send_message(f"Melding sent til {channel.name}.")
+        await channel.sendf(message)
+        await interaction.response.send_message(f"Melding sent til {channel.name}.", ephemeral=True)
     except discord.Forbidden:
         await interaction.response.send_message("Jeg har ikke tilgang til å sende melding i denne kanalen.", ephemeral=True)
     except Exception as e:
@@ -111,7 +111,7 @@ async def send_ukens_kupong(interaction: discord.Interaction, days: int, channel
         for fixture in fixtures:
             message_content = f"{fixture['home_team']} vs {fixture['away_team']}"
             message = await channel.send(message_content)
-            data.append((message.id, fixture['match_id']))  # Store message ID and match ID
+            data.append((str(message.id), fixture['match_id']))  # Store message ID and match ID
 
             # Adding reactions to the message
             for reaction in ('🏠', '🏳️', '✈️'):
@@ -168,12 +168,12 @@ async def total_leaderboard(interaction: discord.Interaction):
 
 @bot.tree.command(name = "ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
 @commands.has_permissions(manage_messages=True)
-async def send_leaderboard_message(interaction: discord.Interaction, days: int):
+async def send_leaderboard_message(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     if (interaction.channel_id == channel_id):
         await interaction.followup("Denne kommandoen kan kun brukes i tippekupongen.")
     try:
-        message = leaderboard.format_leaderboard_message(days)
+        message = leaderboard.format_leaderboard_message()
         if message and message.strip():
             await interaction.response.send_message(message)
             await interaction.followup.send("Melding sent, og filer tømt. Nå kan du sende ukens kupong.", ephemeral=True)

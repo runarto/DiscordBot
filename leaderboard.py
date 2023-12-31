@@ -16,76 +16,63 @@ intents.message_content = True
 scheduler = AsyncIOScheduler()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-def update_user_scores(days):
+async def update_user_scores():
     try:
-        counter = 0; 
+        
         predictions = file_functions.read_file(logic.output_predictions_file) #{message_id, [data]}
 
         if not predictions:
             return {}, [], 0
 
-        sorted_predictions = {}
 
         # Sort the order_tuple based on match_id
-        order_tuple = file_functions.read_file(logic.tracked_messages)
-        order_tuple.sort(key=lambda x: x[1])
+        order_tuple = file_functions.read_file(logic.tracked_messages) #[message-id, match-id]
+        message_match_dict = dict(order_tuple)
 
-        # Iterate through the sorted order_tuple and populate the sorted_data dictionary
-        for message_content_id, _ in order_tuple:
-            if message_content_id in predictions:
-                sorted_predictions[message_content_id] = predictions[message_content_id]
-    
+
         
-        actual_results = logic.get_match_results(days) 
-        actual_result = actual_results.keys()
-        num_of_games = len(actual_results)
-        
+        num_of_games = 0
         user_scores = file_functions.read_file(logic.user_scores) #Total poengsum all-time
-
-        if len(actual_results) != len(predictions):
-            # If they don't have the same size, remove elements from predictions
-            keys_to_remove = [key for key in predictions if key not in actual_results]
-            for key in keys_to_remove:
-                del predictions[key]
-
-
-
         this_week_user_score = []  #Ukens poeng
 
         for message_id, user_predictions in predictions.items():
-            actual_result = actual_result[counter]
-            for prediction in user_predictions:
-                user_id = prediction['user_id']
-                user_display_name = prediction['user_nick']
-                user_prediction = prediction['reaction']
+            match_id = message_match_dict.get(message_id)
+            actual_result = await logic.get_match_results(match_id)
 
-        # Initialize score for each user if not already present
-                if user_display_name not in user_scores:
-                    user_scores[user_display_name] = 0
+            if (actual_result != "No result"):
+                num_of_games+=1
 
-        # Rest of your scoring logic
-                #Inneholder sortert liste med True, False, None 
-                actual_result = "🏠" if actual_result is True else ("✈️" if actual_result is False else "🏳️")
-                predicted_result = user_prediction
+                for prediction in user_predictions:
+                    user_id = prediction['user_id']
+                    user_display_name = prediction['user_nick']
+                    user_prediction = prediction['reaction']
 
-                user_score_entry = next((item for item in this_week_user_score if item['user_id'] == user_id), None)
-                if not user_score_entry:
-                    user_score_entry = {'user_id': user_id, 'points': 0, 'user_nick': user_display_name}
-                    this_week_user_score.append(user_score_entry)
+            # Initialize score for each user if not already present
+                    if user_display_name not in user_scores:
+                        user_scores[user_display_name] = 0
+
+            # Rest of your scoring logic
+                    #Inneholder sortert liste med True, False, None 
+                    actual_result = "🏠" if actual_result is True else ("✈️" if actual_result is False else "🏳️")
+                    predicted_result = user_prediction
+
+                    user_score_entry = next((item for item in this_week_user_score if item['user_id'] == user_id), None)
+                    if not user_score_entry:
+                        user_score_entry = {'user_id': user_id, 'points': 0, 'user_nick': user_display_name}
+                        this_week_user_score.append(user_score_entry)
 
 
-                if predicted_result == actual_result:
-                    user_scores[user_display_name] += 1
-                    user_score_entry['points'] += 1
+                    if predicted_result == actual_result:
+                        user_scores[user_display_name] += 1
+                        user_score_entry['points'] += 1
 
-            counter+= 1
-        
         return user_scores, this_week_user_score, num_of_games
 
     except (FileNotFoundError, KeyError, TypeError) as e:
         print(f"An error occurred: {e}")
         # Return empty data or handle the error as needed
         return {}, [], 0
+    
 
 
 
@@ -111,8 +98,8 @@ def sort_user_scores(user_scores):
     return  
 
 
-def format_leaderboard_message(days):
-    user_scores, this_week_user_scores, num_of_games = update_user_scores(days)
+def format_leaderboard_message():
+    user_scores, this_week_user_scores, num_of_games = update_user_scores()
     
     if not user_scores or not this_week_user_scores:
         return
@@ -164,6 +151,7 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
 
     :param message_id: ID of the message to compare reactions for.
     """
+    message_id = str(message_id)
     try:
         # Load reaction data from the JSON file
         with open(logic.predictions_file, 'r') as file:
@@ -183,16 +171,18 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
 
         # Dictionary to track reactions for each user
         user_reactions = {}
+        
         for reaction_type, user_ids in current_reactions.items():
             for user_id in user_ids:
                 if user_id:
                     user_reactions.setdefault(user_id, []).append(reaction_type)
+        
 
         # List to hold the updated reaction data for this message
         updated_reactions_list = []
 
         # Check if the specific message_id is in the stored reactions
-        if str(message_id) not in stored_reactions.keys():
+        if message_id not in stored_reactions.keys():
             print(f"No stored reactions found for message ID {message_id}")
             for user_id, reaction_types in user_reactions.items():
                 user = await bot.fetch_user(int(user_id.strip('<@!>')))
@@ -214,7 +204,7 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
 
             
             
-            outputData[str(message_id)] = updated_reactions_list
+            outputData[message_id] = updated_reactions_list
             file_functions.write_file(logic.output_predictions_file, outputData)
             return
 
@@ -237,6 +227,13 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
                         "reaction": current_user_reactions[0]
                     })
                     print("Case 1")
+                elif len(current_user_reactions) == 1 and current_user_reactions[0] == stored_reaction_type:
+                    updated_reactions_list.append({
+                        "user_id": stored_user_id, 
+                        "user_nick": stored_user_data["user_nick"], 
+                        "reaction": current_user_reactions[0]
+                    })
+                    print("Case 1.1")
                 elif len(current_user_reactions) == 2:
                     if stored_reaction_type in current_user_reactions:
                         new_reaction = next(reaction for reaction in current_user_reactions if reaction != stored_reaction_type)
@@ -261,10 +258,11 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
                     })
                     print("Case 3")
 
-        # Save the updated reactions list for the specific message
-            outputData[str(message_id)] = updated_reactions_list
-            print(outputData)
-            file_functions.write_file(logic.output_predictions_file, outputData)
+            if str(message_id) in outputData:
+                del outputData[str(message_id)]
+            
+            outputData[message_id] = updated_reactions_list
+
             return
 
     except discord.NotFound:

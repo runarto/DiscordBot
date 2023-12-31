@@ -77,13 +77,7 @@ def get_matches(x_days):
 
 #Returnerer resultater for kamper de siste sju dagene. 
 
-def get_match_results(x_days):
-
-    today_date = datetime.now().strftime("%Y-%m-%d")
-
-    new_date = datetime.now() + timedelta(days=x_days)
-    formatted_new_date = new_date.strftime("%Y-%m-%d")  
-
+async def get_match_results(match_id):
 
     api_url = "https://v3.football.api-sports.io/fixtures"
     headers = {
@@ -91,35 +85,30 @@ def get_match_results(x_days):
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     params = {
-        'league': 39,
-        'season': 2023,
-        'from': formatted_new_date,
-        'to': today_date,
-        'status': 'FT' 
+        'id': match_id,
     }
 
     response = requests.get(api_url, headers=headers, params=params)
     data = response.json()
 
-    results = {}
     for fixture in data['response']:
-        home_win = fixture['teams']['home']['winner']
+        if fixture['status']['status']['short'] == 'FT':
+            home_win = fixture['teams']['home']['winner']
 
-        if home_win is True:
-            result = True  # Home win
-        elif home_win is False:
-            result = False  # Away win
+            if home_win is True:
+                result = True  # Home win
+            elif home_win is False:
+                result = False  # Away win
+            else:
+                result = None  # Draw or data not available
+        elif fixture['status']['status']['short'] in ['CANC', 'ABD', 'PST', 'TBD']:
+            return "Game not started"
         else:
-            result = None  # Draw or data not available
+            return "No result"
 
         #message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
 
-        results[fixture['id']] = result
-
-        
-
-    return dict(sorted(results.items())) #Returnerer en sortert dictionary, etter match_id
-
+    return result
 
 
 #Overflødig. 

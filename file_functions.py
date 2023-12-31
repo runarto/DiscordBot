@@ -3,6 +3,7 @@ import json
 import os
 
 def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
+    message_content = str(message_content)
     try:
         # Load existing data
         data = read_file(logic.predictions_file)
@@ -28,7 +29,8 @@ def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
         print("Message content not found in data.")
 
 
-def save_reaction_data(reaction_type, user_id, user_nick, message_content):
+def save_reaction_data(reaction_type, user_id, user_nick, message_id):
+    message_id = str(message_id)
     
     # Structure to hold the new reaction data
     new_reaction_data = {
@@ -45,15 +47,17 @@ def save_reaction_data(reaction_type, user_id, user_nick, message_content):
         data = {}
 
     # Check if the message content is already a key in the data
-    if message_content in data:
-        # Append new reaction data to the existing list for this message
-        data[message_content].append(new_reaction_data)
-    else:
-        # Otherwise, create a new entry for this message
-        data[message_content] = [new_reaction_data]
+    if message_id not in data:
+        data[message_id] = []
+
+    # Now it's safe to append new_reaction_data
+    data[message_id].append(new_reaction_data)
 
     # Save the updated data
     write_file(logic.predictions_file, data)
+
+
+
 
 
 
@@ -121,3 +125,8 @@ def read_file(file_path):
 def write_file(file_path, data):
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
+
+
+
+
+
