@@ -18,7 +18,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 def update_user_scores(days):
     try:
+        counter = 0; 
         predictions = file_functions.read_file(logic.output_predictions_file) #{message_id, [data]}
+
+        if not predictions:
+            return {}, [], 0
 
         sorted_predictions = {}
 
@@ -30,11 +34,10 @@ def update_user_scores(days):
         for message_content_id, _ in order_tuple:
             if message_content_id in predictions:
                 sorted_predictions[message_content_id] = predictions[message_content_id]
-        
-        if not predictions:
-            return {}, [], 0
+    
         
         actual_results = logic.get_match_results(days) 
+        actual_result = actual_results.keys()
         num_of_games = len(actual_results)
         
         user_scores = file_functions.read_file(logic.user_scores) #Total poengsum all-time
@@ -50,6 +53,7 @@ def update_user_scores(days):
         this_week_user_score = []  #Ukens poeng
 
         for message_id, user_predictions in predictions.items():
+            actual_result = actual_result[counter]
             for prediction in user_predictions:
                 user_id = prediction['user_id']
                 user_display_name = prediction['user_nick']
@@ -60,7 +64,7 @@ def update_user_scores(days):
                     user_scores[user_display_name] = 0
 
         # Rest of your scoring logic
-                actual_result = actual_results.keys()
+                #Inneholder sortert liste med True, False, None 
                 actual_result = "🏠" if actual_result is True else ("✈️" if actual_result is False else "🏳️")
                 predicted_result = user_prediction
 
@@ -73,6 +77,8 @@ def update_user_scores(days):
                 if predicted_result == actual_result:
                     user_scores[user_display_name] += 1
                     user_score_entry['points'] += 1
+
+            counter+= 1
         
         return user_scores, this_week_user_score, num_of_games
 
@@ -139,20 +145,17 @@ def format_leaderboard_message(days):
 
 @bot.event
 async def send_leaderboard_message(days):
-    while True:
-        message = format_leaderboard_message(days)
-        if message:
-            channel = bot.get_channel(perms.CHANNEL_ID)
-            if channel:  # Check if channel is found
-                await channel.send(message)
-                return
-            else:
-                print(f"Could not find channel with ID {perms.CHANNEL_ID}")
+    message = format_leaderboard_message(days)
+    if message:
+        channel = bot.get_channel(perms.CHANNEL_ID)
+        if channel:  # Check if channel is found
+            await channel.send(message)
+            return
         else:
-            print("No message to send.")
+            print(f"Could not find channel with ID {perms.CHANNEL_ID}")
+    else:
+        print("No message to send.")
 
-        # Wait for 180 seconds (3 minutes) before checking again
-        await asyncio.sleep(180)
 
 
 async def compare_and_update_reaction_for_message(message_id, channel, bot):
@@ -165,30 +168,34 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
         # Load reaction data from the JSON file
         with open(logic.predictions_file, 'r') as file:
             stored_reactions = json.load(file)
-
+        
+        with open(logic.output_predictions_file, 'r') as file:
+            if file.read(1):
+                file.seek(0)  # Reset file read position
+                outputData = json.load(file)
+            else:
+                outputData = {}  # Initialize as empty dictionary if file is empty
+        print(outputData)
 
 
         # Fetch the current reactions from Discord for this message ID
         current_reactions = await fetch_current_reactions(message_id, channel, bot)
-        print("Reactions fetched")
 
         # Dictionary to track reactions for each user
         user_reactions = {}
         for reaction_type, user_ids in current_reactions.items():
-            print(reaction_type)
             for user_id in user_ids:
                 if user_id:
                     user_reactions.setdefault(user_id, []).append(reaction_type)
-                    print(user_id)
 
         # List to hold the updated reaction data for this message
         updated_reactions_list = []
 
         # Check if the specific message_id is in the stored reactions
-        if message_id not in stored_reactions:
+        if str(message_id) not in stored_reactions.keys():
             print(f"No stored reactions found for message ID {message_id}")
             for user_id, reaction_types in user_reactions.items():
-                user = await bot.fetch_user(user_id)
+                user = await bot.fetch_user(int(user_id.strip('<@!>')))
                 user_nick = user.display_name  # Fetch the display name of the user
 
                 # Check if the user has used one or more reactions
@@ -206,20 +213,21 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
                     })
 
             
-            outputData = {}
-            outputData[message_id] = updated_reactions_list
+            
+            outputData[str(message_id)] = updated_reactions_list
             file_functions.write_file(logic.output_predictions_file, outputData)
             return
 
 
         # Process reactions for each user in the stored reactions
-        print("I am become death")
-        if stored_reactions:
-            for stored_user_data in stored_reactions[message_id]:
+        else:
+            print("I am become death")
+            for stored_user_data in stored_reactions[str(message_id)]:
                 stored_user_id = stored_user_data['user_id']
-                stored_reaction_type = stored_user_data['reaction_type']
+                stored_reaction_type = stored_user_data['reaction']
                 current_user_reactions = user_reactions.get(stored_user_id, [])
                 print(current_user_reactions, "Here")
+                print(stored_reaction_type,"stored reaction")
 
                 # Apply logic based on the number of current reactions for the user
                 if len(current_user_reactions) == 1 and current_user_reactions[0] != stored_reaction_type:
@@ -228,6 +236,7 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
                         "user_nick": stored_user_data["user_nick"], 
                         "reaction": current_user_reactions[0]
                     })
+                    print("Case 1")
                 elif len(current_user_reactions) == 2:
                     if stored_reaction_type in current_user_reactions:
                         new_reaction = next(reaction for reaction in current_user_reactions if reaction != stored_reaction_type)
@@ -236,23 +245,27 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
                             "user_nick": stored_user_data["user_nick"], 
                             "reaction": new_reaction
                         })
+                        print("Case 2")
                     else:
                         updated_reactions_list.append({
                             "user_id": stored_user_id, 
                             "user_nick": stored_user_data["user_nick"], 
                             "reaction": '🏠'
                         })
+                        print("Case 2.1")
                 elif len(current_user_reactions) >= 3:
                     updated_reactions_list.append({
                         "user_id": stored_user_id, 
                         "user_nick": stored_user_data["user_nick"], 
                         "reaction": '🏠'
                     })
+                    print("Case 3")
 
         # Save the updated reactions list for the specific message
-        outputData = {}
-        outputData[message_id] = updated_reactions_list
-        file_functions.write_file(logic.output_predictions_file, outputData)
+            outputData[str(message_id)] = updated_reactions_list
+            print(outputData)
+            file_functions.write_file(logic.output_predictions_file, outputData)
+            return
 
     except discord.NotFound:
         print("Message or channel not found.")
@@ -311,7 +324,7 @@ async def fetch_current_reactions(message_id, channel, bot):
                 # Check if the user is not the bot
                 if user.id != bot.user.id:
                     # Add the user's ID to the list
-                    user_ids.append(user.id)
+                    user_ids.append(user.mention)
                     print(f"Added user ID: {user.id} for reaction: {reaction.emoji}")
                 else:
                     print(f"Skipping bot's own reaction: {reaction.emoji}")

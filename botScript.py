@@ -27,8 +27,16 @@ timezone = pytz.timezone('Europe/Oslo')
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
+    scheduler.start()
+    await bot.tree.sync()  # Synchronizing slash commands with Discord
     print(f'Logged in as {bot.user}')
+
+    # Debugging: List all commands in the command tree
+    print("Registered Commands:")
+    for command in bot.tree.get_commands():
+        print(f"- {command.name} (Type: {'Slash Command' if isinstance(command, discord.app_commands.Command) else 'Text Command'})")
+
+
 
 
 @bot.event
@@ -78,63 +86,49 @@ async def user_already_reacted(reaction, user):
     return False  # Return False if no previous reaction was found
 
 
+@bot.tree.command(name='sendmsg', description='Sender melding til en kanal av ditt valg')
+@commands.has_permissions(manage_messages=True)  # Ensure only authorized users use this command
+async def send_message(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
+    try:
+        await channel.send(message)
+        await interaction.response.send_message(f"Melding sent til {channel.name}.")
+    except discord.Forbidden:
+        await interaction.response.send_message("Jeg har ikke tilgang til å sende melding i denne kanalen.", ephemeral=True)
+    except Exception as e:
+        await interaction.response.send_message(f"An error occurred: {e}", ephemeral=True)
+
 @bot.tree.command(name='ukens_kupong', description='Send ukens kupong for de neste dagene')
 @commands.has_permissions(manage_messages=True)
-async def send_ukens_kupong(interaction: discord.Interaction, days: int):
-    await interaction.response.defer()
+async def send_ukens_kupong(interaction: discord.Interaction, days: int, channel: discord.TextChannel):
+    await interaction.response.defer(ephemeral=True)
+
     try:
-        # Check if the command is being used in the allowed channel
-        if interaction.channel_id != channel_id:
-            await interaction.followup.send("Denne kommandoen kan kun brukes i tippekupongen.", ephemeral=True)
-            return
+        await channel.send("Ukens kupong:")
 
-        print(f"Fetching channel with ID {channel_id}...")
-        channel = bot.get_channel(channel_id)
-        if channel:
+        fixtures = logic.get_matches(days)  # Fetch matches for the next x days
+        data = []
 
-            print(f"Fetching fixtures for the next {days} days...")
-            fixtures = logic.get_matches(days)  # Fetch matches for the next x days
-            print("Fixtures fetched.")
+        for fixture in fixtures:
+            message_content = f"{fixture['home_team']} vs {fixture['away_team']}"
+            message = await channel.send(message_content)
+            data.append((message.id, fixture['match_id']))  # Store message ID and match ID
 
-            data = []
-            
-            for fixture in fixtures:
-                print(f"Processing fixture: {fixture}")
-                message_content = f"{fixture['home_team']} vs {fixture['away_team']}"
+            # Adding reactions to the message
+            for reaction in ('🏠', '🏳️', '✈️'):
+                await message.add_reaction(reaction)
 
-                print(f"Sending message: {message_content}")
-                message = await channel.send(message_content)
-                data.append((message.id, fixture['match_id'])) #Lagrer melding-id og kamp-id
+        # Writing tracked messages to file
+        file_functions.write_file(logic.tracked_messages, data)
 
-                print("Adding reactions to the message...")
-                await message.add_reaction('🏠')
-                await message.add_reaction('🏳️')
-                await message.add_reaction('✈️')
-
-            print("Writing tracked messages to file...")
-            file_functions.write_file(logic.tracked_messages, data)
-
-            date_start, hour_start, minute_start, messages_id = get_day_hour_minute(days)
-            print(f"Scheduling jobs... Start: {date_start}, Hour: {hour_start}, Minute: {minute_start}")
-            await update_jobs(date_start, hour_start, minute_start, messages_id, channel)
-            scheduler.start()
-            print("Scheduler started.")
-            jobs = scheduler.get_jobs()
-            print("Scheduled Jobs:")
-            for job in jobs:
-                print(f"Job ID: {job.id}")
-                print(f"Next Run Time: {job.next_run_time}")
-                print(f"Job Function: {job.func_ref}")
-                print("-" * 20)
-            await interaction.followup.send("Task completed!", ephemeral=True)
-        else:
-            print(f"Could not find channel with ID {channel_id}")
+        date_start, hour_start, minute_start, messages_id = get_day_hour_minute(days)
+        await update_jobs(date_start, hour_start, minute_start, messages_id, channel)
+        await interaction.followup.send("Kupong sendt!")
+        return
 
     except discord.errors.Forbidden:
-        print(f"Missing permissions to send message in channel {channel_id}")
+        await interaction.followup.send(f"Missing permissions to send message in channel {channel.name}", ephemeral=True)
     except Exception as e:
         await interaction.followup.send(f"An error occurred: {e}. Ta kontakt med Runar (trunar)", ephemeral=True)
-        # Optionally, log the stack trace for more detailed error information
         traceback.print_exc()
 
 
@@ -144,7 +138,7 @@ async def send_ukens_kupong(interaction: discord.Interaction, days: int):
 @bot.tree.command(name = "total_ledertavle",  description="Vis totale resultater")
 async def total_leaderboard(interaction: discord.Interaction):
 
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
 
     if interaction.guild_id != perms.guild_id:
         await interaction.followup.send("Denne kommandoen kan kun brukes i en spesifikk server", ephemeral=True)
@@ -169,10 +163,12 @@ async def total_leaderboard(interaction: discord.Interaction):
     await interaction.followup.send("Task completed!", ephemeral=True)
 
 
-@bot.tree.command(name = "ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Dette tømmer også json filene -- kall denne FØR ukens kupong")
+@bot.tree.command(name = "ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
 @commands.has_permissions(manage_messages=True)
 async def send_leaderboard_message(interaction: discord.Interaction, days: int):
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
+    if (interaction.channel_id == channel_id):
+        await interaction.followup("Denne kommandoen kan kun brukes i tippekupongen.")
     try:
         message = leaderboard.format_leaderboard_message(days)
         if message and message.strip():
@@ -182,7 +178,7 @@ async def send_leaderboard_message(interaction: discord.Interaction, days: int):
             file_functions.write_file(logic.predictions_file, {})
             file_functions.write_file(logic.output_predictions_file, {}) #Tømmer fila. 
         else:
-            await interaction.followup.send("Det er ikke noe data å hente ut de siste dagene.", ephemeral=True)
+            await interaction.followup.send("Det har ikke vært noen kamper de siste dagene, eller så er det ikke data å hente ut. Prøv igjen senere.", ephemeral=True)
             await interaction.followup.send("Task completed!", ephemeral=True)
     except discord.errors.Forbidden:
         await interaction.followup.send("Du kanke bruke denne kommandoen tjommi.", ephemeral=True)
@@ -199,8 +195,7 @@ async def send_leaderboard_message(interaction: discord.Interaction, days: int):
 @commands.has_permissions(manage_messages=True)
 async def find_message_by_content(interaction: discord.Interaction, content: str):
     channel = await bot.fetch_channel(channel_id)
-    channel.send("Ukens kupong:")
-    await interaction.response.defer()
+    await interaction.response.defer(ephemeral=True)
     message_data = file_functions.read_file(logic.tracked_messages)  # List of (message_id, match_id)
     found = False
 
@@ -229,6 +224,17 @@ async def find_message_by_content(interaction: discord.Interaction, content: str
 
     if not found:
         await interaction.followup.send("Fant ikke den aktuelle kampen", ephemeral=True)
+
+
+
+@bot.tree.command(name='clear_cache', description='Tømmer json-filer')
+@commands.has_permissions(manage_messages=True)
+async def clear_cache(interaction: discord.Integration):
+    await interaction.response.defer(ephemeral=True)
+    file_functions.write_file(logic.predictions_file, {})
+    file_functions.write_file(logic.output_predictions_file, {})
+    file_functions.write_file(logic.tracked_messages, [])
+    await interaction.followup.send("Cache tømt", ephemeral=True)
 
 
 def get_day_hour_minute(days):
