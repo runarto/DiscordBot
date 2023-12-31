@@ -149,9 +149,8 @@ async def total_leaderboard(interaction: discord.Interaction):
     if isinstance(scores, dict):
         sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
     else:
-        print("scores is not a dictionary:", type(scores), scores)
+        await interaction.followup.send("Det oppsto en feil med å hente poengene.", ephemeral=True)
         return
-        # Handle the error or convert 'scores' to a dictionary
 
     # Format the leaderboard message
     leaderboard_message = "Tippekupongen 2024:\n"
@@ -159,10 +158,11 @@ async def total_leaderboard(interaction: discord.Interaction):
         leaderboard_message += f"{rank}. {user}: {score} poeng\n"
 
     # Send the leaderboard message to the Discord channel
-    await interaction.response.send_message(leaderboard_message, ephemeral=True)
+    if leaderboard_message == "Tippekupongen 2024:\n":
+        await interaction.followup.send("Vær litt tålmodig da, det ekke registrert poeng enda.")
+    else:
+        await interaction.followup.send(leaderboard_message, ephemeral=True)
 
-# Remove the following line that sends a follow-up response:
-# await interaction.followup.send("Task completed!", ephemeral=True)
 
 
 
