@@ -4,30 +4,35 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logic
 import file_functions
 import perms
-import asyncio
 import json
-import traceback
+
+
+#TODO: Fikse format for user_scores til username: [poeng, antall_ukens_beste]
+#TODO: Finne ut av hvordan man kan fetche rollen til en bruker på en effektiv måte.
+#TODO: Oppdater compare_and_update... slik at den samstemmer med det nye emoji-formatet
 
 channel_id = perms.CHANNEL_ID #Kanalen hvor kupongen sendes
-intents = discord.Intents.default()
-intents.members = True
-intents.reactions = True
-intents.message_content = True
-scheduler = AsyncIOScheduler()
-bot = commands.Bot(command_prefix="!", intents=intents)
+import traceback
+
 
 async def update_user_scores():
     try:
+
+        all_users = file_functions.read_file(logic.all_users)
         
         predictions = file_functions.read_file(logic.output_predictions_file) #{message_id, [data]}
+        print("predictions fetched\n")
 
         if not predictions:
             return {}, [], 0
 
+        team_emojis = file_functions.read_file(logic.team_emojis_file)
+        print("emojis fetched\n")
 
         # Sort the order_tuple based on match_id
         order_tuple = file_functions.read_file(logic.tracked_messages) #[message-id, match-id]
-        message_match_dict = dict(order_tuple)
+        message_match_dict = dict(order_tuple) #message_match_dict[message_id] = match_id
+        print("message-match\n")
 
 
         
@@ -37,7 +42,21 @@ async def update_user_scores():
 
         for message_id, user_predictions in predictions.items():
             match_id = message_match_dict.get(message_id)
-            actual_result = await logic.get_match_results(match_id)
+            print(f"{match_id}\n")
+            
+            actual_result, home_team, away_team = await logic.get_match_results(match_id)
+            actual_result = None
+            print(f"{actual_result}\n")
+            home_team_emoji = team_emojis.get(home_team)
+            away_team_emoji = team_emojis.get(away_team)
+
+            if home_team_emoji is None:
+                home_team_emoji = "🏠"
+            if away_team_emoji is None:
+                away_team_emoji = "✈️"
+
+            actual_result = home_team_emoji if actual_result is True else (away_team_emoji if actual_result is False else "\U0001F1FA")
+
 
             if (actual_result != "No result"):
                 num_of_games+=1
@@ -47,14 +66,17 @@ async def update_user_scores():
                     user_display_name = prediction['user_nick']
                     user_prediction = prediction['reaction']
 
+                    if user_display_name not in all_users:
+                        all_users[user_display_name] = user_id.strip('<@!>')
+
+                    print(user_display_name)
+                    print(user_prediction)
+
             # Initialize score for each user if not already present
                     if user_display_name not in user_scores:
                         user_scores[user_display_name] = 0
 
             # Rest of your scoring logic
-                    #Inneholder sortert liste med True, False, None 
-                    actual_result = "🏠" if actual_result is True else ("✈️" if actual_result is False else "🏳️")
-                    predicted_result = user_prediction
 
                     user_score_entry = next((item for item in this_week_user_score if item['user_id'] == user_id), None)
                     if not user_score_entry:
@@ -62,14 +84,20 @@ async def update_user_scores():
                         this_week_user_score.append(user_score_entry)
 
 
-                    if predicted_result == actual_result:
+                    if user_prediction == actual_result:
                         user_scores[user_display_name] += 1
                         user_score_entry['points'] += 1
+
+        print(this_week_user_score)
+
+        file_functions.write_file(logic.all_users, all_users)
 
         return user_scores, this_week_user_score, num_of_games
 
     except (FileNotFoundError, KeyError, TypeError) as e:
         print(f"An error occurred: {e}")
+        traceback.print_exc()
+
         # Return empty data or handle the error as needed
         return {}, [], 0
     
@@ -98,8 +126,15 @@ def sort_user_scores(user_scores):
     return  
 
 
-def format_leaderboard_message():
-    user_scores, this_week_user_scores, num_of_games = update_user_scores()
+async def format_leaderboard_message(guild):
+    
+    user_scores, this_week_user_scores, num_of_games = await update_user_scores()
+    print("scores fetched\n")
+
+    username_to_id = file_functions.read_file(logic.all_users)
+    print(username_to_id)
+
+    team_emojis = file_functions.read_file(logic.team_emojis_file)
     
     if not user_scores or not this_week_user_scores:
         return
@@ -108,40 +143,51 @@ def format_leaderboard_message():
 
     if this_week_user_scores:
         sorted_this_week_user_scores = sort_user_scores(this_week_user_scores)
-        print(sorted_this_week_user_scores)
+        points_to_users = {}
+        for user in sorted_this_week_user_scores:
+            points = user['points']
+            if points not in points_to_users:
+                points_to_users[points] = []
+            points_to_users[points].append(user['user_nick'])
 
         message_parts.append(f"**Av {num_of_games} mulige:**")
-        for user in sorted_this_week_user_scores:
-            message_parts.append(f"{user['points']} poeng: {user['user_nick']}")
+        for points, users in sorted(points_to_users.items(), reverse=True):
+            names = ', '.join(users)
+            message_parts.append(f"{points} poeng: {names}")
 
+        # Check for and announce the weekly winner
         if sorted_this_week_user_scores:
-            weekly_winner_user = sorted_this_week_user_scores[0]
-            weekly_winner_id = weekly_winner_user['user_id'] # username of this week's top scorer
-            message_parts.append(f"Gratulerer til ukas vinner {weekly_winner_id}!\n")
+        # Find the highest score
+            highest_score = sorted_this_week_user_scores[0]['points']
+
+            # Find all users who have achieved the highest score
+            winners = [user['user_id'] for user in sorted_this_week_user_scores if user['points'] == highest_score]
+
+            # Format the congratulatory message
+            if len(winners) > 1:
+                # Join all but the last winner with commas, and append the last winner with "og"
+                winners_formatted = ', '.join(winners[:-1]) + " og " + winners[-1]
+                message_parts.append(f"Gratulerer til ukas vinnere {winners_formatted}!\n")
+            else:
+                message_parts.append(f"Gratulerer til ukas vinner {winners[0]}!\n")
 
     if user_scores:
         sorted_user_score = sort_user_scores(user_scores)
         message_parts.append("Totale poeng:")
         for rank, (username, score) in enumerate(sorted_user_score, start=1):
-            message_parts.append(f"{rank}. {username}: {score}p")
+            user_id = username_to_id.get(username)
+            if user_id is not None:
+                user_id = user_id.strip('<@!>')
+            role = await get_user_primary_role(user_id, guild, team_emojis)
+            if role == None:
+                role = ""
+            message_parts.append(f"{rank}. {role}{username}: {score}p")
 
         file_functions.write_file(logic.user_scores, user_scores)
 
     return '\n'.join(message_parts)
 
 
-@bot.event
-async def send_leaderboard_message(days):
-    message = format_leaderboard_message(days)
-    if message:
-        channel = bot.get_channel(perms.CHANNEL_ID)
-        if channel:  # Check if channel is found
-            await channel.send(message)
-            return
-        else:
-            print(f"Could not find channel with ID {perms.CHANNEL_ID}")
-    else:
-        print("No message to send.")
 
 
 
@@ -177,11 +223,13 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
                 if user_id:
                     user_reactions.setdefault(user_id, []).append(reaction_type)
         
+        
 
         # List to hold the updated reaction data for this message
         updated_reactions_list = []
 
         # Check if the specific message_id is in the stored reactions
+        
         if message_id not in stored_reactions.keys():
             print(f"No stored reactions found for message ID {message_id}")
             for user_id, reaction_types in user_reactions.items():
@@ -202,68 +250,71 @@ async def compare_and_update_reaction_for_message(message_id, channel, bot):
                         "reaction": reaction_types[0]
                     })
 
-            
+            if str(message_id) in outputData:
+                del outputData[str(message_id)]
             
             outputData[message_id] = updated_reactions_list
             file_functions.write_file(logic.output_predictions_file, outputData)
             return
+        
 
 
         # Process reactions for each user in the stored reactions
-        else:
-            print("I am become death")
-            for stored_user_data in stored_reactions[str(message_id)]:
-                stored_user_id = stored_user_data['user_id']
-                stored_reaction_type = stored_user_data['reaction']
-                current_user_reactions = user_reactions.get(stored_user_id, [])
-                print(current_user_reactions, "Here")
-                print(stored_reaction_type,"stored reaction")
+        
+        print("I am become death")
+        for stored_user_data in stored_reactions[str(message_id)]:
+            stored_user_id = stored_user_data['user_id']
+            stored_reaction_type = stored_user_data['reaction']
+            current_user_reactions = user_reactions.get(stored_user_id, [])
+            print(current_user_reactions, "Here")
+            print(stored_reaction_type,"stored reaction")
 
-                # Apply logic based on the number of current reactions for the user
-                if len(current_user_reactions) == 1 and current_user_reactions[0] != stored_reaction_type:
+            # Apply logic based on the number of current reactions for the user
+            if len(current_user_reactions) == 1 and current_user_reactions[0] != stored_reaction_type:
+                updated_reactions_list.append({
+                    "user_id": stored_user_id, 
+                    "user_nick": stored_user_data["user_nick"], 
+                    "reaction": current_user_reactions[0]
+                })
+                print("Case 1")
+            elif len(current_user_reactions) == 1 and current_user_reactions[0] == stored_reaction_type:
+                updated_reactions_list.append({
+                    "user_id": stored_user_id, 
+                    "user_nick": stored_user_data["user_nick"], 
+                    "reaction": current_user_reactions[0]
+                })
+                print("Case 1.1")
+            elif len(current_user_reactions) == 2:
+                if stored_reaction_type in current_user_reactions:
+                    new_reaction = next(reaction for reaction in current_user_reactions if reaction != stored_reaction_type)
                     updated_reactions_list.append({
                         "user_id": stored_user_id, 
                         "user_nick": stored_user_data["user_nick"], 
-                        "reaction": current_user_reactions[0]
+                        "reaction": new_reaction
                     })
-                    print("Case 1")
-                elif len(current_user_reactions) == 1 and current_user_reactions[0] == stored_reaction_type:
-                    updated_reactions_list.append({
-                        "user_id": stored_user_id, 
-                        "user_nick": stored_user_data["user_nick"], 
-                        "reaction": current_user_reactions[0]
-                    })
-                    print("Case 1.1")
-                elif len(current_user_reactions) == 2:
-                    if stored_reaction_type in current_user_reactions:
-                        new_reaction = next(reaction for reaction in current_user_reactions if reaction != stored_reaction_type)
-                        updated_reactions_list.append({
-                            "user_id": stored_user_id, 
-                            "user_nick": stored_user_data["user_nick"], 
-                            "reaction": new_reaction
-                        })
-                        print("Case 2")
-                    else:
-                        updated_reactions_list.append({
-                            "user_id": stored_user_id, 
-                            "user_nick": stored_user_data["user_nick"], 
-                            "reaction": '🏠'
-                        })
-                        print("Case 2.1")
-                elif len(current_user_reactions) >= 3:
+                    print("Case 2")
+                else:
                     updated_reactions_list.append({
                         "user_id": stored_user_id, 
                         "user_nick": stored_user_data["user_nick"], 
                         "reaction": '🏠'
                     })
-                    print("Case 3")
+                    print("Case 2.1")
+            elif len(current_user_reactions) >= 3:
+                updated_reactions_list.append({
+                    "user_id": stored_user_id, 
+                    "user_nick": stored_user_data["user_nick"], 
+                    "reaction": '🏠'
+                })
+                print("Case 3")
 
-            if str(message_id) in outputData:
-                del outputData[str(message_id)]
-            
-            outputData[message_id] = updated_reactions_list
+        if str(message_id) in outputData:
+            del outputData[str(message_id)]
+        
+        outputData[message_id] = updated_reactions_list
+        file_functions.write_file(logic.output_predictions_file, outputData)
 
-            return
+        return
 
     except discord.NotFound:
         print("Message or channel not found.")
@@ -342,4 +393,74 @@ async def fetch_current_reactions(message_id, channel, bot):
     except discord.HTTPException as e:
         print(f"HTTP exception occurred: {e}")
         return {}
+    
 
+
+async def fetch_user_primary_role(guild, user_id, team_emojis):
+    try:
+        user = await guild.fetch_member(user_id)
+    except:
+        # Handle the case where the member is not found or an error occurs
+        print(f"Member with ID {user_id} not found.")
+        return None
+
+    if user and not user.bot:
+        # Iterate through the roles and return the first one with a unicode emoji
+        highest_val = 0
+        for role in user.roles:
+            if  role.position > highest_val and role.name not in logic.nonRoles:
+                highest_val = role.position
+                team_name = role.name
+
+        print(team_name)
+
+        highest_similarity = 0
+        for team in team_emojis.keys():
+            print(team)
+            similarity = logic.check_similarity(team_name.lower(), team.split(" ")[0].lower())
+            print(similarity)
+            if similarity > highest_similarity:
+                curr_emoji = team_emojis.get(team)
+                print(curr_emoji)
+                highest_similarity = similarity
+
+        # Return an empty string if no role with a unicode emoji is found
+        
+        print(curr_emoji)
+        return curr_emoji
+    else:
+        # Return None if the user is not found or is a bot
+        return None
+
+# Example usage
+async def get_user_primary_role(user_id, guild, team_emojis):
+
+    if user_id is None:
+        return None
+
+    # Find the specific guild by ID
+    if not guild:
+        print(f"Guild was not found.")
+        return None
+
+    primary_role = await fetch_user_primary_role(guild, int(user_id), team_emojis)
+    if primary_role is not None:
+        return primary_role
+
+
+async def total_leaderboard_message(user_scores, guild):
+    username_to_id = file_functions.read_file(logic.all_users)
+    team_emojis = file_functions.read_file(logic.team_emojis_file)
+    message_parts = []
+    sorted_user_score = sort_user_scores(user_scores)
+    message_parts.append("Totale poeng:")
+    for rank, (username, score) in enumerate(sorted_user_score, start=1):
+        user_id = username_to_id.get(username)
+        if user_id is not None:
+            user_id = user_id.strip('<@!>')
+        role = await get_user_primary_role(user_id, guild, team_emojis)
+        if role == None:   
+            role = ""
+        message_parts.append(f"{rank}. {role}{username}: {score}p")
+
+    return '\n'.join(message_parts)

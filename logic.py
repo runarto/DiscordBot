@@ -2,12 +2,105 @@ from perms import API_TOKEN
 import requests
 from datetime import datetime, timedelta
 import pytz
+from difflib import SequenceMatcher
+import file_functions
+import perms
+
+nonRoles = ["Sørveradministrator", "bot-fikler", "Norges Fotballforbund", "Tippekuppongmester"]
+
+
+
+teams = [
+    "Kristiansund BK",
+    "Tromso", 
+    "Brann",
+    "Sarpsborg 08 FF",
+    "Viking",
+    "Bodo/Glimt",
+    "ODD Ballklubb",
+    "Haugesund",
+    "Sandefjord",
+    "Rosenborg",
+    "Stromsgodset",
+    "Ham-Kam",
+    "Lillestrom",
+    "KFUM Oslo",
+    "Fredrikstad",
+    "Molde",
+    "Moss",
+    "Kongsvinger",
+    "Bryne",
+    "Raufoss",
+    "Ranheim",
+    "jerv",
+    "Skeid",
+    "Stabaek",
+    "Sogndal",
+    "Valerenga",
+    "Start",
+    "Aalesund",
+    "Sandnes ULF",
+    "Asane"
+]
+
+teams_norske_navn = {
+    "Kristiansund BK": "Kristiansund",
+    "Tromso": "Tromsø",
+    "Brann": "Brann",
+    "Sarpsborg 08 FF": "Sarpsborg 08",
+    "Viking": "Viking",
+    "Bodo/Glimt": "Bodø/Glimt", #5/10
+    "ODD Ballklubb": "Odd", #3/3
+    "Haugesund": "Haugesund", #9/9
+    "Sandefjord": "Sandefjord", #10/10
+    "Rosenborg": "Rosenborg", #9/9
+    "Stromsgodset": "Strømsgodset", #11/13
+    "Ham-Kam": "Ham-Kam", #6/7
+    "Lillestrom": "Lillestrøm",# > 9/11
+    "KFUM Oslo": "KFUM", #4/4
+    "Fredrikstad": "Fredrikstad", #11/11
+    "Molde": "Molde", #5/5
+    "Moss": "Moss",
+    "Kongsvinger": "Kongsvinger",
+    "Bryne": "Bryne",
+    "Raufoss": "Raufoss",
+    "Ranheim": "Ranheim",
+    "jerv": "Jerv",
+    "Skeid": "Skeid",
+    "Stabaek": "Stabæk",
+    "Sogndal": "Sogndal",
+    "Valerenga": "Vålerenga",
+    "Start": "Start",
+    "Aalesund": "Aalesund",
+    "Sandnes ULF": "Sandnes Ulf",
+    "Asane": "Åsane"
+}
+
+team_emoji_id = [
+    "<:Brann:1039844066487185429>",
+    "<:Glimt:1039831920978169857>",
+    "<:Fredrikstad:1039945582917210162>",
+    "<:Kristiansund:1039834384854941726>",
+    "<:Lillestroem:1039835160125902908>",
+    "<:Odd:1039839692373368872>",
+    "<:Tromsoe:1039842401025527868>",
+    "<:Rosenborg:1059898578883051561>",
+    "<:Hamkam:1039832337032163358>",
+    "<:Molde:1039836329502052444>",
+    "<:KFUM:1039945755814805574>",
+    "<:Stroemsgodset:1039841950079143937>",
+    "<:Viking:1039842907894599760>",
+    "<:Sandefjord:1039840813544378418>",
+    "<:Haugesund:1039832977158443058>"
+]
 
 
 user_scores = "user_scores.json"
 tracked_messages = "match_messages.json"
 predictions_file = 'input_predictions.json'
 output_predictions_file = 'output_predictions.json'
+team_emojis_file = "team_emoji_map.json"
+all_users = "all_users.json"
 
 
 #Returnerer hvilken runde det er. Overflødig funksjon. 
@@ -66,7 +159,8 @@ def get_matches(x_days):
                 'home_team': fixture['teams']['home']['name'],
                 'away_team': fixture['teams']['away']['name'],
                 'round': fixture['league']['round'],
-                'match_id': fixture['fixture']['id']
+                'match_id': fixture['fixture']['id'],
+                'status': fixture['fixture']['status']['short']
             }
             #if current_round == match_info['round']:
             match_details.append(match_info)
@@ -92,23 +186,34 @@ async def get_match_results(match_id):
     data = response.json()
 
     for fixture in data['response']:
-        if fixture['status']['status']['short'] == 'FT':
+        print(fixture['fixture']['status']['short'])
+        if fixture['fixture']['status']['short'] in ['FT', 'PEN', 'AET', 'AWD', 'WO']:
+            home_team = fixture['teams']['home']['name']
+            away_team = fixture['teams']['away']['name']
             home_win = fixture['teams']['home']['winner']
+
+            print(home_team)
+
 
             if home_win is True:
                 result = True  # Home win
             elif home_win is False:
                 result = False  # Away win
             else:
-                result = None  # Draw or data not available
-        elif fixture['status']['status']['short'] in ['CANC', 'ABD', 'PST', 'TBD']:
-            return "Game not started"
+                result = None  # Draw
+        elif fixture['fixture']['status']['short'] in ['CANC', 'ABD', 'PST', 'TBD']:
+            print("lol what\n")
+            return "Game never started"
         else:
+            print("no result")
             return "No result"
 
         #message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
+    print(f"{result}\n")
+    print(f"{home_team}\n")
+    print(f"{away_team}\n")
 
-    return result
+    return result, home_team, away_team
 
 
 #Overflødig. 
@@ -166,6 +271,43 @@ def print_match_table(match_list):
         print(row)
 
 
+
+def check_similarity(input1, input2):
+    return SequenceMatcher(None, input1, input2).ratio()
+
+
+async def map_emojis_to_teams(bot, teams):
+
+    file_functions.write_file(team_emojis_file, {})
+
+    guild = bot.get_guild(perms.guild_id)
+    if not guild:
+        print(f"Guild with ID {perms.guild_id} not found.")
+        return
+
+    team_emoji_mappings = {}
+
+    for team in teams:
+
+        best_match = None
+        highest_ratio = 0
+        team_split = team.split(" ")[0]
+
+        for emoji in guild.emojis:
+            similarity = check_similarity(emoji.name.lower(), team_split.lower())
+
+            if similarity > highest_ratio:
+                highest_ratio = similarity
+                best_match = emoji
+
+        if best_match:
+            team_emoji_mappings[f"{team}"] = f"<:{best_match.name}:{best_match.id}>"
+    
+    file_functions.write_file(team_emojis_file, team_emoji_mappings)
+    
+    
+
+    return team_emoji_mappings
 
 
 

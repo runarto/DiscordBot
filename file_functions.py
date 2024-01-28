@@ -49,9 +49,9 @@ def save_reaction_data(reaction_type, user_id, user_nick, message_id):
     # Check if the message content is already a key in the data
     if message_id not in data:
         data[message_id] = []
-
-    # Now it's safe to append new_reaction_data
-    data[message_id].append(new_reaction_data)
+        data[message_id].append(new_reaction_data)
+    else:
+        data[message_id].append(new_reaction_data)
 
     # Save the updated data
     write_file(logic.predictions_file, data)

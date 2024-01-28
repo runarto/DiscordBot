@@ -5,28 +5,36 @@ import perms
 import pytz 
 import logic
 import file_functions
-import json
 import leaderboard
 import datetime
 from functools import partial
 from apscheduler.jobstores.base import JobLookupError
 from datetime import datetime
 import traceback
+import asyncio
 
 
-channel_id = perms.CHANNEL_ID #Kanalen hvor kupongen sendes
+scheduler = AsyncIOScheduler()
 intents = discord.Intents.default()
 intents.members = True
 intents.reactions = True
 intents.message_content = True
-scheduler = AsyncIOScheduler()
+intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
+channel_id = perms.CHANNEL_ID
 
 timezone = pytz.timezone('Europe/Oslo')
 
 
 @bot.event
 async def on_ready():
+    print(f"Bot has started and is in {len(bot.guilds)} guild(s)")
+    
+    # guild = await bot.fetch_guild(perms.guild_id)
+    # for role in guild.roles:
+    #     print(f"{role.name}, {role.position}\n")
+
+
     scheduler.start()
     await bot.tree.sync()  # Synchronizing slash commands with Discord
     print(f'Logged in as {bot.user}')
@@ -35,6 +43,10 @@ async def on_ready():
     print("Registered Commands:")
     for command in bot.tree.get_commands():
         print(f"- {command.name} (Type: {'Slash Command' if isinstance(command, discord.app_commands.Command) else 'Text Command'})")
+    
+    await logic.map_emojis_to_teams(bot, logic.teams)
+    print("Emojis fetched")
+
 
 
 
@@ -86,21 +98,27 @@ async def user_already_reacted(reaction, user):
     return False  # Return False if no previous reaction was found
 
 
+
+
+
 @bot.tree.command(name='sendmsg', description='Sender melding til en kanal av ditt valg')
 @commands.has_permissions(manage_messages=True)  # Ensure only authorized users use this command
 async def send_message(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
     try:
-        await channel.sendf(message)
+        await channel.send(message)
         await interaction.response.send_message(f"Melding sent til {channel.name}.", ephemeral=True)
     except discord.Forbidden:
         await interaction.response.send_message("Jeg har ikke tilgang til å sende melding i denne kanalen.", ephemeral=True)
     except Exception as e:
         await interaction.response.send_message(f"An error occurred: {e}", ephemeral=True)
 
+
+
 @bot.tree.command(name='ukens_kupong', description='Send ukens kupong for de neste dagene')
 @commands.has_permissions(manage_messages=True)
 async def send_ukens_kupong(interaction: discord.Interaction, days: int, channel: discord.TextChannel):
     await interaction.response.defer(ephemeral=True)
+    emoji_data = file_functions.read_file(logic.team_emojis_file)
 
     try:
         await channel.send("Ukens kupong:")
@@ -109,20 +127,53 @@ async def send_ukens_kupong(interaction: discord.Interaction, days: int, channel
         data = []
 
         for fixture in fixtures:
-            message_content = f"{fixture['home_team']} vs {fixture['away_team']}"
+
+            home_team = fixture['home_team']
+            print(home_team)
+            away_team = fixture['away_team']
+            print(away_team)
+
+
+
+            home_team_emoji = emoji_data.get(home_team)
+            if home_team_emoji is None:
+                home_team_emoji = '🏠'  # Replace 'Default Emoji' with your default emoji
+
+            away_team_emoji = emoji_data.get(away_team)
+            if away_team_emoji is None:
+                away_team_emoji = '✈️'  # Replace 'Default Emoji' with your default emoji
+
+            if fixture['home_team'] in logic.teams_norske_navn:
+                home_team = logic.teams_norske_navn[fixture['home_team']]
+                print(home_team)
+
+            if fixture['away_team'] in logic.teams_norske_navn:
+                away_team = logic.teams_norske_navn[fixture['away_team']]
+                print(away_team)
+
+            if home_team_emoji == '🏠' or away_team_emoji == '✈️': 
+                message_content = f"{home_team} vs {away_team}"
+            else:
+                message_content = f"{home_team_emoji} {home_team} vs {away_team} {away_team_emoji}"
+
             message = await channel.send(message_content)
+
             data.append((str(message.id), fixture['match_id']))  # Store message ID and match ID
 
             # Adding reactions to the message
-            for reaction in ('🏠', '🏳️', '✈️'):
+
+            for reaction in (home_team_emoji, '🇺', away_team_emoji):
                 await message.add_reaction(reaction)
 
         # Writing tracked messages to file
         file_functions.write_file(logic.tracked_messages, data)
 
         date_start, hour_start, minute_start, messages_id = get_day_hour_minute(days)
-        await update_jobs(date_start, hour_start, minute_start, messages_id, channel)
-        await interaction.followup.send("Kupong sendt!")
+        anyGames = await update_jobs(date_start, hour_start, minute_start, messages_id, channel)
+        if anyGames == False:
+            await interaction.followup.send(f"Ingen kamper de neste {days} dagene", ephemeral=True)
+            return
+        await interaction.followup.send("Kupong sendt!", ephemeral=True)
         return
 
     except discord.errors.Forbidden:
@@ -145,18 +196,13 @@ async def total_leaderboard(interaction: discord.Interaction):
 
     # Sort user scores by points (descending order)
     scores = file_functions.read_file(logic.user_scores)
+    guild = interaction.guild
 
     if isinstance(scores, dict):
-        sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        leaderboard_message = leaderboard.total_leaderboard_message(scores, guild)
     else:
         await interaction.followup.send("Det oppsto en feil med å hente poengene.", ephemeral=True)
         return
-
-    # Format the leaderboard message
-    leaderboard_message = "Tippekupongen 2024:\n"
-    for rank, (user, score) in enumerate(sorted_scores, start=1):
-        leaderboard_message += f"{rank}. {user}: {score} poeng\n"
-
     # Send the leaderboard message to the Discord channel
     if leaderboard_message == "Tippekupongen 2024:\n":
         await interaction.followup.send("Vær litt tålmodig da, det ekke registrert poeng enda.")
@@ -169,23 +215,29 @@ async def total_leaderboard(interaction: discord.Interaction):
 @bot.tree.command(name = "ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
 @commands.has_permissions(manage_messages=True)
 async def send_leaderboard_message(interaction: discord.Interaction):
-    await interaction.response.defer(ephemeral=True)
-    if (interaction.channel_id == channel_id):
-        await interaction.followup("Denne kommandoen kan kun brukes i tippekupongen.")
+    await interaction.response.defer(ephemeral=True) 
+
+    channel = await bot.fetch_channel(channel_id)
+    guild = await bot.fetch_guild(perms.guild_id)
+
     try:
-        message = leaderboard.format_leaderboard_message()
+        message = await leaderboard.format_leaderboard_message(guild)
+
         if message and message.strip():
-            await interaction.response.send_message(message)
-            await interaction.followup.send("Melding sent, og filer tømt. Nå kan du sende ukens kupong.", ephemeral=True)
-            file_functions.write_file(logic.tracked_messages, []) #Tømmer meldingslisten etter at vi skriver ut ukens resulater.
-            file_functions.write_file(logic.predictions_file, {})
-            file_functions.write_file(logic.output_predictions_file, {}) #Tømmer fila. 
+            await interaction.followup.send(message, ephemeral=True)
+            #await interaction.followup.send("Melding sent, og filer tømt. Nå kan du sende ukens kupong.", ephemeral=True)
+            #file_functions.write_file(logic.tracked_messages, []) #Tømmer meldingslisten etter at vi skriver ut ukens resulater.
+            #file_functions.write_file(logic.predictions_file, {})
+            #file_functions.write_file(logic.output_predictions_file, {}) #Tømmer fila. 
+
         else:
             await interaction.followup.send("Det har ikke vært noen kamper de siste dagene, eller så er det ikke data å hente ut. Prøv igjen senere.", ephemeral=True)
             await interaction.followup.send("Task completed!", ephemeral=True)
+
     except discord.errors.Forbidden:
         await interaction.followup.send("Du kanke bruke denne kommandoen tjommi.", ephemeral=True)
         await interaction.followup.send("Task completed!", ephemeral=True)
+
     except Exception as e:
         await interaction.followup.send(f"An error occurred: {e}. Ta kontakt med Runar (trunar)", ephemeral=True)
         traceback.print_exc()
@@ -227,6 +279,28 @@ async def find_message_by_content(interaction: discord.Interaction, content: str
 
     if not found:
         await interaction.followup.send("Fant ikke den aktuelle kampen", ephemeral=True)
+
+@bot.tree.command(name="se_scheduled_events", description="Se når kupongen for en kamp blir lagret")
+@commands.has_permissions(manage_messages=True)
+async def print_scheduled_event(interaction: discord.Interaction):
+    matches = file_functions.read_file(logic.tracked_messages)
+    message_ids = {str(message_id) for message_id, _ in matches}
+    channel = await bot.fetch_channel(channel_id)
+    await interaction.response.defer(ephemeral=True)
+    for job in scheduler.get_jobs():
+        if job.id in message_ids:
+            try:
+                match_message = await channel.fetch_message(job.id)
+                match_content = match_message.content  # Get the content of the message
+                await interaction.followup.send(f"{match_content} sin kupong vil bli hentet ut {job.next_run_time}", ephemeral=True)
+            except discord.NotFound:
+                await interaction.followup.send(f"Message with ID {job.id} not found in channel.", ephemeral=True)
+                continue
+            except Exception as e:
+                await interaction.followup.send(f"An error occurred: {e}. Ta kontakt med Runar (trunar)", ephemeral=True)
+                traceback.print_exc()
+                continue
+
 
 
 
@@ -270,30 +344,41 @@ def get_day_hour_minute(days):
 
 async def update_jobs(date_start, hour_start, minute_start, message_ids, channel):
 
+    # Remove existing jobs
+    if scheduler.get_jobs():
+        scheduler.remove_all_jobs()
+        print("Old jobs removed")
+
     if not date_start:  # Check if there are no new jobs to schedule
         print("No new jobs to schedule.")
-        return
+        return False
 
-    # Remove existing jobs
-    for job in scheduler.get_jobs():
-        if job.id in message_ids:
-            try:
-                scheduler.remove_job(job.id)
-                print(f"Job {job.id} removed successfully.")
-            except JobLookupError:
-                print(f"Job {job.id} could not be found.")
-            except Exception as e:
-                print(f"An error occurred while removing job {job.id}: {e}")
-
+    job_details_list = []  # List to hold details of each job
     # Schedule new jobs
     for date, hour, minute, message_id in zip(date_start, hour_start, minute_start, message_ids):
-        job_function = partial(leaderboard.compare_and_update_reaction_for_message, message_id, channel, bot)
-        scheduler.add_job(job_function, 'cron', day_of_week=date, hour=hour, minute=minute, timezone=timezone, id=str(message_id))
+        scheduler.add_job(
+            leaderboard.compare_and_update_reaction_for_message, 
+            'cron', 
+            day_of_week=date, 
+            hour=hour, 
+            minute=minute, 
+            timezone=timezone, 
+            args=[message_id, channel, bot], 
+            id=str(message_id)
+        )
+
+        job_details = f"Job ID: {message_id}, Scheduled Time: {date} at {hour}:{minute}, Function: {leaderboard.compare_and_update_reaction_for_message.__name__}"
+        job_details_list.append(job_details)
+
     print("Jobs added.")
+    for details in job_details_list:
+        print(details)
+
     
-
-
-
-
+    return True
 
 bot.run(perms.TOKEN)
+
+
+
+
