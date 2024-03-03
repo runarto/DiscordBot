@@ -95,12 +95,12 @@ team_emoji_id = [
 ]
 
 
-user_scores = "user_scores.json"
-tracked_messages = "match_messages.json"
-predictions_file = 'input_predictions.json'
-output_predictions_file = 'output_predictions.json'
-team_emojis_file = "team_emoji_map.json"
-all_users = "all_users.json"
+user_scores = "jsonfiles/user_scores.json"
+tracked_messages = "jsonfiles/match_messages.json"
+predictions_file = 'jsonfiles/input_predictions.json'
+output_predictions_file = 'jsonfiles/output_predictions.json'
+team_emojis_file = "jsonfiles/team_emoji_map.json"
+all_users = "jsonfiles/all_users.json"
 
 
 #Returnerer hvilken runde det er. Overflødig funksjon. 
