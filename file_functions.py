@@ -2,7 +2,12 @@ import logic
 import json
 import os
 
-def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
+
+#TODO - Sjekke om async fjerner eventuelle duplikater. 
+# Alternativt, ta heller å lage en funksjon som leser av reaksjonene manuelt og fjerner duplikater, 
+# og tar samtlige meldinger i match_messages slik at den kun behøver å kjøre en gang. 
+
+async def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
     message_content = str(message_content)
     try:
         # Load existing data
@@ -29,7 +34,7 @@ def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
         print("Message content not found in data.")
 
 
-def save_reaction_data(reaction_type, user_id, user_nick, message_id):
+async def save_reaction_data(reaction_type, user_id, user_nick, message_id):
     message_id = str(message_id)
     
     # Structure to hold the new reaction data
@@ -55,11 +60,6 @@ def save_reaction_data(reaction_type, user_id, user_nick, message_id):
 
     # Save the updated data
     write_file(logic.predictions_file, data)
-
-
-
-
-
 
 
 

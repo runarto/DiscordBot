@@ -65,19 +65,19 @@ async def on_reaction_add(reaction, user):
             if (await user_already_reacted(reaction, user)):
                 return
             else:
-                file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(message_id))
+                await file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(message_id))
                 print(f"Reaction added by {user.name}: {reaction.emoji} from message {reaction.message.content}")
         else:
             return
         
 
 @bot.event
-async def on_reaction_remove(reaction, user):
+async def on_reaction_remove(reaction, user): # Remove reaction data when a user removes their reaction (this function needs to be tested more thoroughly)
     try:
         if user == bot.user:
             return
         if (reaction.message.author == bot.user) and (reaction.message.channel.id == channel_id):
-            file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, str(reaction.message.id))
+            await file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, str(reaction.message.id))
             print(f"Reaction removed by {user.name}: {reaction.emoji} from message {reaction.message.content}")
     except Exception as e:
         print(f"Error in on_reaction_remove: {e}")
@@ -215,7 +215,8 @@ async def total_leaderboard(interaction: discord.Interaction):
 @bot.tree.command(name = "ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
 @commands.has_permissions(manage_messages=True)
 async def send_leaderboard_message(interaction: discord.Interaction):
-    await interaction.response.defer(ephemeral=True) 
+
+    await interaction.response.defer() 
 
     channel = await bot.fetch_channel(channel_id)
     guild = await bot.fetch_guild(perms.guild_id)
@@ -224,7 +225,7 @@ async def send_leaderboard_message(interaction: discord.Interaction):
         message = await leaderboard.format_leaderboard_message(guild)
 
         if message and message.strip():
-            await interaction.followup.send(message, ephemeral=True)
+            await interaction.followup.send(message)
             #await interaction.followup.send("Melding sent, og filer tømt. Nå kan du sende ukens kupong.", ephemeral=True)
             #file_functions.write_file(logic.tracked_messages, []) #Tømmer meldingslisten etter at vi skriver ut ukens resulater.
             #file_functions.write_file(logic.predictions_file, {})

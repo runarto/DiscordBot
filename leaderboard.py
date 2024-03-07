@@ -7,9 +7,8 @@ import perms
 import json
 
 
-#TODO: Fikse format for user_scores til username: [poeng, antall_ukens_beste]
-#TODO: Finne ut av hvordan man kan fetche rollen til en bruker på en effektiv måte.
-#TODO: Oppdater compare_and_update... slik at den samstemmer med det nye emoji-formatet
+
+
 
 channel_id = perms.CHANNEL_ID #Kanalen hvor kupongen sendes
 import traceback
