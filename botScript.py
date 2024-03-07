@@ -89,9 +89,9 @@ async def user_already_reacted(reaction, user):
             async for users in reactions.users():
                 if users == user:
                     # Remove the previous reaction data
-                    file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name, str(reaction.message.id))
+                    await file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name, str(reaction.message.id))
                     # Save the new reaction data
-                    file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(reaction.message.id))
+                    await file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(reaction.message.id))
                     # Remove the user's previous reaction
                     await reactions.remove(user)
                     return True
