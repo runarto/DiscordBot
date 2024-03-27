@@ -50,60 +50,9 @@ async def on_ready():
 
 
 
-
-@bot.event
-async def on_reaction_add(reaction, user):
-# Ignore the bot's own reactions
-
-    if user == bot.user:
-        return
-
-    else:
-        if reaction.message.channel.id == channel_id:
-            message_id = reaction.message.id
-                # Check if the user already reacted with a different emoji
-            if (await user_already_reacted(reaction, user)):
-                return
-            else:
-                await file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(message_id))
-                print(f"Reaction added by {user.name}: {reaction.emoji} from message {reaction.message.content}")
-        else:
-            return
-        
-
-@bot.event
-async def on_reaction_remove(reaction, user): # Remove reaction data when a user removes their reaction (this function needs to be tested more thoroughly)
-    try:
-        if user == bot.user:
-            return
-        if (reaction.message.author == bot.user) and (reaction.message.channel.id == channel_id):
-            await file_functions.remove_reaction_data(str(reaction.emoji), user.id, user.display_name, str(reaction.message.id))
-            print(f"Reaction removed by {user.name}: {reaction.emoji} from message {reaction.message.content}")
-    except Exception as e:
-        print(f"Error in on_reaction_remove: {e}")
-
-
-async def user_already_reacted(reaction, user):
-    for reactions in reaction.message.reactions:
-        if reactions.emoji != reaction.emoji:
-            async for users in reactions.users():
-                if users == user:
-                    # Remove the previous reaction data
-                    await file_functions.remove_reaction_data(str(reactions.emoji), user.mention, user.display_name, str(reaction.message.id))
-                    # Save the new reaction data
-                    await file_functions.save_reaction_data(str(reaction.emoji), user.mention, user.display_name, str(reaction.message.id))
-                    # Remove the user's previous reaction
-                    await reactions.remove(user)
-                    return True
-    return False  # Return False if no previous reaction was found
-
-
-
-
-
 @bot.tree.command(name='sendmsg', description='Sender melding til en kanal av ditt valg')
 @commands.has_permissions(manage_messages=True)  # Ensure only authorized users use this command
-async def send_message(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
+async def SendMessageToChannel(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
     try:
         await channel.send(message)
         await interaction.response.send_message(f"Melding sent til {channel.name}.", ephemeral=True)
@@ -116,7 +65,7 @@ async def send_message(interaction: discord.Interaction, channel: discord.TextCh
 
 @bot.tree.command(name='ukens_kupong', description='Send ukens kupong for de neste dagene')
 @commands.has_permissions(manage_messages=True)
-async def send_ukens_kupong(interaction: discord.Interaction, days: int, channel: discord.TextChannel):
+async def SendUkensKupong(interaction: discord.Interaction, days: int, channel: discord.TextChannel):
     await interaction.response.defer(ephemeral=True)
     emoji_data = file_functions.read_file(logic.team_emojis_file)
 
@@ -124,53 +73,25 @@ async def send_ukens_kupong(interaction: discord.Interaction, days: int, channel
         await channel.send("Ukens kupong:")
 
         fixtures = logic.get_matches(days)  # Fetch matches for the next x days
-        data = []
+        messages = []
 
         for fixture in fixtures:
 
-            home_team = fixture['home_team']
-            print(home_team)
-            away_team = fixture['away_team']
-            print(away_team)
-
-
-
-            home_team_emoji = emoji_data.get(home_team)
-            if home_team_emoji is None:
-                home_team_emoji = '🏠'  # Replace 'Default Emoji' with your default emoji
-
-            away_team_emoji = emoji_data.get(away_team)
-            if away_team_emoji is None:
-                away_team_emoji = '✈️'  # Replace 'Default Emoji' with your default emoji
-
-            if fixture['home_team'] in logic.teams_norske_navn:
-                home_team = logic.teams_norske_navn[fixture['home_team']]
-                print(home_team)
-
-            if fixture['away_team'] in logic.teams_norske_navn:
-                away_team = logic.teams_norske_navn[fixture['away_team']]
-                print(away_team)
-
-            if home_team_emoji == '🏠' or away_team_emoji == '✈️': 
-                message_content = f"{home_team} vs {away_team}"
-            else:
-                message_content = f"{home_team_emoji} {home_team} vs {away_team} {away_team_emoji}"
+            message_content, home_team_emoji, away_team_emoji = logic.FormatMatchMessge(fixture, emoji_data)
 
             message = await channel.send(message_content)
 
-            data.append((str(message.id), fixture['match_id']))  # Store message ID and match ID
-
-            # Adding reactions to the message
+            messages.append((str(message.id), fixture['match_id']))
 
             for reaction in (home_team_emoji, '🇺', away_team_emoji):
                 await message.add_reaction(reaction)
 
-        # Writing tracked messages to file
-        file_functions.write_file(logic.tracked_messages, data)
+        file_functions.write_file(logic.tracked_messages, messages)
+
 
         date_start, hour_start, minute_start, messages_id = get_day_hour_minute(days)
         anyGames = await update_jobs(date_start, hour_start, minute_start, messages_id, channel)
-        if anyGames == False:
+        if not anyGames:
             await interaction.followup.send(f"Ingen kamper de neste {days} dagene", ephemeral=True)
             return
         await interaction.followup.send("Kupong sendt!", ephemeral=True)
@@ -218,7 +139,6 @@ async def send_leaderboard_message(interaction: discord.Interaction):
 
     await interaction.response.defer() 
 
-    channel = await bot.fetch_channel(channel_id)
     guild = await bot.fetch_guild(perms.guild_id)
 
     try:
@@ -226,10 +146,6 @@ async def send_leaderboard_message(interaction: discord.Interaction):
 
         if message and message.strip():
             await interaction.followup.send(message)
-            #await interaction.followup.send("Melding sent, og filer tømt. Nå kan du sende ukens kupong.", ephemeral=True)
-            #file_functions.write_file(logic.tracked_messages, []) #Tømmer meldingslisten etter at vi skriver ut ukens resulater.
-            #file_functions.write_file(logic.predictions_file, {})
-            #file_functions.write_file(logic.output_predictions_file, {}) #Tømmer fila. 
 
         else:
             await interaction.followup.send("Det har ikke vært noen kamper de siste dagene, eller så er det ikke data å hente ut. Prøv igjen senere.", ephemeral=True)
@@ -256,30 +172,12 @@ async def find_message_by_content(interaction: discord.Interaction, content: str
     found = False
 
     for message_id, _ in message_data:
-        try:
-            # Fetch the channel by ID (assuming you know which channel to look in)
-
-            # Fetch the message by ID from the channel
-            message = await channel.fetch_message(message_id)
-
-            if message.content == content:
-                # Message found
-                print(message.content)
-                await leaderboard.compare_and_update_reaction_for_message(message_id, channel, bot)
-                await interaction.followup.send("Reaksjonene er ferdig lagret", ephemeral=True)
-                found = True
-                break
-        except discord.NotFound:
-            await interaction.followup.send("Fant ikke den aktuelle kampen", ephemeral=True)
-            continue  # If message not found, continue to the next one
-        except Exception as e:
-            # Handle other potential errors
-            await interaction.followup.send(f"An error occurred: {e}. Ta kontakt med Runar (trunar)", ephemeral=True)
-            traceback.print_exc()
-            continue
-
-    if not found:
-        await interaction.followup.send("Fant ikke den aktuelle kampen", ephemeral=True)
+        message = await channel.fetch_message(int(message_id))
+        if content in message.content:
+            await interaction.followup.send(f"Message found: {message.jump_url}", ephemeral=True)
+            await leaderboard.StorePredictions(message_id, channel, bot)
+            found = True
+            break
 
 @bot.tree.command(name="se_scheduled_events", description="Se når kupongen for en kamp blir lagret")
 @commands.has_permissions(manage_messages=True)
@@ -358,7 +256,7 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
     # Schedule new jobs
     for date, hour, minute, message_id in zip(date_start, hour_start, minute_start, message_ids):
         scheduler.add_job(
-            leaderboard.compare_and_update_reaction_for_message, 
+            leaderboard.StorePredictions, 
             'cron', 
             day_of_week=date, 
             hour=hour, 
@@ -368,7 +266,7 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
             id=str(message_id)
         )
 
-        job_details = f"Job ID: {message_id}, Scheduled Time: {date} at {hour}:{minute}, Function: {leaderboard.compare_and_update_reaction_for_message.__name__}"
+        job_details = f"Job ID: {message_id}, Scheduled Time: {date} at {hour}:{minute}, Function: {leaderboard.StorePredictions.__name__}"
         job_details_list.append(job_details)
 
     print("Jobs added.")

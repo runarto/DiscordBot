@@ -1,7 +1,7 @@
 from perms import API_TOKEN
 import requests
-from datetime import datetime, timedelta
 import pytz
+from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 import file_functions
 import perms
@@ -112,8 +112,8 @@ def get_round():
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_round = {
-        "league": "848",
-        "season": "2023"
+        "league": "103",
+        "season": "2024"
     }
     response = requests.get(api_url, headers=headers, params=query_round)
     if response.status_code == 200:
@@ -142,8 +142,8 @@ def get_matches(x_days):
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
-        "league": "848",
-        "season": "2023",
+        "league": "103",
+        "season": "2024",
         "timezone": "Europe/Oslo",
         "from": today_date,
         "to": formatted_new_date 
@@ -192,8 +192,6 @@ async def get_match_results(match_id):
             away_team = fixture['teams']['away']['name']
             home_win = fixture['teams']['home']['winner']
 
-            print(home_team)
-
 
             if home_win is True:
                 result = True  # Home win
@@ -202,10 +200,8 @@ async def get_match_results(match_id):
             else:
                 result = None  # Draw
         elif fixture['fixture']['status']['short'] in ['CANC', 'ABD', 'PST', 'TBD']:
-            print("lol what\n")
             return "Game never started"
         else:
-            print("no result")
             return "No result"
 
         #message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
@@ -311,5 +307,27 @@ async def map_emojis_to_teams(bot, teams):
 
 
 
+def FormatMatchMessge(fixture, emoji_data):
+    home_team = fixture['home_team']
+    away_team = fixture['away_team']
 
+    home_team_emoji = emoji_data.get(home_team)
+    if home_team_emoji is None:
+        home_team_emoji = '🏠'  # Replace 'Default Emoji' with your default emoji
 
+    away_team_emoji = emoji_data.get(away_team)
+    if away_team_emoji is None:
+        away_team_emoji = '✈️'  # Replace 'Default Emoji' with your default emoji
+
+    if fixture['home_team'] in teams_norske_navn:
+        home_team = teams_norske_navn[fixture['home_team']]
+
+    if fixture['away_team'] in teams_norske_navn:
+        away_team = teams_norske_navn[fixture['away_team']]
+
+    if home_team_emoji == '🏠' or away_team_emoji == '✈️': 
+        message_content = f"{home_team} vs {away_team}"
+    else:
+        message_content = f"{home_team_emoji} {home_team} vs {away_team} {away_team_emoji}"
+
+    return message_content, home_team_emoji, away_team_emoji

@@ -3,104 +3,24 @@ import json
 import os
 
 
-#TODO - Sjekke om async fjerner eventuelle duplikater. 
-# Alternativt, ta heller å lage en funksjon som leser av reaksjonene manuelt og fjerner duplikater, 
-# og tar samtlige meldinger i match_messages slik at den kun behøver å kjøre en gang. 
-
-async def remove_reaction_data(reaction_type, user_id, user_nick ,message_content):
-    message_content = str(message_content)
-    try:
-        # Load existing data
-        data = read_file(logic.predictions_file)
-
-    except FileNotFoundError:
-        print("File not found. No data to remove.")
-        return
-
-    # Check if the message content is in the data
-    if message_content in data:
-        # Filter out the reaction data to be removed
-        data[message_content] = [reaction for reaction in data[message_content]
-                                 if not (reaction['user_id'] == user_id and reaction['reaction'] == reaction_type and reaction['user_nick'] == user_nick)]
-
-        # If the list for this message is now empty, remove the key entirely
-        if not data[message_content]:
-            del data[message_content]
-
-        # Save the updated data
-        write_file(logic.predictions_file, data)
-    
-    else:
-        print("Message content not found in data.")
-
-
-async def save_reaction_data(reaction_type, user_id, user_nick, message_id):
-    message_id = str(message_id)
-    
-    # Structure to hold the new reaction data
-    new_reaction_data = {
-        'user_id': user_id,
-        'user_nick': user_nick,
-        'reaction': reaction_type
-    }
-
-    try:
-        # Load existing data
-        data = read_file(logic.predictions_file)
-    except FileNotFoundError:
-        # Initialize data as an empty dictionary if file doesn't exist
-        data = {}
-
-    # Check if the message content is already a key in the data
-    if message_id not in data:
-        data[message_id] = []
-        data[message_id].append(new_reaction_data)
-    else:
-        data[message_id].append(new_reaction_data)
-
-    # Save the updated data
-    write_file(logic.predictions_file, data)
 
 
 
 
 
 
-def save_predictions_to_json(input_json_file_path, output_json_file_path, target_message):
-    # Read and parse the input JSON file
-    predictions = read_file(input_json_file_path)
+def StorePredictions(PredictionsFile, target_message, prediction):
 
+    # Read the predictions file
+    predictions = read_file(PredictionsFile)
 
-    if target_message in predictions: #Itererer over meldinger som ligger i predictions
-        print(f"Found target message: {target_message}")
-        # Extract data for the target message
-        data_to_save = {target_message: predictions[target_message]} 
+    # Add the target message to the predictions
+    predictions[target_message] = prediction
 
-        # Initialize variable to hold the existing data
-        existing_data = {}
+    # Write the updated predictions to the file
+    write_file(PredictionsFile, predictions)
 
-        # Try to read the existing data from the output file
-        try:
-            existing_data = read_file(output_json_file_path)
-        except (FileNotFoundError, json.JSONDecodeError):
-            print("Output file not found or is empty/invalid, starting fresh")
-            pass
-
-        # Append the new data to existing data
-        existing_data.update(data_to_save)
-
-        # Write the updated/initial data to the output JSON file
-        write_file(output_json_file_path, existing_data)
-
-        # Remove the target message from the input data
-        del predictions[target_message]
-        print("Removed target message from input data")
-
-        # Write the updated data back to the input JSON file
-        write_file(input_json_file_path, predictions)
-        
-    else:
-        print(f"Target message '{target_message}' not found in input file")
+    return predictions[target_message]
 
 
 
