@@ -7,6 +7,7 @@ import file_functions
 import perms
 
 nonRoles = ["Sørveradministrator", "bot-fikler", "Norges Fotballforbund", "Tippekuppongmester"]
+MAX_MESSAGE_LENGTH = 2000
 
 
 
@@ -331,3 +332,9 @@ def FormatMatchMessge(fixture, emoji_data):
         message_content = f"{home_team_emoji} {home_team} vs {away_team} {away_team_emoji}"
 
     return message_content, home_team_emoji, away_team_emoji
+
+
+
+
+def split_message(message):
+    return [message[i:i+MAX_MESSAGE_LENGTH] for i in range(0, len(message), MAX_MESSAGE_LENGTH)]

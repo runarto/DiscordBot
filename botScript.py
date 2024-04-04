@@ -133,31 +133,32 @@ async def total_leaderboard(interaction: discord.Interaction):
 
 
 
-@bot.tree.command(name = "ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
+@bot.tree.command(name="ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
 @commands.has_permissions(manage_messages=True)
 async def send_leaderboard_message(interaction: discord.Interaction):
-
-    await interaction.response.defer() 
-
-    guild = await bot.fetch_guild(perms.guild_id)
+    await interaction.response.defer()
 
     try:
+        guild = await bot.fetch_guild(perms.guild_id)
         message = await leaderboard.format_leaderboard_message(guild)
+        print(message)
 
         if message and message.strip():
-            await interaction.followup.send(message)
-
+            messages = logic.split_message(message)
+            for m in messages:
+                await interaction.followup.send(m)
         else:
             await interaction.followup.send("Det har ikke vært noen kamper de siste dagene, eller så er det ikke data å hente ut. Prøv igjen senere.", ephemeral=True)
-            await interaction.followup.send("Task completed!", ephemeral=True)
-
+            # Send "Task completed!" message after other responses
     except discord.errors.Forbidden:
         await interaction.followup.send("Du kanke bruke denne kommandoen tjommi.", ephemeral=True)
-        await interaction.followup.send("Task completed!", ephemeral=True)
-
     except Exception as e:
         await interaction.followup.send(f"An error occurred: {e}. Ta kontakt med Runar (trunar)", ephemeral=True)
         traceback.print_exc()
+
+    # Send "Task completed!" message after all other responses
+    await interaction.followup.send("Task completed!", ephemeral=True)
+
 
 
         
@@ -275,6 +276,9 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
 
     
     return True
+
+
+
 
 bot.run(perms.TOKEN)
 
