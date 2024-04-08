@@ -113,7 +113,7 @@ def get_round():
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_round = {
-        "league": "103",
+        "league": "104",
         "season": "2024"
     }
     response = requests.get(api_url, headers=headers, params=query_round)
@@ -143,7 +143,7 @@ def get_matches(x_days):
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
-        "league": "103",
+        "league": "104",
         "season": "2024",
         "timezone": "Europe/Oslo",
         "from": today_date,
@@ -171,7 +171,6 @@ def get_matches(x_days):
 #get_match_results() blir kalt 7 dager etter get_matches()
 
 #Returnerer resultater for kamper de siste sju dagene. 
-
 async def get_match_results(match_id):
 
     api_url = "https://v3.football.api-sports.io/fixtures"
@@ -337,4 +336,23 @@ def FormatMatchMessge(fixture, emoji_data):
 
 
 def split_message(message):
-    return [message[i:i+MAX_MESSAGE_LENGTH] for i in range(0, len(message), MAX_MESSAGE_LENGTH)]
+    split_messages = []
+    current_message = ""
+    for char in message:
+        current_message += char
+        if len(current_message) >= MAX_MESSAGE_LENGTH:
+            # Find the last newline character before reaching the character limit
+            last_newline_index = current_message.rfind('\n', 0, MAX_MESSAGE_LENGTH)
+            if last_newline_index != -1:
+                split_messages.append(current_message[:last_newline_index+1])
+                current_message = current_message[last_newline_index+1:]
+            else:
+                # If no newline is found within the limit, split at the character limit
+                split_messages.append(current_message)
+                current_message = ""
+    if current_message:
+        split_messages.append(current_message)
+    return split_messages
+
+
+

@@ -120,7 +120,7 @@ async def total_leaderboard(interaction: discord.Interaction):
     guild = interaction.guild
 
     if isinstance(scores, dict):
-        leaderboard_message = leaderboard.total_leaderboard_message(scores, guild)
+        leaderboard_message = await leaderboard.total_leaderboard_message(scores, guild)
     else:
         await interaction.followup.send("Det oppsto en feil med å hente poengene.", ephemeral=True)
         return
@@ -128,7 +128,9 @@ async def total_leaderboard(interaction: discord.Interaction):
     if leaderboard_message == "Tippekupongen 2024:\n":
         await interaction.followup.send("Vær litt tålmodig da, det ekke registrert poeng enda.")
     else:
-        await interaction.followup.send(leaderboard_message, ephemeral=True)
+        messages = logic.split_message(leaderboard_message)
+        for m in messages:
+            await interaction.followup.send(m, ephemeral=True)
 
 
 
