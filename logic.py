@@ -113,7 +113,7 @@ def get_round():
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_round = {
-        "league": "104",
+        "league": "103",
         "season": "2024"
     }
     response = requests.get(api_url, headers=headers, params=query_round)
@@ -143,7 +143,7 @@ def get_matches(x_days):
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
-        "league": "104",
+        "league": "103",
         "season": "2024",
         "timezone": "Europe/Oslo",
         "from": today_date,
