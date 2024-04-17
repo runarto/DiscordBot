@@ -105,6 +105,7 @@ async def format_leaderboard_message(guild):
     print("scores fetched\n")
 
     team_emojis = file_functions.read_file(logic.team_emojis_file)
+    weekly_winners = file_functions.read_file("jsonfiles/weekly_winners.json")
     
     if not user_scores or not this_week_user_scores:
         return
@@ -114,35 +115,20 @@ async def format_leaderboard_message(guild):
     if this_week_user_scores:
         print(this_week_user_scores)
         sorted_this_week_user_scores = sort_user_scores(this_week_user_scores)
-        points_to_users = {}
-        for user in sorted_this_week_user_scores:
-            points = user['points']
-            if points not in points_to_users:
-                points_to_users[points] = []
-            user_id = user['user_id'].strip('<@!>')
-            user_nick = await guild.fetch_member(int(user_id))
-            points_to_users[points].append(user_nick.display_name)
-
-        message_parts.append(f"**Av {num_of_games} mulige:**")
-        for points, users in sorted(points_to_users.items(), reverse=True):
-            names = ', '.join(users)
-            message_parts.append(f"{points} poeng: {names}")
+        points_to_users = await get_user_nicknames(sorted_this_week_user_scores, guild)
+        message_parts = format_message(points_to_users, num_of_games)
 
         # Check for and announce the weekly winner
         if sorted_this_week_user_scores:
-        # Find the highest score
+            # Find the highest score
             highest_score = sorted_this_week_user_scores[0]['points']
 
             # Find all users who have achieved the highest score
-            winners = [user['user_id'] for user in sorted_this_week_user_scores if user['points'] == highest_score]
+            weekly_winners, winners = get_weekly_winners(weekly_winners, sorted_this_week_user_scores, highest_score)
 
             # Format the congratulatory message
-            if len(winners) > 1:
-                # Join all but the last winner with commas, and append the last winner with "og"
-                winners_formatted = ', '.join(winners[:-1]) + " og " + winners[-1]
-                message_parts.append(f"Gratulerer til ukas vinnere {winners_formatted}!\n")
-            else:
-                message_parts.append(f"Gratulerer til ukas vinner {winners[0]}!\n")
+            winner_message = format_winner_message(winners)
+            message_parts.append(winner_message)
 
     if user_scores:
         sorted_user_score = sort_user_scores(user_scores)
@@ -155,14 +141,54 @@ async def format_leaderboard_message(guild):
                 role = ""
 
             user_nick = await guild.fetch_member(int(user_id))
-            message_parts.append(f"{rank}. {role}{user_nick.display_name}: {score}p")
+            if user_id in weekly_winners:
+                message_parts.append(f"{rank}. {role}{user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
+            else:
+                message_parts.append(f"{rank}. {role}{user_nick.display_name}: {score}p")
+            
+            
 
         file_functions.write_file(logic.user_scores, user_scores)
+        file_functions.write_file("jsonfiles/weekly_winners.json", weekly_winners)
 
     return '\n'.join(message_parts)
 
 
+async def get_user_nicknames(user_scores, guild):
+    points_to_users = {}
+    for user in user_scores:
+        points = user['points']
+        if points not in points_to_users:
+            points_to_users[points] = []
+        user_id = user['user_id'].strip('<@!>')
+        user_nick = await guild.fetch_member(int(user_id))
+        points_to_users[points].append(user_nick.display_name)
+    return points_to_users
 
+def format_message(points_to_users, num_of_games):
+    message_parts = [f"**Av {num_of_games} mulige:**"]
+    for points, users in sorted(points_to_users.items(), reverse=True):
+        names = ', '.join(users)
+        message_parts.append(f"{points} poeng: {names}")
+    return message_parts
+
+def format_winner_message(winners):
+    if len(winners) > 1:
+        winners_formatted = ', '.join(winners[:-1]) + " og " + winners[-1]
+        return f"Gratulerer til ukas vinnere {winners_formatted}!\n"
+    else:
+        return f"Gratulerer til ukas vinner {winners[0]}!\n"
+
+def get_weekly_winners(weekly_winners, sorted_this_week_user_scores, highest_score):
+    winners = [user['user_id'] for user in sorted_this_week_user_scores if user['points'] == highest_score]
+    for winner in winners:
+        user_id = winner.strip('<@!>')
+        if user_id in weekly_winners:
+            weekly_winners[user_id] += 1
+        else:
+            weekly_winners[user_id] = 1
+
+    return weekly_winners, winners
 
 async def StorePredictions(message_id, channel, bot):
 
@@ -287,6 +313,7 @@ async def GetPrimaryRoleForUser(user_id, guild, team_emojis):
 async def total_leaderboard_message(user_scores, guild):
     username_to_id = file_functions.read_file(logic.all_users)
     team_emojis = file_functions.read_file(logic.team_emojis_file)
+    weekly_winners = file_functions.read_file("jsonfiles/weekly_winners.json")
     message_parts = []
     sorted_user_score = sort_user_scores(user_scores)
     message_parts.append("Totale poeng:")
@@ -298,5 +325,7 @@ async def total_leaderboard_message(user_scores, guild):
         if role == None:   
             role = ""
         message_parts.append(f"{rank}. {role}{username}: {score}p")
+        if user_id in weekly_winners:
+            message_parts.append(f"(us: {weekly_winners[username]})")
 
     return '\n'.join(message_parts)
