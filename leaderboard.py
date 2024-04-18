@@ -274,8 +274,6 @@ async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
                 highest_val = role.position
                 team_name = role.name
 
-        print(team_name)
-
         highest_similarity = 0
         for team in team_emojis.keys():
             print(team)
@@ -304,6 +302,9 @@ async def GetPrimaryRoleForUser(user_id, guild, team_emojis):
     if not guild:
         print(f"Guild was not found.")
         return None
+    
+    if user_id == str(696084965875646465):
+        return "<:Odd:1039839692373368872>"
 
     primary_role = await FetchPrimaryRoleForUser(guild, user_id, team_emojis)
     if primary_role is not None:
