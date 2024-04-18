@@ -41,7 +41,8 @@ teams = [
     "Start",
     "Aalesund",
     "Sandnes ULF",
-    "Asane"
+    "Asane",
+    "Lyn Fotball"
 ]
 
 teams_norske_navn = {
