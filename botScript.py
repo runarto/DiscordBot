@@ -29,10 +29,6 @@ timezone = pytz.timezone('Europe/Oslo')
 @bot.event
 async def on_ready():
     print(f"Bot has started and is in {len(bot.guilds)} guild(s)")
-    
-    # guild = await bot.fetch_guild(perms.guild_id)
-    # for role in guild.roles:
-    #     print(f"{role.name}, {role.position}\n")
 
 
     scheduler.start()
