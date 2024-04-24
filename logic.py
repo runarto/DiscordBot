@@ -356,5 +356,42 @@ def split_message(message):
         split_messages.append(current_message)
     return split_messages
 
+def get_match_results_non_async(match_id):
+
+    api_url = "https://v3.football.api-sports.io/fixtures"
+    headers = {
+        "x-rapidapi-host": "v3.football.api-sports.io",
+        "x-rapidapi-key": API_TOKEN # Be cautious with your API key
+    }
+    params = {
+        'id': match_id,
+    }
+
+    response = requests.get(api_url, headers=headers, params=params)
+    data = response.json()
+
+    for fixture in data['response']:
+        print(fixture['fixture']['status']['short'])
+        if fixture['fixture']['status']['short'] in ['FT', 'PEN', 'AET', 'AWD', 'WO']:
+            home_team = fixture['teams']['home']['name']
+            away_team = fixture['teams']['away']['name']
+            home_win = fixture['teams']['home']['winner']
 
 
+            if home_win is True:
+                result = True  # Home win
+            elif home_win is False:
+                result = False  # Away win
+            else:
+                result = None  # Draw
+        elif fixture['fixture']['status']['short'] in ['CANC', 'ABD', 'PST', 'TBD']:
+            return "Game never started"
+        else:
+            return "No result"
+
+        #message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
+    print(f"{result}\n")
+    print(f"{home_team}\n")
+    print(f"{away_team}\n")
+
+    return result, home_team, away_team

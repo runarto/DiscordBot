@@ -212,6 +212,24 @@ async def clear_cache(interaction: discord.Integration):
     await interaction.followup.send("Cache tømt", ephemeral=True)
 
 
+@bot.tree.command(name='sjekkLagretData', description='Sjekker predictions-fila')
+@commands.has_permissions(manage_messages=True)
+async def checkPredictionsStored(interaction: discord.Integration):
+    await interaction.response.defer(ephemeral=True)
+    channel = await bot.fetch_channel(channel_id)
+    predictions_file = file_functions.read_file(logic.predictions_file)
+    message_list = []
+    for message_id, _ in predictions_file.items():
+        message = await channel.fetch_message(int(message_id))
+        if message:
+            msg = f"Reactions for match {message} has been stored."
+            message_list.append(msg)
+    if message_list:
+        await interaction.followup.send("\n".join(message_list), ephemeral=True)
+    else:
+        await interaction.followup.send("No stored predictions found.", ephemeral=True)
+
+
 def get_day_hour_minute(days):
 
     day_of_week = []

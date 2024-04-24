@@ -142,9 +142,9 @@ async def format_leaderboard_message(guild):
 
             user_nick = await guild.fetch_member(int(user_id))
             if user_id in weekly_winners:
-                message_parts.append(f"{rank}. {role}{user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
+                message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
             else:
-                message_parts.append(f"{rank}. {role}{user_nick.display_name}: {score}p")
+                message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p")
             
             
 
