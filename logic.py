@@ -395,3 +395,6 @@ def get_match_results_non_async(match_id):
     print(f"{away_team}\n")
 
     return result, home_team, away_team
+
+
+get_match_results_non_async(1164359)
