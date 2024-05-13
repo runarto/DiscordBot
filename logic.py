@@ -397,4 +397,4 @@ def get_match_results_non_async(match_id):
     return result, home_team, away_team
 
 
-get_match_results_non_async(1164367)
+get_match_results_non_async(1164375)

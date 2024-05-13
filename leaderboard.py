@@ -134,17 +134,21 @@ async def format_leaderboard_message(guild):
         sorted_user_score = sort_user_scores(user_scores)
         message_parts.append("Totale poeng:")
         for rank, (user_id, score) in enumerate(sorted_user_score, start=1):
-            if user_id is not None:
-                user_id = user_id.strip('<@!>')
-            role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
-            if role == None:
-                role = ""
+            try: 
+                if user_id is not None:
+                    user_id = user_id.strip('<@!>')
+                role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
+                if role == None:
+                    role = ""
 
-            user_nick = await guild.fetch_member(int(user_id))
-            if user_id in weekly_winners:
-                message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
-            else:
-                message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p")
+                user_nick = await guild.fetch_member(int(user_id))
+                if user_id in weekly_winners:
+                    message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
+                else:
+                    message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p")
+            except discord.NotFound:
+                print(f"Member with user_id: {user_id} not found in guild: {guild.name} (ID: {guild.id}), skipping.")
+                continue
             
             
 
@@ -261,9 +265,8 @@ async def FetchReactionsFromMessage(message_id, channel, bot):
 async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
     try:
         user = await guild.fetch_member(user_id)
-    except:
-        # Handle the case where the member is not found or an error occurs
-        print(f"Member with ID {user_id} not found.")
+    except discord.NotFound:
+        print(f"Member with user_id: {user_id} not found in guild: {guild.name} (ID: {guild.id}), skipping.")
         return None
 
     if user and not user.bot:
