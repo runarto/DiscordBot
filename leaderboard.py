@@ -279,17 +279,12 @@ async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
 
         highest_similarity = 0
         for team in team_emojis.keys():
-            print(team)
             similarity = logic.check_similarity(team_name.lower(), team.split(" ")[0].lower())
-            print(similarity)
             if similarity > highest_similarity:
                 curr_emoji = team_emojis.get(team)
-                print(curr_emoji)
                 highest_similarity = similarity
 
         # Return an empty string if no role with a unicode emoji is found
-        
-        print(curr_emoji)
         return curr_emoji
     else:
         # Return None if the user is not found or is a bot
@@ -307,10 +302,12 @@ async def GetPrimaryRoleForUser(user_id, guild, team_emojis):
         return None
     
     if user_id == str(696084965875646465):
+        print(f"User: {user_id}, emoji: <:Odd:1039839692373368872>")
         return "<:Odd:1039839692373368872>"
 
     primary_role = await FetchPrimaryRoleForUser(guild, user_id, team_emojis)
     if primary_role is not None:
+        print(f"User: {user_id}, emoji: {primary_role}")
         return primary_role
 
 

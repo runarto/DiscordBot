@@ -206,10 +206,9 @@ async def get_match_results(match_id):
         else:
             return "No result"
 
-        #message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
-    print(f"{result}\n")
-    print(f"{home_team}\n")
-    print(f"{away_team}\n")
+    print(f"Home team: {home_team}\n")
+    print(f"Away team: {away_team}\n")
+    print(f"Result: {result}\n")
 
     return result, home_team, away_team
 
@@ -389,12 +388,10 @@ def get_match_results_non_async(match_id):
         else:
             return "No result"
 
-        #message = f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']}"
-    print(f"{result}\n")
-    print(f"{home_team}\n")
-    print(f"{away_team}\n")
-
+    print(f"Result: {result}\n")
+    print("Home team: " + home_team + "\n")
+    print("Away team: " + away_team + "\n")
     return result, home_team, away_team
 
 
-get_match_results_non_async(1164375)
+get_match_results_non_async(1164399)
