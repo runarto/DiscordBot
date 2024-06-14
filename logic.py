@@ -44,6 +44,30 @@ teams = [
     "Asane",
     "Lyn Fotball",
     "Hei"
+    "Spain",
+    "Italy",
+    "Ukraine",
+    "Denmark", 
+    "England", 
+    "Germany",
+    "Portugal",
+    "Croatia",
+    "Turkey",
+    "Albania",
+    "Poland",
+    "Netherlands", 
+    "Belgium",
+    "Scotland",
+    "Austria",
+    "Czech Republic",
+    "France",
+    "Georgia",
+    "Slovenia",
+    "Slovakia",
+    "Hungary",
+    "Switzerland",
+    "Romania",
+    "Serbia"
 ]
 
 teams_norske_navn = {
@@ -145,7 +169,7 @@ def get_matches(x_days):
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
-        "league": "103",
+        "league": "4",
         "season": "2024",
         "timezone": "Europe/Oslo",
         "from": today_date,
@@ -394,4 +418,4 @@ def get_match_results_non_async(match_id):
     return result, home_team, away_team
 
 
-get_match_results_non_async(1164399)
+get_matches(7)
