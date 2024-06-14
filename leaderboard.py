@@ -113,18 +113,17 @@ async def format_leaderboard_message(guild):
     message_parts = []
 
     if this_week_user_scores:
-        print(this_week_user_scores)
-        sorted_this_week_user_scores = sort_user_scores(this_week_user_scores)
-        points_to_users = await get_user_nicknames(sorted_this_week_user_scores, guild)
+        scores_this_week = sort_user_scores(this_week_user_scores)
+        points_to_users = await get_user_nicknames(scores_this_week, guild)
         message_parts = format_message(points_to_users, num_of_games)
 
         # Check for and announce the weekly winner
-        if sorted_this_week_user_scores:
+        if scores_this_week:
             # Find the highest score
-            highest_score = sorted_this_week_user_scores[0]['points']
+            highest_score = scores_this_week[0]['points']
 
             # Find all users who have achieved the highest score
-            weekly_winners, winners = get_weekly_winners(weekly_winners, sorted_this_week_user_scores, highest_score)
+            weekly_winners, winners = get_weekly_winners(weekly_winners, scores_this_week, highest_score)
 
             # Format the congratulatory message
             winner_message = format_winner_message(winners)
@@ -161,12 +160,16 @@ async def format_leaderboard_message(guild):
 async def get_user_nicknames(user_scores, guild):
     points_to_users = {}
     for user in user_scores:
-        points = user['points']
-        if points not in points_to_users:
-            points_to_users[points] = []
-        user_id = user['user_id'].strip('<@!>')
-        user_nick = await guild.fetch_member(int(user_id))
-        points_to_users[points].append(user_nick.display_name)
+        try:
+            points = user['points']
+            if points not in points_to_users:
+                points_to_users[points] = []
+            user_id = user['user_id'].strip('<@!>')
+            user_nick = await guild.fetch_member(int(user_id))
+            points_to_users[points].append(user_nick.display_name)
+        except discord.NotFound:
+            print(f"Member with user_id: {user_id} not found in guild: {guild.name} (ID: {guild.id}), skipping.")
+            continue
     return points_to_users
 
 def format_message(points_to_users, num_of_games):
@@ -309,6 +312,8 @@ async def GetPrimaryRoleForUser(user_id, guild, team_emojis):
     if primary_role is not None:
         print(f"User: {user_id}, emoji: {primary_role}")
         return primary_role
+    
+    return None
 
 
 async def total_leaderboard_message(user_scores, guild):
