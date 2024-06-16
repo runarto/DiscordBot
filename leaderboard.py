@@ -105,7 +105,7 @@ async def format_leaderboard_message(guild):
     print("scores fetched\n")
 
     team_emojis = file_functions.read_file(logic.team_emojis_file)
-    weekly_winners = file_functions.read_file("jsonfiles/weekly_winners.json")
+    weekly_winners = file_functions.read_file("jsonfiles/weekly_winners_euro.json")
     
     if not user_scores or not this_week_user_scores:
         return
@@ -136,15 +136,15 @@ async def format_leaderboard_message(guild):
             try: 
                 if user_id is not None:
                     user_id = user_id.strip('<@!>')
-                role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
-                if role == None:
-                    role = ""
+                #role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
+                #if role == None:
+                #    role = ""
 
                 user_nick = await guild.fetch_member(int(user_id))
                 if user_id in weekly_winners:
-                    message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
+                    message_parts.append(f"{rank}. {user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
                 else:
-                    message_parts.append(f"{rank}. {role} {user_nick.display_name}: {score}p")
+                    message_parts.append(f"{rank}. {user_nick.display_name}: {score}p")
             except discord.NotFound:
                 print(f"Member with user_id: {user_id} not found in guild: {guild.name} (ID: {guild.id}), skipping.")
                 continue
@@ -152,7 +152,7 @@ async def format_leaderboard_message(guild):
             
 
         file_functions.write_file(logic.user_scores, user_scores)
-        file_functions.write_file("jsonfiles/weekly_winners.json", weekly_winners)
+        file_functions.write_file("jsonfiles/weekly_winners_euro.json", weekly_winners)
 
     return '\n'.join(message_parts)
 
@@ -281,6 +281,8 @@ async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
                 team_name = role.name
 
         highest_similarity = 0
+        if team_name == 'Україна':
+            team_name = 'Ukraine'
         for team in team_emojis.keys():
             similarity = logic.check_similarity(team_name.lower(), team.split(" ")[0].lower())
             if similarity > highest_similarity:
@@ -288,7 +290,8 @@ async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
                 highest_similarity = similarity
 
         # Return an empty string if no role with a unicode emoji is found
-        return curr_emoji
+        if curr_emoji is not None:
+            return curr_emoji
     else:
         # Return None if the user is not found or is a bot
         return None
