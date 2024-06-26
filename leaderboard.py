@@ -105,7 +105,7 @@ async def format_leaderboard_message(guild):
     print("scores fetched\n")
 
     team_emojis = file_functions.read_file(logic.team_emojis_file)
-    weekly_winners = file_functions.read_file("jsonfiles/weekly_winners_euro.json")
+    weekly_winners = file_functions.read_file("jsonfiles/weekly_winners.json")
     
     if not user_scores or not this_week_user_scores:
         return
@@ -152,7 +152,7 @@ async def format_leaderboard_message(guild):
             
 
         file_functions.write_file(logic.user_scores, user_scores)
-        file_functions.write_file("jsonfiles/weekly_winners_euro.json", weekly_winners)
+        file_functions.write_file("jsonfiles/weekly_winners.json", weekly_winners)
 
     return '\n'.join(message_parts)
 
