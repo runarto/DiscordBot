@@ -8,33 +8,8 @@ import perms
 
 nonRoles = ["Sørveradministrator", "bot-fikler", "Norges Fotballforbund", "Tippekuppongmester"]
 MAX_MESSAGE_LENGTH = 2000
+MAX_ROLE_VALUE = 100
 
-NT_to_emoji = {
-    "Spain": "🇪🇸",
-    "Italy": "🇮🇹",
-    "Ukraine": "🇺🇦",
-    "Denmark": "🇩🇰",
-    "England": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",  # This is the England flag emoji
-    "Germany": "🇩🇪",
-    "Portugal": "🇵🇹",
-    "Croatia": "🇭🇷",
-    "Turkey": "🇹🇷",
-    "Albania": "🇦🇱",
-    "Poland": "🇵🇱",
-    "Netherlands": "🇳🇱",
-    "Belgium": "🇧🇪",
-    "Scotland": "🏴󠁧󠁢󠁳󠁣󠁴󠁿",  # This is the Scotland flag emoji
-    "Austria": "🇦🇹",
-    "Czech Republic": "🇨🇿",
-    "France": "🇫🇷",
-    "Georgia": "🇬🇪",
-    "Slovenia": "🇸🇮",
-    "Slovakia": "🇸🇰",
-    "Hungary": "🇭🇺",
-    "Switzerland": "🇨🇭",
-    "Romania": "🇷🇴",
-    "Serbia": "🇷🇸"
-}
 
 
 teams = [
@@ -72,33 +47,6 @@ teams = [
     "Hei",
 ]
 
-national_teams = [
-    "Spain",
-    "Italy",
-    "Ukraine",
-    "Denmark", 
-    "England", 
-    "Germany",
-    "Portugal",
-    "Croatia",
-    "Turkey",
-    "Albania",
-    "Poland",
-    "Netherlands", 
-    "Belgium",
-    "Scotland",
-    "Austria",
-    "Czech Republic",
-    "France",
-    "Georgia",
-    "Slovenia",
-    "Slovakia",
-    "Hungary",
-    "Switzerland",
-    "Romania",
-    "Serbia",
-]
-
 teams_norske_navn = {
     "Kristiansund BK": "Kristiansund",
     "Tromso": "Tromsø",
@@ -129,31 +77,7 @@ teams_norske_navn = {
     "Start": "Start",
     "Aalesund": "Aalesund",
     "Sandnes ULF": "Sandnes Ulf",
-    "Asane": "Åsane",
-    "Spain": "Spania",
-    "Italy": "Italia",
-    "Ukraine": "Ukraina",
-    "Denmark": "Danmark", 
-    "England": "England", 
-    "Germany": "Tyskland",
-    "Portugal": "Portugal",
-    "Croatia": "Kroatia",
-    "Turkey": "Tyrkia",
-    "Albania": "Albania",
-    "Poland": "Polen",
-    "Netherlands": "Nederland", 
-    "Belgium": "Belgia",
-    "Scotland": "Skottland",
-    "Austria": "Østerrike",
-    "Czech Republic": "Tsjekkia",
-    "France": "Frankrike",
-    "Georgia": "Georgia",
-    "Slovenia; ": "Slovenia",
-    "Slovakia": "Slovakia",
-    "Hungary": "Ungarn",
-    "Switzerland": "Sveits",
-    "Romania": "Romania",
-    "Serbia: ": "Serbia",
+    "Asane": "Åsane"
 }
 
 team_emoji_id = [
@@ -171,35 +95,11 @@ team_emoji_id = [
     "<:Stroemsgodset:1039841950079143937>",
     "<:Viking:1039842907894599760>",
     "<:Sandefjord:1039840813544378418>",
-    "<:Haugesund:1039832977158443058>",
-    "<:flag_cz:>",
-    "<:flag_dk:>",
-    "<:england:>",
-    "<:flag_es:>",
-    "<:flag_fr:>",
-    "<:flag_ge:>",
-    "<:flag_hr:>",
-    "<:flag_hu:>",
-    "<:flag_it:>",
-    "<:flag_nl:>",
-    "<:flag_pl:>",
-    "<:flag_pt:>",
-    "<:flag_ro:>",
-    "<:flag_scotland:>",
-    "<:flag_sk:>",
-    "<:flag_si:>",
-    "<:flag_rs:>",
-    "<:flag_be:>",
-    "<:flag_at:>",
-    "<:flag_al:>",
-    "<:flag_de:>",
-    "<:flag_ua:>",
-    "<:scotland:>",
-    "<:flag_ch:>",
+    "<:Haugesund:1039832977158443058>"
 ]
 
 
-user_scores = "jsonfiles/user_scores_Euros.json"
+user_scores = "jsonfiles/user_scores_Eliteserien.json"
 tracked_messages = "jsonfiles/match_messages.json"
 predictions_file = 'jsonfiles/input_predictions.json'
 output_predictions_file = 'jsonfiles/output_predictions.json'
@@ -231,7 +131,7 @@ def get_round():
 #Returnerer kamp-detaljer for aktuelle kamper x dager frem i tid. 
 
 def get_matches(x_days):
-    today_date = (datetime.now() - timedelta(days=3)).strftime("%Y-%m-%d")
+    today_date = datetime.now().strftime("%Y-%m-%d")
 
     new_date = datetime.now() + timedelta(days=x_days)
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
@@ -246,7 +146,7 @@ def get_matches(x_days):
         "x-rapidapi-key": API_TOKEN # Be cautious with your API key
     }
     query_fixtures = {
-        "league": "4",
+        "league": "103",
         "season": "2024",
         "timezone": "Europe/Oslo",
         "from": today_date,
@@ -403,9 +303,6 @@ async def map_emojis_to_teams(bot, teams):
 
         if best_match:
             team_emoji_mappings[f"{team}"] = f"<:{best_match.name}:{best_match.id}>"
-
-    for NT, emoji in NT_to_emoji.items():
-        team_emoji_mappings[NT] = emoji
     
     file_functions.write_file(team_emojis_file, team_emoji_mappings)
     

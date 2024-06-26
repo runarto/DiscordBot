@@ -30,7 +30,6 @@ timezone = pytz.timezone('Europe/Oslo')
 async def on_ready():
     print(f"Bot has started and is in {len(bot.guilds)} guild(s)")
 
-
     scheduler.start()
     await bot.tree.sync()  # Synchronizing slash commands with Discord
     print(f'Logged in as {bot.user}')
@@ -42,6 +41,16 @@ async def on_ready():
     
     await logic.map_emojis_to_teams(bot, logic.teams)
     print("Emojis fetched")
+
+    # Fetch and print all roles in each guild
+    for guild in bot.guilds:
+        print(f"Roles in guild: {guild.name} ({guild.id})")
+        for role in guild.roles:
+            print(f"- {role.name} (Position: {role.position})")
+            if role.name == "Bodø/Glimt":
+                logic.MAX_ROLE_VALUE = role.position
+
+
 
 
 

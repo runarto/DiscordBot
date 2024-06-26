@@ -136,9 +136,9 @@ async def format_leaderboard_message(guild):
             try: 
                 if user_id is not None:
                     user_id = user_id.strip('<@!>')
-                #role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
-                #if role == None:
-                #    role = ""
+                role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
+                if role == None:
+                    role = ""
 
                 user_nick = await guild.fetch_member(int(user_id))
                 if user_id in weekly_winners:
@@ -276,13 +276,11 @@ async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
         # Iterate through the roles and return the first one with a unicode emoji
         highest_val = 0
         for role in user.roles:
-            if  role.position > highest_val and role.name not in logic.nonRoles:
+            if (role.position > highest_val) and (role.name not in logic.nonRoles) and (role.position <= logic.MAX_ROLE_VALUE):
                 highest_val = role.position
                 team_name = role.name
 
         highest_similarity = 0
-        if team_name == 'Україна':
-            team_name = 'Ukraine'
         for team in team_emojis.keys():
             similarity = logic.check_similarity(team_name.lower(), team.split(" ")[0].lower())
             if similarity > highest_similarity:
