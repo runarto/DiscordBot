@@ -127,9 +127,6 @@ def get_round():
     else:
         return None
 
-
-#Returnerer kamp-detaljer for aktuelle kamper x dager frem i tid. 
-
 def get_matches(x_days):
     today_date = datetime.now().strftime("%Y-%m-%d")
 
@@ -173,10 +170,6 @@ def get_matches(x_days):
             f"Round: {match['round']}, Match ID: {match['match_id']}, Status: {match['status']}")
         return match_details
     
-
-#get_match_results() blir kalt 7 dager etter get_matches()
-
-#Returnerer resultater for kamper de siste sju dagene. 
 async def get_match_results(match_id):
 
     api_url = "https://v3.football.api-sports.io/fixtures"
@@ -216,9 +209,6 @@ async def get_match_results(match_id):
 
     return result, home_team, away_team
 
-
-#Overflødig. 
-
 def fixture_status(match_details):
     # Define the UTC+1 time zone
     utc_plus_one = pytz.timezone('Etc/GMT-1')
@@ -238,9 +228,6 @@ def fixture_status(match_details):
             started_matches.append(match)
 
     return started_matches
-
-
-#Bare for testing. 
 
 def print_match_table(match_list):
     # Define the table headers
@@ -271,11 +258,8 @@ def print_match_table(match_list):
         ])
         print(row)
 
-
-
 def check_similarity(input1, input2):
     return SequenceMatcher(None, input1, input2).ratio()
-
 
 async def map_emojis_to_teams(bot, teams):
 
@@ -312,8 +296,6 @@ async def map_emojis_to_teams(bot, teams):
 
     return team_emoji_mappings
 
-
-
 def FormatMatchMessge(fixture, emoji_data):
     home_team = fixture['home_team']
     away_team = fixture['away_team']
@@ -338,9 +320,6 @@ def FormatMatchMessge(fixture, emoji_data):
         message_content = f"{home_team_emoji} {home_team} vs {away_team} {away_team_emoji}"
 
     return message_content, home_team_emoji, away_team_emoji
-
-
-
 
 def split_message(message):
     split_messages = []
@@ -399,5 +378,10 @@ def get_match_results_non_async(match_id):
     print("Away team: " + away_team + "\n")
     return result, home_team, away_team
 
+def check_if_valid_server(server_id):
+    if server_id == perms.guild_id:
+        return True
+    else:
+        return False
 
 #get_matches(0)
