@@ -49,10 +49,15 @@ def write_file(file_path, new_data):
             data = json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         # If the file doesn't exist or is empty, initialize an empty structure
-        data = []
+        data = {} if isinstance(new_data, dict) else []
 
-    # Step 2: Append new data (assuming it's a list of items)
-    data.append(new_data)
+    # Step 2: Merge new data
+    if isinstance(data, list) and isinstance(new_data, list):
+        data.extend(new_data)  # Append to list
+    elif isinstance(data, dict) and isinstance(new_data, dict):
+        data.update(new_data)  # Update dictionary
+    else:
+        raise ValueError("Data in file and new data must be of the same type (both list or both dict)")
 
     # Step 3: Write updated data back to file
     with open(file_path, 'w') as file:
