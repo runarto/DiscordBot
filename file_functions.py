@@ -42,9 +42,23 @@ def read_file(file_path):
         return {}
 
 
-def write_file(file_path, data):
+def write_file(file_path, new_data):
+    try:
+        # Step 1: Read existing data
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        # If the file doesn't exist or is empty, initialize an empty structure
+        data = []
+
+    # Step 2: Append new data (assuming it's a list of items)
+    data.append(new_data)
+
+    # Step 3: Write updated data back to file
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
+
+
 
 
 
