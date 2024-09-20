@@ -3,6 +3,8 @@ input_predictions.json
 output_predictions.json
 user_scores.json
 predictions.py
+.venv/
+__pycache__/
 
 
 
