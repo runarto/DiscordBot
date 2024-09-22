@@ -102,6 +102,7 @@ predictions_file = 'jsonfiles/input_predictions.json'
 output_predictions_file = 'jsonfiles/output_predictions.json'
 team_emojis_file = "jsonfiles/team_emoji_map.json"
 all_users = "jsonfiles/all_users.json"
+scheduled_jobs = "jsonfiles/scheduled_jobs.json"
 
 
 

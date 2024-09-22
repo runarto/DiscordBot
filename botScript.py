@@ -7,11 +7,8 @@ import logic
 import file_functions
 import leaderboard
 import datetime
-from functools import partial
-from apscheduler.jobstores.base import JobLookupError
 from datetime import datetime
 import traceback
-import asyncio
 
 
 scheduler = AsyncIOScheduler()
@@ -49,6 +46,24 @@ async def on_ready():
             print(f"- {role.name} (Position: {role.position})")
             if role.name == "Bodø/Glimt":
                 logic.MAX_ROLE_VALUE = role.position
+
+    
+    # Check for any scheduled jobs
+    scheduled_jobs = file_functions.read_file(logic.scheduled_jobs)
+    if scheduled_jobs:
+        channel = await bot.fetch_channel(channel_id)
+        for job in scheduled_jobs:
+            scheduler.add_job(
+                leaderboard.StorePredictions,
+                'cron',
+                day_of_week=job['date'],
+                hour=job['hour'],
+                minute=job['minute'],
+                timezone=timezone,
+                args=[job['message_id'], channel, bot],
+                id=str(job['message_id'])
+            )
+            print(f"Job ID: {job['message_id']}, Scheduled Time: {job['date']} at {job['hour']}:{job['minute']}, Function: {leaderboard.StorePredictions.__name__}")
 
 
 
@@ -233,8 +248,8 @@ async def clear_cache(interaction: discord.Integration):
     if logic.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer(ephemeral=True)
         file_functions.write_file(logic.predictions_file, {})
-        file_functions.write_file(logic.output_predictions_file, {})
         file_functions.write_file(logic.tracked_messages, [])
+        file_functions.write_file(logic.scheduled_jobs, [])
         await interaction.followup.send("Cache tømt", ephemeral=True)
     else:
         await interaction.response.send_message("Denne kommandoen kan kun brukes i en spesifikk server.", ephemeral=True)
@@ -310,6 +325,15 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
             args=[message_id, channel, bot], 
             id=str(message_id)
         )
+
+        save_schedule_to_json = {
+            "message_id": message_id,
+            "date": date,
+            "hour": hour,
+            "minute": minute
+        }
+
+        file_functions.write_file(logic.scheduled_jobs, save_schedule_to_json)
 
         job_details = f"Job ID: {message_id}, Scheduled Time: {date} at {hour}:{minute}, Function: {leaderboard.StorePredictions.__name__}"
         job_details_list.append(job_details)

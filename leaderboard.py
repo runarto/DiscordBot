@@ -4,7 +4,6 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logic
 import file_functions
 import perms
-import json
 
 
 
