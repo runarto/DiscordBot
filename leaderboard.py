@@ -1,14 +1,16 @@
 import discord
+from discord.ext import commands
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logic
 import file_functions
 import perms
-import traceback
 
 
-# TODO: Add functionality to show whether or not your position has changed since last week. 
+
 
 
 channel_id = perms.CHANNEL_ID #Kanalen hvor kupongen sendes
+import traceback
 
 
 async def update_user_scores():

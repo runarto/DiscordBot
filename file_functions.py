@@ -64,10 +64,6 @@ def write_file(file_path, new_data):
         json.dump(data, file, indent=4)
 
 
-def clear_file(file, data):
-    with open(file, 'w') as file:
-        json.dump(data, file, indent=4)
-
 
 
 
