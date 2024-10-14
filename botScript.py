@@ -247,9 +247,9 @@ async def print_scheduled_event(interaction: discord.Interaction):
 async def clear_cache(interaction: discord.Integration):
     if logic.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer(ephemeral=True)
-        file_functions.write_file(logic.predictions_file, {})
-        file_functions.write_file(logic.tracked_messages, [])
-        file_functions.write_file(logic.scheduled_jobs, [])
+        file_functions.clear_file(logic.predictions_file, {})
+        file_functions.clear_file(logic.tracked_messages, [])
+        file_functions.clear_file(logic.scheduled_jobs, [])
         await interaction.followup.send("Cache tømt", ephemeral=True)
     else:
         await interaction.response.send_message("Denne kommandoen kan kun brukes i en spesifikk server.", ephemeral=True)
