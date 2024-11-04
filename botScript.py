@@ -9,6 +9,7 @@ import leaderboard
 import datetime
 from datetime import datetime
 import traceback
+import API
 
 
 scheduler = AsyncIOScheduler()
@@ -97,7 +98,7 @@ async def SendUkensKupong(interaction: discord.Interaction, days: int, channel: 
         try:
             await channel.send("Ukens kupong:")
 
-            fixtures = logic.get_matches(days)  # Fetch matches for the next x days
+            fixtures = API.get_matches(days)  # Fetch matches for the next x days
             messages = []
 
             for fixture in fixtures:
@@ -221,8 +222,8 @@ async def find_message_by_content(interaction: discord.Interaction, content: str
 @bot.tree.command(name="se_scheduled_events", description="Se når kupongen for en kamp blir lagret")
 @commands.has_permissions(manage_messages=True)
 async def print_scheduled_event(interaction: discord.Interaction):
-    matches = file_functions.read_file(logic.tracked_messages)
-    message_ids = {str(message_id) for message_id, _ in matches}
+    jobs = file_functions.read_file(logic.scheduled_jobs)
+    message_ids = [job['message_id'] for job in jobs]
     channel = await bot.fetch_channel(channel_id)
     await interaction.response.defer(ephemeral=True)
     for job in scheduler.get_jobs():
@@ -278,7 +279,7 @@ def get_day_hour_minute(days):
     day_of_week = []
     hour = []
     minute = []
-    data = logic.get_matches(days)
+    data = API.get_matches(days)
     message_id_and_match_id = file_functions.read_file(logic.tracked_messages)
     message_ids = [message_id for message_id, _ in message_id_and_match_id]
 
@@ -313,6 +314,11 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
         return False
 
     job_details_list = []  # List to hold details of each job
+    existing_jobs = file_functions.read_file(logic.scheduled_jobs)
+    
+    if not isinstance(existing_jobs, list):
+            existing_jobs = []
+    
     # Schedule new jobs
     for date, hour, minute, message_id in zip(date_start, hour_start, minute_start, message_ids):
         scheduler.add_job(
@@ -332,17 +338,18 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
             "hour": hour,
             "minute": minute
         }
-
-        file_functions.write_file(logic.scheduled_jobs, save_schedule_to_json)
+        
+        existing_jobs.append(save_schedule_to_json)
 
         job_details = f"Job ID: {message_id}, Scheduled Time: {date} at {hour}:{minute}, Function: {leaderboard.StorePredictions.__name__}"
         job_details_list.append(job_details)
+
+    file_functions.write_file(logic.scheduled_jobs, existing_jobs)
 
     print("Jobs added.")
     for details in job_details_list:
         print(details)
 
-    
     return True
 
 

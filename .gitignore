@@ -1,6 +1,5 @@
 perms.py
 output_predictions.json
 predictions.py
-.venv/
-
+venv/
 

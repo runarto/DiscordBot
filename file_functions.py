@@ -4,11 +4,6 @@ import os
 
 
 
-
-
-
-
-
 def StorePredictions(PredictionsFile, target_message, prediction):
 
     # Read the predictions file

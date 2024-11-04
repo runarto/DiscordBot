@@ -4,10 +4,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import logic
 import file_functions
 import perms
-
-
-
-
+import API
 
 channel_id = perms.CHANNEL_ID #Kanalen hvor kupongen sendes
 import traceback
@@ -37,7 +34,7 @@ async def update_user_scores():
         for message_id, reactions_data in predictions.items():
             match_id = message_id_match_id_dict.get(message_id)
             print(f"{match_id}\n")
-            actual_result, home_team, away_team = await logic.get_match_results(match_id)
+            actual_result, home_team, away_team = await API.get_match_results(match_id)
             if actual_result == "No result":
                 continue
 
