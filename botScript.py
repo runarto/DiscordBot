@@ -6,8 +6,6 @@ import pytz
 import logic
 import file_functions
 import leaderboard
-import datetime
-from datetime import datetime
 import traceback
 import API
 
@@ -67,10 +65,6 @@ async def on_ready():
             print(f"Job ID: {job['message_id']}, Scheduled Time: {job['date']} at {job['hour']}:{job['minute']}, Function: {leaderboard.StorePredictions.__name__}")
 
 
-
-
-
-
 @bot.tree.command(name='sendmsg', description='Sender melding til en kanal av ditt valg')
 @commands.has_permissions(manage_messages=True)  # Ensure only authorized users use this command
 async def SendMessageToChannel(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
@@ -103,7 +97,7 @@ async def SendUkensKupong(interaction: discord.Interaction, days: int, channel: 
 
             for fixture in fixtures:
 
-                message_content, home_team_emoji, away_team_emoji = logic.FormatMatchMessge(fixture, emoji_data)
+                message_content, home_team_emoji, away_team_emoji = logic.format_match_message(fixture, emoji_data)
 
                 message = await channel.send(message_content)
 
@@ -115,7 +109,7 @@ async def SendUkensKupong(interaction: discord.Interaction, days: int, channel: 
             file_functions.write_file(logic.tracked_messages, messages)
 
 
-            date_start, hour_start, minute_start, messages_id = get_day_hour_minute(days)
+            date_start, hour_start, minute_start, messages_id = logic.get_day_hour_minute(days)
             anyGames = await update_jobs(date_start, hour_start, minute_start, messages_id, channel)
             if not anyGames:
                 await interaction.followup.send(f"Ingen kamper de neste {days} dagene", ephemeral=True)
@@ -136,7 +130,7 @@ async def SendUkensKupong(interaction: discord.Interaction, days: int, channel: 
 
 
 @bot.tree.command(name="total_ledertavle", description="Vis totale resultater")
-async def total_leaderboard(interaction: discord.Interaction):
+async def TotalLeaderboard(interaction: discord.Interaction):
     if logic.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer(ephemeral=True)
 
@@ -168,7 +162,7 @@ async def total_leaderboard(interaction: discord.Interaction):
 
 @bot.tree.command(name="ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
 @commands.has_permissions(manage_messages=True)
-async def send_leaderboard_message(interaction: discord.Interaction):
+async def SendResults(interaction: discord.Interaction):
     if logic.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer()
 
@@ -202,7 +196,7 @@ async def send_leaderboard_message(interaction: discord.Interaction):
 
 @bot.tree.command(name="lagre_tips_manuelt", description="Kopier meldingen for kampen sine reaksjoner du vil lagre")
 @commands.has_permissions(manage_messages=True)
-async def find_message_by_content(interaction: discord.Interaction, content: str):
+async def FindMessageByContent(interaction: discord.Interaction, content: str):
     if logic.check_if_valid_server(interaction.guild_id):
         channel = await bot.fetch_channel(channel_id)
         await interaction.response.defer(ephemeral=True)
@@ -245,7 +239,7 @@ async def print_scheduled_event(interaction: discord.Interaction):
 
 @bot.tree.command(name='clear_cache', description='Tømmer json-filer')
 @commands.has_permissions(manage_messages=True)
-async def clear_cache(interaction: discord.Integration):
+async def ClearCache(interaction: discord.Integration):
     if logic.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer(ephemeral=True)
         file_functions.clear_file(logic.predictions_file, {})
@@ -258,7 +252,7 @@ async def clear_cache(interaction: discord.Integration):
 
 @bot.tree.command(name='sjekk_lagret_data', description='Sjekker predictions-fila')
 @commands.has_permissions(manage_messages=True)
-async def check_predictions_stored(interaction: discord.Integration):
+async def CheckIfPredictionIsStored(interaction: discord.Integration):
     await interaction.response.defer(ephemeral=True)
     channel = await bot.fetch_channel(channel_id)
     predictions_file = file_functions.read_file(logic.predictions_file)
@@ -273,33 +267,6 @@ async def check_predictions_stored(interaction: discord.Integration):
     else:
         await interaction.followup.send("No stored predictions found.", ephemeral=True)
 
-
-def get_day_hour_minute(days):
-
-    day_of_week = []
-    hour = []
-    minute = []
-    data = API.get_matches(days)
-    message_id_and_match_id = file_functions.read_file(logic.tracked_messages)
-    message_ids = [message_id for message_id, _ in message_id_and_match_id]
-
-# Extract the message IDs as a list
-
-
-    for date in data:
-     # Parse the date string into a datetime object
-        date_time = datetime.fromisoformat(date['date'])
-        # Get the day of the week
-        day_of_week_add = date_time.strftime('%A')[:3].lower()
-        day_of_week.append(day_of_week_add)
-        # Get the hour and minute
-        hour_add = int(date_time.strftime('%H'))
-        hour.append(str(hour_add))
-
-        minute_add = int(date_time.strftime('%M')) 
-        minute.append(str(minute_add))
-
-    return day_of_week, hour, minute, message_ids
 
 
 async def update_jobs(date_start, hour_start, minute_start, message_ids, channel):

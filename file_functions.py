@@ -4,7 +4,7 @@ import os
 
 
 
-def StorePredictions(PredictionsFile, target_message, prediction):
+def store_predictions(PredictionsFile, target_message, prediction):
 
     # Read the predictions file
     predictions = read_file(PredictionsFile)

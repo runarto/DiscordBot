@@ -75,15 +75,18 @@ async def update_user_scores():
 
 #Sorterer 
 
-def sort_user_scores(user_scores):
+def sort_user_scores(user_scores, weekly_winners):
     if user_scores is None:
         return
 
     # Check if user_scores is a dictionary
     if isinstance(user_scores, dict):
         # Sorting the dictionary by its values (scores) in descending order
-        sorted_scores = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
-        return sorted_scores
+        return sorted(
+        user_scores.items(),
+        key=lambda item: (item[1], weekly_winners.get(item[0].strip('<@!>'), 0)),
+        reverse=True
+    )
 
     # Check if user_scores is a list of dictionaries
     elif isinstance(user_scores, list):
@@ -92,7 +95,7 @@ def sort_user_scores(user_scores):
         return sorted_scores
 
     # Return an empty list if user_scores is neither a dict nor a list of dicts
-    return  
+    return []
 
 
 async def format_leaderboard_message(guild):
@@ -108,8 +111,8 @@ async def format_leaderboard_message(guild):
 
     message_parts = []
 
-    if this_week_user_scores:
-        scores_this_week = sort_user_scores(this_week_user_scores)
+    if this_week_user_scores: # Check if there were any games this prior week. 
+        scores_this_week = sort_user_scores(this_week_user_scores, None)
         points_to_users = await get_user_nicknames(scores_this_week, guild)
         message_parts = format_message(points_to_users, num_of_games)
 
@@ -126,24 +129,45 @@ async def format_leaderboard_message(guild):
             message_parts.append(winner_message)
 
     if user_scores:
-        sorted_user_score = sort_user_scores(user_scores)
+        # Sort user scores with weekly wins as a tiebreaker
+        sorted_user_score = sort_user_scores(user_scores, weekly_winners)
         message_parts.append("Totale poeng:")
-        for rank, (user_id, score) in enumerate(sorted_user_score, start=1):
-            try: 
+        
+        current_rank = 0  # Initialize rank separately
+        previous_score = None
+        previous_weekly_wins = None
+
+        for index, (user_id, score) in enumerate(sorted_user_score, start=1):
+            try:
                 if user_id is not None:
                     user_id = user_id.strip('<@!>')
-                role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
-                if role == None:
+
+                # Fetch role and nickname
+                role = await get_primary_role_for_user(user_id, guild, team_emojis)
+                if role is None:
                     role = ""
 
                 user_nick = await guild.fetch_member(int(user_id))
+                weekly_win_count = weekly_winners.get(user_id, 0)
+
+                # Determine rank only for valid users
+                if score != previous_score or weekly_win_count != previous_weekly_wins:
+                    current_rank += 1
+
+                # Append to message parts
                 if user_id in weekly_winners:
-                    message_parts.append(f"{rank}. {role}{user_nick.display_name}: {score}p (us: {weekly_winners[user_id]})")
+                    message_parts.append(f"{current_rank}. {role}{user_nick.display_name}: {score}p (us: {weekly_win_count})")
                 else:
-                    message_parts.append(f"{rank}. {role}{user_nick.display_name}: {score}p")
+                    message_parts.append(f"{current_rank}. {role}{user_nick.display_name}: {score}p")
+
+                # Update previous values
+                previous_score = score
+                previous_weekly_wins = weekly_win_count
+
             except discord.NotFound:
                 print(f"Member with user_id: {user_id} not found in guild: {guild.name} (ID: {guild.id}), skipping.")
                 continue
+
             
             
 
@@ -193,13 +217,16 @@ def get_weekly_winners(weekly_winners, sorted_this_week_user_scores, highest_sco
 
     return weekly_winners, winners
 
-async def StorePredictions(message_id, channel, bot):
+
+
+
+async def store_predictions(message_id, channel, bot):
 
     message_id = str(message_id)
 
     try:
-        current_reactions = await FetchReactionsFromMessage(message_id, channel, bot)
-        file_functions.StorePredictions(logic.predictions_file, message_id, current_reactions)
+        current_reactions = await fetch_reactions_from_message(message_id, channel, bot)
+        file_functions.store_predictions(logic.predictions_file, message_id, current_reactions)
         return
     except discord.NotFound:
         print("Message or channel not found.")
@@ -212,7 +239,7 @@ async def StorePredictions(message_id, channel, bot):
 
 
 
-async def FetchReactionsFromMessage(message_id, channel, bot):
+async def fetch_reactions_from_message(message_id, channel, bot):
     try:
         if channel is None:
             print("Channel not found. Unable to proceed.")
@@ -261,7 +288,7 @@ async def FetchReactionsFromMessage(message_id, channel, bot):
     
 
 
-async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
+async def fetch_primary_role_for_user(guild, user_id, team_emojis):
     try:
         user = await guild.fetch_member(user_id)
     except discord.NotFound:
@@ -291,7 +318,7 @@ async def FetchPrimaryRoleForUser(guild, user_id, team_emojis):
         return None
 
 # Example usage
-async def GetPrimaryRoleForUser(user_id, guild, team_emojis):
+async def get_primary_role_for_user(user_id, guild, team_emojis):
 
     if user_id is None:
         return None
@@ -305,7 +332,7 @@ async def GetPrimaryRoleForUser(user_id, guild, team_emojis):
         print(f"User: {user_id}, emoji: <:Odd:1039839692373368872>")
         return "<:Odd:1039839692373368872>"
 
-    primary_role = await FetchPrimaryRoleForUser(guild, user_id, team_emojis)
+    primary_role = await fetch_primary_role_for_user(guild, user_id, team_emojis)
     if primary_role is not None:
         print(f"User: {user_id}, emoji: {primary_role}")
         return primary_role
@@ -318,13 +345,13 @@ async def total_leaderboard_message(user_scores, guild):
     team_emojis = file_functions.read_file(logic.team_emojis_file)
     weekly_winners = file_functions.read_file("jsonfiles/weekly_winners.json")
     message_parts = []
-    sorted_user_score = sort_user_scores(user_scores)
+    sorted_user_score = sort_user_scores(user_scores, weekly_winners)
     message_parts.append("Totale poeng:")
     for rank, (username, score) in enumerate(sorted_user_score, start=1):
         user_id = username_to_id.get(username)
         if user_id is not None:
             user_id = user_id.strip('<@!>')
-        role = await GetPrimaryRoleForUser(user_id, guild, team_emojis)
+        role = await get_primary_role_for_user(user_id, guild, team_emojis)
         if role == None:   
             role = ""
         message_parts.append(f"{rank}. {role}{username}: {score}p")
