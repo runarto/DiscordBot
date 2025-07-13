@@ -1,34 +1,36 @@
 import discord
 from discord.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import logic
-import file_functions
-import perms
-import API
-
-channel_id = perms.CHANNEL_ID #Kanalen hvor kupongen sendes
+import utils as utils
+import file_functions as file_functions
+import API 
 import traceback
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+CHANNEL_ID = os.getenv('CHANNEL_ID')
 
 
 async def update_user_scores():
     try:
         
-        predictions = file_functions.read_file(logic.predictions_file) #{message_id, [data]}
+        predictions = file_functions.read_file(utils.predictions_file) #{message_id, [data]}
         print("predictions fetched\n")
 
         if not predictions:
             return {}, [], 0
 
-        team_emojis = file_functions.read_file(logic.team_emojis_file)
+        team_emojis = file_functions.read_file(utils.team_emojis_file)
         print("emojis fetched\n")
 
         # Sort the order_tuple based on match_id
-        order_tuple = file_functions.read_file(logic.tracked_messages) #[message-id, match-id]
+        order_tuple = file_functions.read_file(utils.tracked_messages) #[message-id, match-id]
         message_id_match_id_dict = dict(order_tuple) #message_match_dict[message_id] = match_id
         print("message-match\n")
 
         num_of_games = 0
-        user_scores = file_functions.read_file(logic.user_scores) #Total poengsum all-time
+        user_scores = file_functions.read_file(utils.user_scores) #Total poengsum all-time
         this_week_user_score = []  #Ukens poeng
 
         for message_id, reactions_data in predictions.items():
@@ -103,7 +105,7 @@ async def format_leaderboard_message(guild):
     user_scores, this_week_user_scores, num_of_games = await update_user_scores()
     print("scores fetched\n")
 
-    team_emojis = file_functions.read_file(logic.team_emojis_file)
+    team_emojis = file_functions.read_file(utils.team_emojis_file)
     weekly_winners = file_functions.read_file("jsonfiles/weekly_winners.json")
     
     if not user_scores or not this_week_user_scores:
@@ -138,7 +140,7 @@ async def format_leaderboard_message(guild):
             previous_weekly_wins = None
         
             # Get previous sorted user scores
-            prev_sorted_user_score = sort_user_scores(file_functions.read_file(logic.user_scores), weekly_winners)
+            prev_sorted_user_score = sort_user_scores(file_functions.read_file(utils.user_scores), weekly_winners)
         
             # Create a mapping of user IDs to their previous ranks
             prev_rank_map = {user_id: rank for rank, (user_id, _) in enumerate(prev_sorted_user_score, start=1)}
@@ -190,7 +192,7 @@ async def format_leaderboard_message(guild):
             
             
 
-        file_functions.write_file(logic.user_scores, user_scores)
+        file_functions.write_file(utils.user_scores, user_scores)
         file_functions.write_file("jsonfiles/weekly_winners.json", weekly_winners)
 
     return '\n'.join(message_parts)
@@ -245,7 +247,7 @@ async def store_predictions(message_id, channel, bot):
 
     try:
         current_reactions = await fetch_reactions_from_message(message_id, channel, bot)
-        file_functions.store_predictions(logic.predictions_file, message_id, current_reactions)
+        file_functions.store_predictions(utils.predictions_file, message_id, current_reactions)
         return
     except discord.NotFound:
         print("Message or channel not found.")
@@ -318,13 +320,13 @@ async def fetch_primary_role_for_user(guild, user_id, team_emojis):
         # Iterate through the roles and return the first one with a unicode emoji
         highest_val = 0
         for role in user.roles:
-            if (role.position > highest_val) and (role.name not in logic.nonRoles) and (role.position <= logic.MAX_ROLE_VALUE):
+            if (role.position > highest_val) and (role.name not in utils.nonRoles) and (role.position <= utils.MAX_ROLE_VALUE):
                 highest_val = role.position
                 team_name = role.name
 
         highest_similarity = 0
         for team in team_emojis.keys():
-            similarity = logic.check_similarity(team_name.lower(), team.split(" ")[0].lower())
+            similarity = utils.check_similarity(team_name.lower(), team.split(" ")[0].lower())
             if similarity > highest_similarity:
                 curr_emoji = team_emojis.get(team)
                 highest_similarity = similarity
@@ -360,8 +362,8 @@ async def get_primary_role_for_user(user_id, guild, team_emojis):
 
 
 async def total_leaderboard_message(user_scores, guild):
-    username_to_id = file_functions.read_file(logic.all_users)
-    team_emojis = file_functions.read_file(logic.team_emojis_file)
+    username_to_id = file_functions.read_file(utils.all_users)
+    team_emojis = file_functions.read_file(utils.team_emojis_file)
     weekly_winners = file_functions.read_file("jsonfiles/weekly_winners.json")
     message_parts = []
     sorted_user_score = sort_user_scores(user_scores, weekly_winners)

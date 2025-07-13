@@ -1,15 +1,16 @@
-from perms import API_TOKEN
 from difflib import SequenceMatcher
-import file_functions
-import perms
-import API
+import src.file_functions as file_functions
 from datetime import datetime
+from dotenv import load_dotenv
+
+import os
 
 nonRoles = ["Sørveradministrator", "bot-fikler", "Norges Fotballforbund", "Tippekuppongmester"]
 MAX_MESSAGE_LENGTH = 2000
 MAX_ROLE_VALUE = 100
 
-
+load_dotenv()
+GUILD_ID = int(os.getenv("GUILD_ID"))
 
 teams = [
     "Kristiansund BK",
@@ -117,10 +118,10 @@ async def map_emojis_to_teams(bot, teams):
 
     file_functions.write_file(team_emojis_file, {})
 
-    guild = bot.get_guild(perms.guild_id)
+    guild = bot.get_guild(GUILD_ID)
     if not guild:
-        print(f"Guild with ID {perms.guild_id} not found.")
-        return
+        print(f"Guild with ID {GUILD_ID} not found.")
+        exit(1)
 
     team_emoji_mappings = {}
 
@@ -142,10 +143,6 @@ async def map_emojis_to_teams(bot, teams):
     
     file_functions.write_file(team_emojis_file, team_emoji_mappings)
     
-
-    
-    
-
     return team_emoji_mappings
 
 def format_match_message(fixture, emoji_data):
@@ -193,12 +190,24 @@ def split_message(message):
     return split_messages
 
 def check_if_valid_server(server_id):
-    if server_id == perms.guild_id:
+    if server_id == GUILD_ID:
         return True
     else:
         return False
+    
+async def leave_unauthorized_guilds(bot, ALLOWED_GUILDS):
+    """
+    Leaves any guild that is not in the ALLOWED_GUILDS list.
+    """
 
-#get_matches(0)
+    if not bot.guilds:
+        print("No guilds found.")
+        return
+    for guild in bot.guilds:
+        if guild.id not in ALLOWED_GUILDS:
+            print(f"Leaving unauthorized guild: {guild.name} ({guild.id})")
+            await guild.leave()
+
 
 
 def get_day_hour_minute(days):

@@ -1,5 +1,5 @@
 perms.py
 __pycache__/
-predictions.py
 venv/
 jsonfiles/
+.env
