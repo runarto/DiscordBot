@@ -5,30 +5,6 @@ import os
 
 API_TOKEN = os.getenv('API_TOKEN')  # Ensure you have your API token set in your environment variables
 
-def get_teams():
-    """
-    Fetches the list of teams from the API and returns a dictionary mapping team IDs to team names.
-    """
-    api_url = "https://v3.football.api-sports.io/teams"
-    headers = {
-        "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": API_TOKEN  # Be cautious with your API key
-    }
-    params = {
-        'league': '103',  # Norwegian Eliteserien
-        'season': '2025'
-    }
-
-    response = requests.get(api_url, headers=headers, params=params)
-    
-    if response.status_code == 200:
-        data = response.json()
-        teams = {team['team']['id']: team['team']['name'] for team in data['response']}
-        return teams
-    else:
-        print(f"Error fetching teams: {response.status_code}")
-        return {}
-
 def get_matches(x_days):
 
     today_date = datetime.now().strftime("%Y-%m-%d")

@@ -23,9 +23,11 @@ intents.message_content = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
 CHANNEL_ID = os.getenv('CHANNEL_ID')
-ALLOWED_GUILDS = os.getenv('ALLOWED_GUILDS')
+ALLOWED_GUILDS = [1039825091430719559, 813477125100797962]
 GUILD_ID = os.getenv('GUILD_ID')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+
 
 
 timezone = pytz.timezone('Europe/Oslo')

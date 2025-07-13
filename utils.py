@@ -1,7 +1,8 @@
 from difflib import SequenceMatcher
-import src.file_functions as file_functions
+import file_functions as file_functions
 from datetime import datetime
 from dotenv import load_dotenv
+import API as API
 
 import os
 
@@ -205,8 +206,9 @@ async def leave_unauthorized_guilds(bot, ALLOWED_GUILDS):
         return
     for guild in bot.guilds:
         if guild.id not in ALLOWED_GUILDS:
+            print(guild.id)
             print(f"Leaving unauthorized guild: {guild.name} ({guild.id})")
-            await guild.leave()
+            #await guild.leave()
 
 
 
