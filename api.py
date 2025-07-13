@@ -1,15 +1,12 @@
 from datetime import datetime, timedelta
 from perms import API_TOKEN
 import requests
-import perms
 
 def get_matches(x_days):
-    today_date = datetime.now().strftime("%Y-%m-%d")
 
+    today_date = datetime.now().strftime("%Y-%m-%d")
     new_date = datetime.now() + timedelta(days=x_days)
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
-
-    #Hver gang get_matches() kjører henter vi inn kamper som er fra denne dagen, og 7 dager frem i tid
 
     api_url = "https://v3.football.api-sports.io/fixtures"
     headers = {
@@ -18,7 +15,7 @@ def get_matches(x_days):
     }
     query_fixtures = {
         "league": "103",
-        "season": "2024",
+        "season": "2025",
         "timezone": "Europe/Oslo",
         "from": today_date,
         "to": formatted_new_date 
@@ -125,3 +122,7 @@ def get_match_results_non_async(match_id):
     print("Home team: " + home_team + "\n")
     print("Away team: " + away_team + "\n")
     return result, home_team, away_team
+
+
+
+

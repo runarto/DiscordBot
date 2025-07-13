@@ -2,6 +2,8 @@ from perms import API_TOKEN
 from difflib import SequenceMatcher
 import file_functions
 import perms
+import API
+from datetime import datetime
 
 nonRoles = ["Sørveradministrator", "bot-fikler", "Norges Fotballforbund", "Tippekuppongmester"]
 MAX_MESSAGE_LENGTH = 2000
@@ -92,7 +94,9 @@ team_emoji_id = [
     "<:Stroemsgodset:1039841950079143937>",
     "<:Viking:1039842907894599760>",
     "<:Sandefjord:1039840813544378418>",
-    "<:Haugesund:1039832977158443058>"
+    "<:Haugesund:1039832977158443058>",
+    "<:Bryne:1039945160374632489>",
+    "<:Vaalerenga:1039843306043080735>"
 ]
 
 
@@ -144,7 +148,7 @@ async def map_emojis_to_teams(bot, teams):
 
     return team_emoji_mappings
 
-def FormatMatchMessge(fixture, emoji_data):
+def format_match_message(fixture, emoji_data):
     home_team = fixture['home_team']
     away_team = fixture['away_team']
 
@@ -195,3 +199,31 @@ def check_if_valid_server(server_id):
         return False
 
 #get_matches(0)
+
+
+def get_day_hour_minute(days):
+
+    day_of_week = []
+    hour = []
+    minute = []
+    data = API.get_matches(days)
+    message_id_and_match_id = file_functions.read_file(tracked_messages)
+    message_ids = [message_id for message_id, _ in message_id_and_match_id]
+
+# Extract the message IDs as a list
+
+
+    for date in data:
+     # Parse the date string into a datetime object
+        date_time = datetime.fromisoformat(date['date'])
+        # Get the day of the week
+        day_of_week_add = date_time.strftime('%A')[:3].lower()
+        day_of_week.append(day_of_week_add)
+        # Get the hour and minute
+        hour_add = int(date_time.strftime('%H'))
+        hour.append(str(hour_add))
+
+        minute_add = int(date_time.strftime('%M')) 
+        minute.append(str(minute_add))
+
+    return day_of_week, hour, minute, message_ids

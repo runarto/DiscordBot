@@ -4,12 +4,7 @@ import os
 
 
 
-
-
-
-
-
-def StorePredictions(PredictionsFile, target_message, prediction):
+def store_predictions(PredictionsFile, target_message, prediction):
 
     # Read the predictions file
     predictions = read_file(PredictionsFile)
@@ -64,8 +59,6 @@ def write_file(file_path, new_data):
         json.dump(data, file, indent=4)
 
 
-
-
-
-
-
+def clear_file(file, data):
+    with open(file, 'w') as file:
+        json.dump(data, file, indent=4)
