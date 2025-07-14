@@ -8,9 +8,6 @@ import file_functions
 import leaderboard
 import traceback
 import API
-import ssl
-import certifi
-import aiohttp
 
 
 scheduler = AsyncIOScheduler()
@@ -24,16 +21,8 @@ channel_id = perms.CHANNEL_ID
 
 timezone = pytz.timezone('Europe/Oslo')
 
-async def setup_connector():
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
-    connector = aiohttp.TCPConnector(ssl=ssl_context)
-    session = aiohttp.ClientSession(connector=connector)
-    bot.http.connector = connector
-    bot.http._HTTPClient__session = session  # 👈 monkey-patch session
-
 @bot.event
 async def on_ready():
-    await setup_connector()
     print(f"Bot has started and is in {len(bot.guilds)} guild(s)")
 
     for guild in bot.guilds:
@@ -82,7 +71,7 @@ async def on_ready():
 
 
 @bot.tree.command(name='sendmsg', description='Sender melding til en kanal av ditt valg')
-@commands.has_permissions(manage_messages=True)  # Ensure only authorized users use this command
+@commands.has_permissions(manage_messages=True)
 async def SendMessageToChannel(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
     if logic.check_if_valid_server(interaction.guild_id):
         try:

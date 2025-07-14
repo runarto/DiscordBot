@@ -1,18 +1,22 @@
 import sqlite3
+from db.db_create import create_matches_table, create_users_table, create_predictions_table, create_scores_table
 
-def initialize_database():
-    # Connect to the SQLite database (or create it if it doesn't exist)
-    conn = sqlite3.connect('predictions.db')
-    cursor = conn.cursor()
+class DB:
+    def __init__(self, db_path):
+        self.conn = sqlite3.connect(db_path)
 
-    # Create a table for storing predictions if it doesn't already exist
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS predictions (
-            target_message TEXT PRIMARY KEY,
-            prediction TEXT
-        )
-    ''')
+    def init_db(self):
+        self.create_tables()
 
-    # Commit the changes and close the connection
-    conn.commit()
-    conn.close()
+    def create_tables(self):
+        create_predictions_table(self.conn)
+        create_matches_table(self.conn)
+        create_scores_table(self.conn)
+        create_users_table(self.conn)
+
+    
+
+    
+
+    
+

@@ -1,0 +1,58 @@
+
+
+# --- Matches Read/Write ---
+
+def insert_match(conn, match_id, home_team, away_team, kick_off_time):
+    with conn:
+        conn.execute("""
+            INSERT OR REPLACE INTO matches (match_id, home_team, away_team, kick_off_time)
+            VALUES (?, ?, ?, ?);
+        """, (match_id, home_team, away_team, kick_off_time))
+
+def get_all_matches(conn):
+    return conn.execute("SELECT * FROM matches ORDER BY kick_off_time;").fetchall()
+
+def get_match_by_id(conn, match_id):
+    return conn.execute("SELECT * FROM matches WHERE match_id = ?;", (match_id,)).fetchone()
+
+# --- Predictions Read/Write ---
+
+def insert_prediction(conn, match_id, user_id, prediction):
+    with conn:
+        conn.execute("""
+            INSERT OR REPLACE INTO predictions (match_id, user_id, prediction)
+            VALUES (?, ?, ?);
+        """, (match_id, user_id, prediction))
+
+def get_predictions_for_user(conn, user_id):
+    return conn.execute("SELECT * FROM predictions WHERE user_id = ?;", (user_id,)).fetchall()
+
+def get_prediction(conn, match_id, user_id):
+    return conn.execute("""
+        SELECT prediction FROM predictions 
+        WHERE match_id = ? AND user_id = ?;
+    """, (match_id, user_id)).fetchone()
+
+def get_all_predictions_for_match(conn, match_id):
+    return conn.execute("""
+        SELECT user_id, prediction FROM predictions
+        WHERE match_id = ?;
+    """, (match_id,)).fetchall()
+
+# --- Scores Read/Write ---
+
+def upsert_score(conn, user_id, points_delta=0, win_delta=0):
+    with conn:
+        conn.execute("""
+            INSERT INTO scores (user_id, points, weekly_wins)
+            VALUES (?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET 
+                points = points + excluded.points,
+                weekly_wins = weekly_wins + excluded.weekly_wins;
+        """, (user_id, points_delta, win_delta))
+
+def get_user_score(conn, user_id):
+    return conn.execute("SELECT * FROM scores WHERE user_id = ?;", (user_id,)).fetchone()
+
+def get_all_scores(conn):
+    return conn.execute("SELECT * FROM scores ORDER BY points DESC;").fetchall()

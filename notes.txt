@@ -1,0 +1,13 @@
+Tables needed:
+
+matches [match_id, home_team, away_team, kick_off_time]
+predictions [match_id, user_id, prediction]
+scores [user_id, points, weekly_wins]
+
+bot-funksjoner:
+
+send_kupong: sender ut ukens kupong
+send_resultater: printer ut de oppdaterte resultatene
+les_kamper: tar inn et sett med kamper
+logger: sender logg av det som gjøres til en kanal
+
