@@ -3,7 +3,7 @@ from discord.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import utils as utils
 import file_functions as file_functions
-import API 
+import api as API
 import traceback
 import os
 from dotenv import load_dotenv

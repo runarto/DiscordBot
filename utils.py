@@ -2,7 +2,7 @@ from difflib import SequenceMatcher
 import file_functions as file_functions
 from datetime import datetime
 from dotenv import load_dotenv
-import API as API
+import api as API
 
 import os
 

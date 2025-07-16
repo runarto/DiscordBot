@@ -6,7 +6,7 @@ import utils as utils
 import file_functions as file_functions
 import leaderboard as leaderboard
 import traceback
-import API as API
+import api as API
 import ssl
 import certifi
 import aiohttp
