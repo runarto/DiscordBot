@@ -22,14 +22,10 @@ intents.reactions = True
 intents.message_content = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-CHANNEL_ID = os.getenv('CHANNEL_ID')
+CHANNEL_ID = 1094933846383923320
+GUILD_ID = 1039825091430719559
 ALLOWED_GUILDS = [1039825091430719559, 813477125100797962]
-GUILD_ID = os.getenv('GUILD_ID')
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-
-
-
-
 timezone = pytz.timezone('Europe/Oslo')
 
 async def setup_connector():
@@ -41,7 +37,7 @@ async def setup_connector():
 
 @bot.event
 async def on_ready():
-    await setup_connector()
+    #await setup_connector()
 
     await utils.leave_unauthorized_guilds(bot, ALLOWED_GUILDS)
 
