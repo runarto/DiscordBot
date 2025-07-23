@@ -1,6 +1,6 @@
-perms.py
 __pycache__/
-predictions.py
 .venv/
+.vscode/
 jsonfiles/
 .env
+notes.txt

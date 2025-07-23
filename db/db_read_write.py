@@ -56,3 +56,24 @@ def get_user_score(conn, user_id):
 
 def get_all_scores(conn):
     return conn.execute("SELECT * FROM scores ORDER BY points DESC;").fetchall()
+
+# --- Users Read/Write ---
+
+def insert_user(conn, user_id, user_name, user_emoji=None):
+    with conn:
+        conn.execute("""
+            INSERT OR REPLACE INTO users (user_id, user_name, user_emoji)
+            VALUES (?, ?, ?);
+        """, (user_id, user_name, user_emoji))
+
+# --- Team Emojis Read/Write ---
+
+def get_team_emojis(conn):
+    return conn.execute("SELECT * FROM team_emojis;").fetchall()
+
+def insert_team_emoji(conn, team_name, emoji):
+    with conn:
+        conn.execute("""
+            INSERT OR REPLACE INTO team_emojis (team_name, emoji)
+            VALUES (?, ?);
+        """, (team_name, emoji))

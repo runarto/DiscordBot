@@ -38,6 +38,7 @@ def create_users_table(conn):
         conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             user_id TEXT PRIMARY KEY,
+            user_name TEXT NOT NULL,
             user_emoji TEXT
         );
         """)

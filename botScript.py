@@ -1,15 +1,17 @@
 import discord
 from discord.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import perms
 import pytz 
-import logic
-import file_functions
+import misc.logic as logic
 import leaderboard
 import traceback
-import API
+from dotenv import load_dotenv
+import os
+from db.db_interface import DB
+from misc.logic import fetch_user_data
 
 
+load_dotenv()
 scheduler = AsyncIOScheduler()
 intents = discord.Intents.default()
 intents.members = True
@@ -17,16 +19,21 @@ intents.reactions = True
 intents.message_content = True
 intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-channel_id = perms.CHANNEL_ID
+CHANNEL_ID = 1094933846383923320
+GUILD_ID = 1039825091430719559
+ALLOWED_GUILDS = [1039825091430719559]
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+timezone = pytz.timezone('Europe/Oslo')
 
 timezone = pytz.timezone('Europe/Oslo')
 
 @bot.event
 async def on_ready():
+    db = DB("infobase.db")
     print(f"Bot has started and is in {len(bot.guilds)} guild(s)")
 
     for guild in bot.guilds:
-        if guild.id not in perms.ALLOWED_GUILDS:
+        if guild.id not in ALLOWED_GUILDS:
             print(f"Leaving unauthorized guild: {guild.name} ({guild.id})")
             await guild.leave()
 
@@ -35,62 +42,23 @@ async def on_ready():
     await bot.tree.sync()
     print(f'Logged in as {bot.user}')
 
-    # Debugging: List all commands in the command tree
-    print("Registered Commands:")
-    for command in bot.tree.get_commands():
-        print(f"- {command.name} (Type: {'Slash Command' if isinstance(command, discord.app_commands.Command) else 'Text Command'})")
-    
-    await logic.map_emojis_to_teams(bot, logic.teams)
-    print("Emojis fetched")
+    fetch_user_data(bot=bot, db=db) 
 
-    # Fetch and print all roles in each guild
-    for guild in bot.guilds:
-        print(f"Roles in guild: {guild.name} ({guild.id})")
-        for role in guild.roles:
-            print(f"- {role.name} (Position: {role.position})")
-            if role.name == "Bodø/Glimt":
-                logic.MAX_ROLE_VALUE = role.position
+    for emoji in guild.emojis:
 
-    
-    # Check for any scheduled jobs
-    scheduled_jobs = file_functions.read_file(logic.scheduled_jobs)
-    if scheduled_jobs:
-        channel = await bot.fetch_channel(channel_id)
-        for job in scheduled_jobs:
-            scheduler.add_job(
-                leaderboard.store_predictions,
-                'cron',
-                day_of_week=job['date'],
-                hour=job['hour'],
-                minute=job['minute'],
-                timezone=timezone,
-                args=[job['message_id'], channel, bot],
-                id=str(job['message_id'])
-            )
-            print(f"Job ID: {job['message_id']}, Scheduled Time: {job['date']} at {job['hour']}:{job['minute']}, Function: {leaderboard.store_predictions.__name__}")
-
-
-@bot.tree.command(name='sendmsg', description='Sender melding til en kanal av ditt valg')
-@commands.has_permissions(manage_messages=True)
-async def SendMessageToChannel(interaction: discord.Interaction, channel: discord.TextChannel, *, message: str):
-    if logic.check_if_valid_server(interaction.guild_id):
-        try:
-            await channel.send(message)
-            await interaction.response.send_message(f"Melding sent til {channel.name}.", ephemeral=True)
-        except discord.Forbidden:
-            await interaction.response.send_message("Jeg har ikke tilgang til å sende melding i denne kanalen.", ephemeral=True)
-        except Exception as e:
-            await interaction.response.send_message(f"An error occurred: {e}", ephemeral=True)
-    else:
-        await interaction.response.send_message("Denne kommandoen kan kun brukes i en spesifikk server.", ephemeral=True)
-
-
+    return
 
 @bot.tree.command(name='ukens_kupong', description='Send ukens kupong for de neste dagene')
 @commands.has_permissions(manage_messages=True)
-async def SendUkensKupong(interaction: discord.Interaction, days: int, channel: discord.TextChannel):
+async def SendUkensKupong(interaction: discord.Interaction, 
+                          days: int, 
+                          channel: discord.TextChannel):
 
-    if logic.check_if_valid_server(interaction.guild_id):
+
+
+
+
+
         await interaction.response.defer(ephemeral=True)
         emoji_data = file_functions.read_file(logic.team_emojis_file)
 
@@ -127,8 +95,6 @@ async def SendUkensKupong(interaction: discord.Interaction, days: int, channel: 
         except Exception as e:
             await interaction.followup.send(f"An error occurred: {e}. Ta kontakt med Runar (trunar)", ephemeral=True)
             traceback.print_exc()
-    else:
-        await interaction.response.send_message("Denne kommandoen kan kun brukes i en spesifikk server.", ephemeral=True)
 
 
 
@@ -389,7 +355,7 @@ async def FindLuremuser(
 
 
 
-bot.run(perms.TOKEN)
+bot.run(os.getenv('BOT_TOKEN'))
 
 
 
