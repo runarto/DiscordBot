@@ -1,46 +1,117 @@
-import json
 
-# Load data from the provided JSON files
-with open('jsonfiles/user_scores_Eliteserien.json', 'r') as f:
-    user_scores = json.load(f)
+# main.py - Clean main file
+import logging
+import discord
+from discord.ext import commands
+import os
+import asyncio
+from dotenv import load_dotenv
 
-with open('jsonfiles/weekly_winners.json', 'r') as f:
-    weekly_winners = json.load(f)
+from misc.setup import setup_logging, setup_bot, setup_scheduler
+from db.db_interface import DB
+from logger.log import DiscordLogHandler
 
-# Function to sort user scores
-def sort_user_scores(user_scores, weekly_winners):
-    return sorted(
-        user_scores.items(),
-        key=lambda item: (item[1], weekly_winners.get(item[0].strip('<@!>'), 0)),
-        reverse=True
-    )
+# Global constants
+DB_PATH = "testbase.db"
+TIPPEKUPONG_CHANNEL_ID = 1094933846383923320
+GUILD_ID = 1039825091430719559
+ALLOWED_GUILDS = [GUILD_ID]
+LOG_CHANNEL_ID = 1376622589488664816
 
-# Sort the user scores
-sorted_user_score = sort_user_scores(user_scores, weekly_winners)
+# Create shared instances
+db = DB(DB_PATH)
+load_dotenv()
+logger = setup_logging()
+bot = setup_bot()
+scheduler = setup_scheduler(db=db, channel=discord.Object(id=TIPPEKUPONG_CHANNEL_ID), logger=logger)
 
-# Generate message parts with rank calculation
-message_parts = ["Totale poeng:"]
-previous_score = None
-previous_weekly_wins = None
-current_rank = 0
+# Attach shared instances to bot for cogs to access
+bot.db = db
+bot.logger = logger
+bot.scheduler = scheduler
+bot.db_path = DB_PATH
 
-for index, (user_id, score) in enumerate(sorted_user_score, start=1):
-    weekly_win_count = weekly_winners.get(user_id.strip('<@!>'), 0)
+async def load_cogs():
+    """Load all cogs"""
+    cogs = [
+        'cogs.manager'
+        'cogs.admin',
+        'cogs.database', 
+        'cogs.kupong',
+        'cogs.mapping'
+    ]
+    
+    for cog in cogs:
+        try:
+            await bot.load_extension(cog)
+            logger.info(f"Loaded: {cog}")
+        except Exception as e:
+            logger.error(f"Failed to load {cog}: {e}")
 
-    # Determine rank
-    if score != previous_score or weekly_win_count != previous_weekly_wins:
-        current_rank = index
+@bot.event
+async def on_ready():
+    discord_handler = DiscordLogHandler(bot, LOG_CHANNEL_ID)
+    discord_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+    logger.addHandler(discord_handler)
 
-    # Append to message parts
-    if user_id.strip('<@!>') in weekly_winners:
-        message_parts.append(f"{current_rank}. {user_id}: {score}p (us: {weekly_win_count})")
-    else:
-        message_parts.append(f"{current_rank}. {user_id}: {score}p")
+    for guild in bot.guilds:
+        if guild.id not in ALLOWED_GUILDS:
+            logger.warning(f"Leaving unauthorized guild: {guild.name} ({guild.id})")
+            await guild.leave()
 
-    # Update previous score and weekly wins
-        previous_score = score
-        previous_weekly_wins = weekly_win_count
+    logger.debug(f"Commands in tree: {[cmd.name for cmd in bot.tree.get_commands()]}")
+    
+    bot.tree.clear_commands(guild=discord.Object(id=GUILD_ID))
+    synced = await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+    logger.debug(f"Synced {len(synced)} commands to the tree.")
 
-# Output the generated message
-for part in message_parts:
-    print(part)
+    logger.debug(f"Logged in as {bot.user}")
+    scheduler.start()
+
+async def main():
+    await load_cogs()
+    await bot.start(os.getenv('BOT_TOKEN'))
+
+match_messages = [
+    [
+        "1396970978310881321",
+        1342301
+    ],
+    [
+        "1396970988557832416",
+        1342303
+    ],
+    [
+        "1396970998540275864",
+        1342302
+    ],
+    [
+        "1396971009588072649",
+        1342305
+    ],
+    [
+        "1396971018681319768",
+        1342299
+    ],
+    [
+        "1396971028772818985",
+        1342304
+    ],
+    [
+        "1396971037240983595",
+        1342300
+    ]
+]
+
+from api.rapid_sports import get_fixture
+
+auth = os.getenv('API_TOKEN')
+
+for entry in match_messages:
+    message_id, match_id = entry
+    fixture = get_fixture(auth, match_id)['response'][0]
+    db.insert_match(match_id, message_id, fixture['teams']['home']['name'], fixture['teams']['away']['name'], fixture['fixture']['date'])
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
