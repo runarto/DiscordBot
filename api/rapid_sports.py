@@ -2,6 +2,22 @@ from datetime import datetime, timedelta
 import requests
 from api.api_utils import generate_headers, validate
 
+def get_fixture(auth, fixture_id: int):
+    """https://www.api-football.com/documentation-v3#tag/Fixtures/operation/get-fixtures"""
+    
+    """
+        Fetches a specific fixture by its ID.
+    """
+    
+    url = f"https://v3.football.api-sports.io/fixtures?id={fixture_id}"
+    headers = generate_headers(auth)
+
+    query = {
+        "timezone": "Europe/Oslo"
+    }
+    
+    return validate(requests.get(url, headers=headers, params=query))
+
 
 def get_teams(auth: str):    
     """https://www.api-football.com/documentation-v3#tag/Teams/operation/get-teams"""

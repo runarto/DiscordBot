@@ -81,6 +81,10 @@ class DB:
     def insert_team_emoji(self, role_name, emoji):
         db_rw.insert_team_emoji(self._conn, role_name, emoji)
 
+    def delete_team_emoji(self, role_name):
+        with self._conn:
+            self._conn.execute("DELETE FROM team_emojis WHERE role_name = ?;", (role_name,))
+
     def insert_team(self, team_name_api, team_name_norsk, team_emoji):
         db_rw.insert_team(self._conn, team_name_api, team_name_norsk, team_emoji)
 

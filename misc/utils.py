@@ -57,7 +57,9 @@ def map_roles_to_emojis(bot, db):
     roles = discord_api.get_roles(bot)
     emojis = discord_api.get_emojis(bot)
 
-    threshold = 0.7
+    threshold = 0.63
+
+    mapping = {}
 
     for role in roles:
         best_match = None
@@ -72,28 +74,34 @@ def map_roles_to_emojis(bot, db):
                 best_match = emoji
 
         if best_match:
+            mapping[role.name] = f"<:{best_match.name}:{best_match.id}>"
             db.insert_team_emoji(role.name, f"<:{best_match.name}:{best_match.id}>")
 
+    return mapping
 
-def fetch_user_data(bot, db):
+
+def map_users(bot, db):
     """
         Fetches username, user-id and top emoji from the guilds and inserts it into the database.
+        If user has no mapped role, inserts None for emoji.
     """
-    non_permitted_roles = []
-    for guild in bot.guilds: 
-        for role in guild.roles:
-            if role.position > 120 or role.name == "@everyone":
-                non_permitted_roles.append(role.id)
+    mapping = db.get_team_emojis()
+    role_to_emoji = {item.role_name: item.emoji for item in mapping}
 
+    for guild in bot.guilds: 
         for user in guild.members:
             if user.bot:
                 continue
+            
+            role_emoji = None  # Default to None
+            
+            # Try to find a mapped role
             for role in reversed(user.roles):
-                if role.id in non_permitted_roles:
-                    continue
-                else:
-                    db.insert_user(user.id, user.name, user.display_name, role.name)
+                if role.name in role_to_emoji:
+                    role_emoji = role_to_emoji[role.name]
                     break
+            # Insert user regardless of whether we found a mapped role
+            db.insert_user(user.id, user.name, user.display_name, role_emoji)
 
 
 async def store_predictions(message: discord.Message, logger: logging.Logger, db):
@@ -124,7 +132,7 @@ async def store_predictions(message: discord.Message, logger: logging.Logger, db
                 logger.error(f"Failed to insert prediction for user {user.id}: {e}")
 
 
-def backup_database(source_path: str, backup_dir: str = "./backups") -> str:
+async def backup_database(source_path: str, backup_dir: str = "./backups") -> str:
     """
     Creates a timestamped backup of the database file.
     Returns the path to the created backup.

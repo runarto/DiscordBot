@@ -57,3 +57,48 @@
 2025-07-24 18:02:57,460 - INFO - Commands synced to guild 1039825091430719559
 2025-07-24 18:03:36,680 - INFO - Commands synced to guild 1039825091430719559
 2025-07-24 18:04:35,815 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 20:49:26,766 - ERROR - Failed to sync commands: object NoneType can't be used in 'await' expression
+2025-07-24 20:56:48,456 - INFO - Message sent to <#1184792138807001098>: hei dette er en test xoxo
+2025-07-24 20:56:48,458 - ERROR - Failed to send message to <#1184792138807001098>: object NoneType can't be used in 'await' expression
+2025-07-24 21:02:49,439 - INFO - Message sent to <#1376622589488664816>: heisann hoppsann
+2025-07-24 21:03:22,549 - INFO - Syncing database with user data and emojis...
+2025-07-24 21:03:23,083 - INFO - Database sync complete.
+2025-07-24 21:04:04,278 - INFO - Matches table flushed.
+2025-07-24 21:05:15,218 - INFO - Message sent to <#1179461251257090108>: jeg er new and improved
+2025-07-24 21:06:56,821 - INFO - Sending leaderboard to <#1376622589488664816>.
+2025-07-24 21:06:57,553 - INFO - Leaderboard sent to <#1376622589488664816>.
+2025-07-24 21:13:43,878 - INFO - Syncing database with user data and emojis...
+2025-07-24 21:13:44,626 - INFO - Database sync complete.
+2025-07-24 21:17:54,419 - INFO - Syncing database with user data and emojis...
+2025-07-24 21:17:55,199 - INFO - Database sync complete.
+2025-07-24 21:18:11,023 - INFO - Sending leaderboard to <#1376622589488664816>.
+2025-07-24 21:18:12,287 - INFO - Leaderboard sent to <#1376622589488664816>.
+2025-07-24 21:57:18,943 - INFO - Syncing database with user data and emojis...
+2025-07-24 21:57:19,727 - INFO - Database sync complete.
+2025-07-24 21:59:00,443 - INFO - Syncing database with user data and emojis...
+2025-07-24 21:59:01,228 - INFO - Database sync complete.
+2025-07-24 22:20:34,340 - INFO - Sending leaderboard to <#1376622589488664816>.
+2025-07-24 22:20:35,980 - INFO - Leaderboard sent to <#1376622589488664816>.
+2025-07-24 22:27:30,576 - INFO - Users table flushed.
+2025-07-24 22:27:52,630 - INFO - Syncing database with user data and emojis...
+2025-07-24 22:27:52,911 - INFO - Database sync complete.
+2025-07-24 22:43:33,088 - INFO - Syncing database with user data and emojis...
+2025-07-24 22:43:33,436 - INFO - Database sync complete.
+2025-07-24 22:44:20,027 - INFO - Sending leaderboard to <#1376622589488664816>.
+2025-07-24 22:44:24,322 - INFO - Leaderboard sent to <#1376622589488664816>.
+2025-07-24 23:02:21,635 - INFO - Loaded: cogs.admin
+2025-07-24 23:02:21,636 - INFO - Loaded: cogs.database
+2025-07-24 23:02:21,638 - INFO - Loaded: cogs.kupong
+2025-07-24 23:02:21,639 - INFO - Loaded: cogs.mapping
+2025-07-25 00:13:27,703 - ERROR - Failed to load cogs.cog_managercogs.admin: No module named 'cogs.cog_managercogs'
+2025-07-25 00:13:27,708 - INFO - Loaded: cogs.database
+2025-07-25 00:13:27,714 - INFO - Loaded: cogs.kupong
+2025-07-25 00:13:27,718 - ERROR - Failed to load cogs.mapping: Extension 'cogs.mapping' raised an error: CommandAlreadyRegistered: Command 'update_user_emoji' already registered.
+2025-07-25 00:15:19,803 - ERROR - Failed to load cogs.managercogs.admin: No module named 'cogs.managercogs'
+2025-07-25 00:15:19,805 - INFO - Loaded: cogs.database
+2025-07-25 00:15:19,808 - INFO - Loaded: cogs.kupong
+2025-07-25 00:15:19,810 - ERROR - Failed to load cogs.mapping: Extension 'cogs.mapping' raised an error: CommandAlreadyRegistered: Command 'update_user_emoji' already registered.
+2025-07-25 00:27:34,415 - ERROR - Failed to load cogs.managercogs.admin: No module named 'cogs.managercogs'
+2025-07-25 00:27:34,416 - INFO - Loaded: cogs.database
+2025-07-25 00:27:34,419 - INFO - Loaded: cogs.kupong
+2025-07-25 00:27:34,421 - ERROR - Failed to load cogs.mapping: Extension 'cogs.mapping' raised an error: CommandAlreadyRegistered: Command 'update_user_emoji' already registered.

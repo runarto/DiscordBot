@@ -90,7 +90,6 @@ class Results:
     
     def _format_total_leaderboard(self, db) -> list[str]:
         scores = db.get_all_scores()  # list of Score(user_id, points, weekly_wins)
-
         leaderboard = []
         for score in scores:
             user = db.get_user(score.user_id)
