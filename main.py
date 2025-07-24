@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands
 import pytz 
 import misc.utils as utils
-import leaderboard
-import traceback
 from dotenv import load_dotenv
 import os
 from db.db_interface import DB
@@ -69,6 +67,25 @@ async def SendUkensResultater(interaction: discord.Interaction, channel: discord
 
 
 
+import json
+from db.db_interface import DB
+
+# Load the files
+with open("user_scores_Eliteserien.json", "r") as f:
+    total_scores = json.load(f)
+
+with open("weekly_winners.json", "r") as f:
+    weekly_wins = json.load(f)
+
+# Open DB connection
+db = DB("infobase.db")
+#db.drop_table("scores")  # Drop the scores table if it exists
+
+for user_tag, total_points in total_scores.items():
+    user_id = user_tag.strip("<@>")
+    weekly_wins_count = weekly_wins.get(user_id, 0)
+
+    db.upsert_score(user_id=user_id, points_delta=total_points, win_delta=weekly_wins_count)
 
 
 
@@ -90,7 +107,7 @@ async def SendUkensResultater(interaction: discord.Interaction, channel: discord
 
 
 
-bot.run(os.getenv('BOT_TOKEN'))
+#bot.run(os.getenv('BOT_TOKEN'))
 
 
 

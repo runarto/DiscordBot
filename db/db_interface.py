@@ -87,6 +87,11 @@ class DB:
     def get_team(self, team_name_api):
         row = db_rw.get_team(self._conn, team_name_api)
         return row_to_dataclass(row, Team) if row else None
+    
+    def drop_table(self, table_name: str):
+        with self._conn:
+            self._conn.execute(f"DROP TABLE IF EXISTS {table_name};")
+
 
     def close(self):
         self._conn.close()
