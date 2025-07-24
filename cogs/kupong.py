@@ -48,7 +48,7 @@ class KupongCog(commands.Cog, name="Kupong"):
 
     @app_commands.command(name='store_predictions', description='Store predictions for a specific match.')
     @app_commands.default_permissions(manage_messages=True)
-    async def store_predictions(self, interaction: discord.Interaction, message_id: int, channel: discord.TextChannel):
+    async def store_predictions(self, interaction: discord.Interaction, message_id: str, channel: discord.TextChannel):
         await interaction.response.defer(ephemeral=True)
         try:
             message = await channel.fetch_message(message_id)

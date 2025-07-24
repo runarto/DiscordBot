@@ -34,7 +34,7 @@ bot.db_path = DB_PATH
 async def load_cogs():
     """Load all cogs"""
     cogs = [
-        'cogs.manager'
+        'cogs.cog_manager',
         'cogs.admin',
         'cogs.database', 
         'cogs.kupong',
