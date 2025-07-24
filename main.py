@@ -72,46 +72,6 @@ async def main():
     await load_cogs()
     await bot.start(os.getenv('BOT_TOKEN'))
 
-match_messages = [
-    [
-        "1396970978310881321",
-        1342301
-    ],
-    [
-        "1396970988557832416",
-        1342303
-    ],
-    [
-        "1396970998540275864",
-        1342302
-    ],
-    [
-        "1396971009588072649",
-        1342305
-    ],
-    [
-        "1396971018681319768",
-        1342299
-    ],
-    [
-        "1396971028772818985",
-        1342304
-    ],
-    [
-        "1396971037240983595",
-        1342300
-    ]
-]
-
-from api.rapid_sports import get_fixture
-
-auth = os.getenv('API_TOKEN')
-
-for entry in match_messages:
-    message_id, match_id = entry
-    fixture = get_fixture(auth, match_id)['response'][0]
-    db.insert_match(match_id, message_id, fixture['teams']['home']['name'], fixture['teams']['away']['name'], fixture['fixture']['date'])
-
 
 if __name__ == "__main__":
     asyncio.run(main())
