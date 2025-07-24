@@ -61,8 +61,7 @@ async def on_ready():
 
     logger.debug(f"Commands in tree: {[cmd.name for cmd in bot.tree.get_commands()]}")
     
-    bot.tree.clear_commands(guild=discord.Object(id=GUILD_ID))
-    synced = await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
+    synced = await bot.tree.sync()
     logger.debug(f"Synced {len(synced)} commands to the tree.")
 
     logger.debug(f"Logged in as {bot.user}")

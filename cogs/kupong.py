@@ -48,17 +48,16 @@ class KupongCog(commands.Cog, name="Kupong"):
 
     @app_commands.command(name='store_predictions', description='Store predictions for a specific match.')
     @app_commands.default_permissions(manage_messages=True)
-    async def store_predictions(self, interaction: discord.Interaction, message_id: str, channel: discord.TextChannel):
+    async def store_predictions(self, interaction: discord.Interaction, content: str, channel: discord.TextChannel):
         await interaction.response.defer(ephemeral=True)
-        try:
-            message = await channel.fetch_message(message_id)
-            backup_database(self.bot.db_path)
-            await store_predictions(message, self.bot.logger, self.bot.db)
-            self.bot.logger.debug(f"Stored predictions for message {message_id}.")
-            await interaction.followup.send(f"Predictions for message {message_id} have been stored.", ephemeral=True)
-        except Exception as e:
-            self.bot.logger.debug(f"Failed to store predictions for message {message_id}: {e}")
-            await interaction.followup.send(f"Failed to store predictions for message {message_id}.", ephemeral=True)
+        match_info = self.bot.db.get_all_matches()
+        for match in match_info:
+            message = await channel.fetch_message(match.message_id)
+            if message.content == content:
+                backup_database(self.bot.db_path)
+                await store_predictions(message, self.bot.logger, self.bot.db)
+        self.bot.logger.info(f"Stored predictions for message {message.content}.")
+        await interaction.followup.send(f"Predictions for message {message.id} have been stored.", ephemeral=True)
 
 
     @app_commands.command(name='delete_messages', description='Delete the match messages.')

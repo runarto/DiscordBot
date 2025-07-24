@@ -24,7 +24,7 @@ class DatabaseCog(commands.Cog, name="Database"):
         self.bot.logger.info(f"{table.value.capitalize()} table flushed.")
         await interaction.followup.send(f"**{table.value}** table has been flushed.", ephemeral=True)
 
-    @app_commands.command(name='add_team_emoji', description='Maps users to their main emoji.')
+    @app_commands.command(name='add_team_emoji', description='Maps a team role to an emoji.')
     @app_commands.default_permissions(manage_messages=True)
     async def add_team_emoji(self, interaction: discord.Interaction, role: discord.Role, emoji: str):
         await interaction.response.defer(ephemeral=True)

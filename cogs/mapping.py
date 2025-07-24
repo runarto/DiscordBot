@@ -52,15 +52,15 @@ class MappingCog(commands.Cog, name="Mapping"):
         await interaction.followup.send("🎉 Emoji mapping complete!")
     
 
-    @app_commands.command(name='map_users', description='Maps users to their main emoji.')
+    @app_commands.command(name='fetch_users', description='Populates the users table.')
     @app_commands.default_permissions(manage_messages=True)
     async def map_users(self, interaction: discord.Interaction):
 
         await interaction.response.defer(ephemeral=True)
-        self.bot.logger.info("Mapping users to their main emoji...")
+        self.bot.logger.debug("Mapping users to their main emoji...")
         map_users(bot=self.bot, db=self.bot.db)
-        self.bot.logger.info("User mapping complete.")
-        await interaction.followup.send("User mapping has been completed.", ephemeral=True)
+        self.bot.logger.info("User fetch complete.")
+        await interaction.followup.send("User fetch has been completed.", ephemeral=True)
 
 
 
