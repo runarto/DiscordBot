@@ -12,7 +12,7 @@ from db.db_interface import DB
 from logger.log import DiscordLogHandler
 
 # Global constants
-DB_PATH = "testbase.db"
+DB_PATH = "infobase.db"
 TIPPEKUPONG_CHANNEL_ID = 1094933846383923320
 GUILD_ID = 1039825091430719559
 ALLOWED_GUILDS = [GUILD_ID]
