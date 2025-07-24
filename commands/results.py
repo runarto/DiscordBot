@@ -133,23 +133,5 @@ class Results:
 
 
 
-        if not self.match_results:
-            await self._interaction.response.send_message("No match results available.")
-            return
-
-        result_messages = []
-        for match_id, result in self.match_results.items():
-            match = self._db.get_match_by_id(match_id)
-            if match:
-                result_messages.append(f"{match.home_team} vs {match.away_team}: {result}")
-
-        result_text = "\n".join(result_messages)
-        await self._interaction.response.send_message(f"Match Results:\n{result_text}")
-
-        # Increment scores after sending results
-        self._increment_score()
-
-
-
 
 
