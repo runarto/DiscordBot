@@ -11,3 +11,5 @@ send_resultater: printer ut de oppdaterte resultatene
 les_kamper: tar inn et sett med kamper
 logger: sender logg av det som gjøres til en kanal
 
+add logger that logs to bot-Tippekupongen on action
+

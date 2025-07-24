@@ -6,7 +6,7 @@ def insert_match(conn, match_id, message_id, home_team, away_team, kick_off_time
     with conn:
         conn.execute("""
             INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time)
-            VALUES (?, ?, ?, ?);
+            VALUES (?, ?, ?, ?, ?);
         """, (match_id, message_id, home_team, away_team, kick_off_time))
 
 def get_all_matches(conn):
@@ -63,7 +63,7 @@ def insert_user(conn, user_id, user_name, user_display_name, user_emoji=None):
     with conn:
         conn.execute("""
             INSERT OR REPLACE INTO users (user_id, user_name, user_display_name, user_emoji)
-            VALUES (?, ?, ?);
+            VALUES (?, ?, ?, ?);
         """, (user_id, user_name, user_display_name, user_emoji))
 
 def get_user(conn, user_id):

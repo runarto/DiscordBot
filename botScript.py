@@ -27,7 +27,6 @@ ALLOWED_GUILDS = [1039825091430719559]
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 timezone = pytz.timezone('Europe/Oslo')
 
-timezone = pytz.timezone('Europe/Oslo')
 
 @bot.event
 async def on_ready():
@@ -40,13 +39,13 @@ async def on_ready():
             await guild.leave()
 
 
-    scheduler.start()
-    await bot.tree.sync()
+    guild = discord.Object(id=GUILD_ID)
+    await bot.tree.sync(guild=guild)
     print(f'Logged in as {bot.user}')
 
-    fetch_user_data(bot=bot, db=db) 
-    map_roles_to_emojis(bot=bot, db=db)
-    map_teams_to_emojis(bot=bot, db=db, auth=os.getenv('API_TOKEN'))
+    # fetch_user_data(bot=bot, db=db) 
+    # map_roles_to_emojis(bot=bot, db=db)
+    # map_teams_to_emojis(bot=bot, db=db, auth=os.getenv('API_TOKEN'))
 
 @bot.tree.command(name='ukens_kupong', description='Send ukens kupong for de neste dagene.')
 @commands.has_permissions(manage_messages=True)
@@ -56,15 +55,16 @@ async def SendUkensKupong(interaction: discord.Interaction,
     
 
     await interaction.response.defer(ephemeral=True)
-    kupong = kupong.Kupong(days=days, db=DB("infobase.db"), channel=channel)
-    await kupong.send()
+    kup = kupong.Kupong(days=days, db=DB("infobase.db"), channel=channel)
+    await kup.send_msg()
     await interaction.followup.send(f"Ukens kupong for de neste {days} dagene er sendt til {channel.mention}.", ephemeral=True)
 
 
 async def SendUkensResultater(interaction: discord.Interaction, channel: discord.TextChannel):
+
     await interaction.response.defer(ephemeral=True)
-    results = results.Results(db=DB("infobase.db"), channel=channel)
-    await results.send()
+    res = results.Results(db=DB("infobase.db"), channel=channel)
+    await res.send()
 
 
 

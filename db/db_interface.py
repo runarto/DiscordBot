@@ -63,8 +63,8 @@ class DB:
         rows = db_rw.get_all_scores(self._conn)
         return [row_to_dataclass(row, Score) for row in rows]
 
-    def insert_user(self, user_id: int, user_name: str, user_emoji: str = None):
-        db_rw.insert_user(self._conn, user_id, user_name, user_emoji)
+    def insert_user(self, user_id: int, user_name: str, user_display_name: str, user_emoji: str = None):
+        db_rw.insert_user(self._conn, user_id, user_name, user_display_name, user_emoji)
 
     def get_user(self, user_id):
         row = db_rw.get_user(self._conn, user_id)

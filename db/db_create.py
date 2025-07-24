@@ -40,6 +40,7 @@ def create_users_table(conn):
         CREATE TABLE IF NOT EXISTS users (
             user_id TEXT PRIMARY KEY,
             user_name TEXT NOT NULL,
+            user_display_name TEXT NOT NULL,
             user_emoji TEXT
         );
         """)

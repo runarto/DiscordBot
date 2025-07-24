@@ -4,17 +4,17 @@ import discord
 
 class Kupong:
     def __init__(self, days, db, channel: discord.TextChannel):
-        self.auth = os.getenv('API_TOKEN')
+        self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
-        self._fixtures = get_fixtures(self.auth, days)['response']['fixtures']
+        self._fixtures = get_fixtures(self._auth, days)['response']
 
     def _add_fixture(self, fixture, msg_id):
         match_id = fixture['fixture']['id']
         home_team = fixture['teams']['home']['name']
         away_team = fixture['teams']['away']['name']
         kick_off_time = fixture['fixture']['date']
-        self.db.insert_match(match_id, msg_id, home_team, away_team, kick_off_time)
+        self._db.insert_match(match_id, msg_id, home_team, away_team, kick_off_time)
 
     async def _message(self, fixture) -> tuple[str, str, str]:
         """Sends a message for a fixture and returns the message ID."""
@@ -29,10 +29,10 @@ class Kupong:
 
         return sent_msg.id
 
-    async def send(self):
-        self.channel.send("Ukens kupong:")
+    async def send_msg(self):
+        await self._channel.send("Ukens kupong:")
         for fixture in self._fixtures:
-            msg_id = self._message(fixture)
+            msg_id = await self._message(fixture)
             self._add_fixture(fixture, msg_id)
 
 
