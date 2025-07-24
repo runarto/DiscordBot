@@ -41,3 +41,19 @@
 2025-07-24 16:34:10,164 - INFO - Logged in as Norsk Tipping#0491
 2025-07-24 16:36:32,305 - INFO - Commands synced to guild 1039825091430719559
 2025-07-24 16:38:35,008 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 16:57:49,156 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 17:07:43,970 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 17:53:30,675 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342301: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342302: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342303: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342305: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342299: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342300: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342304: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:53:30,677 - ERROR - Failed to schedule match 1342226: 'DB' object has no attribute 'get_prediction_for_match'
+2025-07-24 17:57:00,512 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 17:59:30,539 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 18:02:57,460 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 18:03:36,680 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 18:04:35,815 - INFO - Commands synced to guild 1039825091430719559

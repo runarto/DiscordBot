@@ -22,11 +22,16 @@ class Schedule:
         matches = self._db.get_all_matches()
         for match in matches:
             try:
+
+                if self._db.get_all_predictions_for_match(match.match_id):
+                    self._logger.debug(f"Match {match.match_id} already has predictions stored, skipping scheduling.")
+                    continue
+
                 dt = datetime.fromisoformat(match.kick_off_time)
-                job_time = dt + timedelta(minutes=1)  # adjust if you want to wait longer
+                job_time = dt + timedelta(minutes=1) 
 
                 if job_time < datetime.now(tz=pytz.timezone("Europe/Oslo")):
-                    continue  # skip past matches
+                    continue 
 
                 self._scheduler.add_job(
                     self._store_predictions_job,
@@ -35,14 +40,14 @@ class Schedule:
                     id=str(match.match_id),
                     name=f"Store predictions for match {match.match_id}"
                 )
-                self._logger.info(f"Scheduled predictions for match {match.match_id} at {job_time}")
+                self._logger.debug(f"Scheduled predictions for match {match.match_id} at {job_time}")
             except Exception as e:
-                self._logger.error(f"Failed to schedule match {match.match_id}: {e}")
+                self._logger.debug(f"Failed to schedule match {match.match_id}: {e}")
 
     async def _store_predictions_job(self, message_id: int):
         try:
             message = await self._channel.fetch_message(message_id)
             await store_predictions(message, self._logger, self._db)
-            self._logger.info(f"Stored predictions for message {message_id}")
+            self._logger.debug(f"Stored predictions for message {message_id}")
         except Exception as e:
-            self._logger.error(f"Failed to store predictions for message {message_id}: {e}")
+            self._logger.debug(f"Failed to store predictions for message {message_id}: {e}")

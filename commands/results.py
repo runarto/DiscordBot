@@ -116,9 +116,15 @@ class Results:
             lines.append(f"{rank} - {emoji} {name}: {points}p (us: {weekly_wins})")
 
         return split_message_blocks(lines)
+    
 
+    async def send_leaderboard(self):
+        """Sends the leaderboard to the specified channel."""
+        total_chunks = self._format_total_leaderboard(self._db)
+        for chunk in total_chunks:
+            await self._channel.send(chunk)
 
-    async def send(self):
+    async def send_results(self):
         weekly_chunks = self._format_weekly_leaderboard(self.weekly_scores, self._db)
         total_chunks = self._format_total_leaderboard(self._db)
 

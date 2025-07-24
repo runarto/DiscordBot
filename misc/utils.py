@@ -3,8 +3,9 @@ from datetime import datetime
 import api.discord as discord_api
 import api.rapid_sports as sports_api
 import discord
-from discord.ext import commands
 import logging
+import os
+import shutil
 
 
 def check_similarity(input1, input2):
@@ -121,3 +122,14 @@ async def store_predictions(message: discord.Message, logger: logging.Logger, db
                 db.insert_prediction(match_id, str(user.id), prediction_value)
             except Exception as e:
                 logger.error(f"Failed to insert prediction for user {user.id}: {e}")
+
+
+def backup_database(source_path: str, backup_dir: str = "./backups") -> str:
+    """
+    Creates a timestamped backup of the database file.
+    Returns the path to the created backup.
+    """
+    os.makedirs(backup_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_path = os.path.join(backup_dir, f"backup_{timestamp}.db")
+    shutil.copyfile(source_path, backup_path)
