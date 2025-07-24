@@ -1,0 +1,43 @@
+2025-07-24 16:24:44,702 - INFO - Bot started in 1 guild(s)
+2025-07-24 16:24:44,934 - INFO - Logged in as Norsk Tipping#0491
+2025-07-24 16:26:57,053 - INFO - Bot started in 1 guild(s)
+2025-07-24 16:26:57,281 - INFO - Logged in as Norsk Tipping#0491
+2025-07-24 16:26:57,282 - INFO - Discord logging handler attached.
+2025-07-24 16:28:01,475 - INFO - Sending ukens kupong for the next 7 days to <#1376622589488664816>.
+2025-07-24 16:28:02,154 - INFO - Sending message for fixture: Fredrikstad vs Strømsgodset
+2025-07-24 16:28:04,765 - INFO - Message sent with ID: 1397948447252021270 for fixture: Fredrikstad vs Strømsgodset
+2025-07-24 16:28:04,766 - INFO - Adding fixture: 1342301 with message ID: 1397948447252021270
+2025-07-24 16:28:04,769 - INFO - Inserted match: Fredrikstad vs Stromsgodset with ID: 1342301
+2025-07-24 16:28:04,769 - INFO - Sending message for fixture: Kristiansund vs KFUM Oslo
+2025-07-24 16:28:07,578 - INFO - Message sent with ID: 1397948458601681050 for fixture: Kristiansund vs KFUM Oslo
+2025-07-24 16:28:07,578 - INFO - Adding fixture: 1342303 with message ID: 1397948458601681050
+2025-07-24 16:28:07,582 - INFO - Inserted match: Kristiansund BK vs KFUM Oslo with ID: 1342303
+2025-07-24 16:28:07,582 - INFO - Sending message for fixture: Haugesund vs Ham-Kam
+2025-07-24 16:28:10,515 - INFO - Message sent with ID: 1397948469842415668 for fixture: Haugesund vs Ham-Kam
+2025-07-24 16:28:10,517 - INFO - Adding fixture: 1342302 with message ID: 1397948469842415668
+2025-07-24 16:28:10,519 - INFO - Inserted match: Haugesund vs Ham-Kam with ID: 1342302
+2025-07-24 16:28:10,519 - INFO - Sending message for fixture: Sandefjord vs Sarpsborg 08
+2025-07-24 16:28:18,567 - INFO - Message sent with ID: 1397948504453681263 for fixture: Sandefjord vs Sarpsborg 08
+2025-07-24 16:28:18,568 - INFO - Adding fixture: 1342305 with message ID: 1397948504453681263
+2025-07-24 16:28:18,570 - INFO - Inserted match: Sandefjord vs Sarpsborg 08 FF with ID: 1342305
+2025-07-24 16:28:18,571 - INFO - Sending message for fixture: Bodø/Glimt vs Vålerenga
+2025-07-24 16:28:20,895 - INFO - Message sent with ID: 1397948516130750557 for fixture: Bodø/Glimt vs Vålerenga
+2025-07-24 16:28:20,896 - INFO - Adding fixture: 1342299 with message ID: 1397948516130750557
+2025-07-24 16:28:20,900 - INFO - Inserted match: Bodo/Glimt vs Valerenga with ID: 1342299
+2025-07-24 16:28:20,900 - INFO - Sending message for fixture: Rosenborg vs Tromsø
+2025-07-24 16:28:28,767 - INFO - Message sent with ID: 1397948529787408456 for fixture: Rosenborg vs Tromsø
+2025-07-24 16:28:28,768 - INFO - Adding fixture: 1342304 with message ID: 1397948529787408456
+2025-07-24 16:28:28,770 - INFO - Inserted match: Rosenborg vs Tromso with ID: 1342304
+2025-07-24 16:28:28,770 - INFO - Sending message for fixture: Bryne vs Viking
+2025-07-24 16:28:32,931 - INFO - Message sent with ID: 1397948566743548045 for fixture: Bryne vs Viking
+2025-07-24 16:28:32,931 - INFO - Adding fixture: 1342300 with message ID: 1397948566743548045
+2025-07-24 16:28:32,933 - INFO - Inserted match: Bryne vs Viking with ID: 1342300
+2025-07-24 16:28:32,933 - INFO - Sending message for fixture: Bodø/Glimt vs Strømsgodset
+2025-07-24 16:28:37,113 - INFO - Message sent with ID: 1397948584611020810 for fixture: Bodø/Glimt vs Strømsgodset
+2025-07-24 16:28:37,115 - INFO - Adding fixture: 1342226 with message ID: 1397948584611020810
+2025-07-24 16:28:37,117 - INFO - Inserted match: Bodo/Glimt vs Stromsgodset with ID: 1342226
+2025-07-24 16:28:37,118 - INFO - Ukens kupong for the next 7 days sent to <#1376622589488664816>.
+2025-07-24 16:34:09,881 - INFO - Bot started in 1 guild(s)
+2025-07-24 16:34:10,164 - INFO - Logged in as Norsk Tipping#0491
+2025-07-24 16:36:32,305 - INFO - Commands synced to guild 1039825091430719559
+2025-07-24 16:38:35,008 - INFO - Commands synced to guild 1039825091430719559

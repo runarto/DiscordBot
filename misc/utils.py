@@ -2,6 +2,9 @@ from difflib import SequenceMatcher
 from datetime import datetime
 import api.discord as discord_api
 import api.rapid_sports as sports_api
+import discord
+from discord.ext import commands
+import logging
 
 
 def check_similarity(input1, input2):
@@ -21,8 +24,6 @@ def split_message_blocks(lines: list[str], max_length: int = 2000) -> list[str]:
         blocks.append(current_block.rstrip())
 
     return blocks
-
-
 
 def map_teams_to_emojis(bot, db, auth):
     teams = sports_api.get_teams(auth)['response']
@@ -92,3 +93,31 @@ def fetch_user_data(bot, db):
                 else:
                     db.insert_user(user.id, user.name, user.display_name, role.name)
                     break
+
+
+async def store_predictions(message: discord.Message, logger: logging.Logger, db):
+    """
+    Stores predictions from a message in the database.
+    Reactions are assumed to represent:
+        - First reaction: "H" (Home win)
+        - Second reaction: "D" (Draw)
+        - Third reaction: "A" (Away win)
+    """
+    match_id = message.id
+    prediction_labels = ["H", "D", "A"]
+
+    reactions = message.reactions[:3]  # Make sure only first 3 are processed
+
+    for i, reaction in enumerate(reactions):
+        if i >= len(prediction_labels):
+            break
+
+        prediction_value = prediction_labels[i]
+        async for user in reaction.users():
+            if user.bot:
+                continue
+            try:
+                logger.debug(f"Inserting prediction for user {user.id}: {str(reaction.emoji)}")
+                db.insert_prediction(match_id, str(user.id), prediction_value)
+            except Exception as e:
+                logger.error(f"Failed to insert prediction for user {user.id}: {e}")

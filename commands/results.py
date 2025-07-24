@@ -1,5 +1,6 @@
 import discord
 import os
+import logging
 
 from collections import defaultdict
 from api.rapid_sports import get_fixture_result
@@ -7,7 +8,7 @@ from misc.utils import split_message_blocks
 
 
 class Results:
-    def __init__(self, db, channel: discord.TextChannel):
+    def __init__(self, db, channel: discord.TextChannel, logger: logging.Logger):
         self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
@@ -126,6 +127,8 @@ class Results:
 
         for chunk in total_chunks:
             await self.channel.send(chunk)
+
+    
 
 
 

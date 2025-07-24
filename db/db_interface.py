@@ -92,6 +92,11 @@ class DB:
         with self._conn:
             self._conn.execute(f"DROP TABLE IF EXISTS {table_name};")
 
+    def flush_table(self, table_name: str):
+        with self._conn:
+            self._conn.execute(f"DELETE FROM {table_name};")
+            self._conn.commit()
+
 
     def close(self):
         self._conn.close()
