@@ -7,4 +7,5 @@ def generate_headers(API_TOKEN: str):
     }
 
 def validate(response: requests.Response):
-    return response.raise_for_status() 
+    response.raise_for_status() 
+    return response.json()  # or whatever is appropriate

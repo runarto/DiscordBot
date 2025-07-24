@@ -2,12 +2,12 @@
 
 # --- Matches Read/Write ---
 
-def insert_match(conn, match_id, home_team, away_team, kick_off_time):
+def insert_match(conn, match_id, message_id, home_team, away_team, kick_off_time):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO matches (match_id, home_team, away_team, kick_off_time)
+            INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time)
             VALUES (?, ?, ?, ?);
-        """, (match_id, home_team, away_team, kick_off_time))
+        """, (match_id, message_id, home_team, away_team, kick_off_time))
 
 def get_all_matches(conn):
     return conn.execute("SELECT * FROM matches ORDER BY kick_off_time;").fetchall()
@@ -59,21 +59,39 @@ def get_all_scores(conn):
 
 # --- Users Read/Write ---
 
-def insert_user(conn, user_id, user_name, user_emoji=None):
+def insert_user(conn, user_id, user_name, user_display_name, user_emoji=None):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO users (user_id, user_name, user_emoji)
+            INSERT OR REPLACE INTO users (user_id, user_name, user_display_name, user_emoji)
             VALUES (?, ?, ?);
-        """, (user_id, user_name, user_emoji))
+        """, (user_id, user_name, user_display_name, user_emoji))
+
+def get_user(conn, user_id):
+    return conn.execute("SELECT * FROM users WHERE user_id = ?;", (user_id,)).fetchone()
+
+def get_all_users(conn):
+    return conn.execute("SELECT * FROM users;").fetchall()
 
 # --- Team Emojis Read/Write ---
 
 def get_team_emojis(conn):
     return conn.execute("SELECT * FROM team_emojis;").fetchall()
 
-def insert_team_emoji(conn, team_name, emoji):
+def insert_team_emoji(conn, role_name, emoji):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO team_emojis (team_name, emoji)
+            INSERT OR REPLACE INTO team_emojis (role_name, emoji)
             VALUES (?, ?);
-        """, (team_name, emoji))
+        """, (role_name, emoji))
+
+# --- Teams Read/Write ---
+
+def insert_team(conn, team_name_api, team_name_norsk, team_emoji):
+    with conn:
+        conn.execute("""
+            INSERT OR REPLACE INTO teams (team_name_api, team_name_norsk, team_emoji)
+            VALUES (?, ?, ?);
+        """, (team_name_api, team_name_norsk, team_emoji))
+
+def get_team(conn, team_name_api):
+    return conn.execute("SELECT * FROM teams WHERE team_name_api = ?;", (team_name_api,)).fetchone()

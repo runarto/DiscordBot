@@ -2,13 +2,15 @@ import discord
 from discord.ext import commands
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import pytz 
-import misc.logic as logic
+import misc.utils as utils
 import leaderboard
 import traceback
 from dotenv import load_dotenv
 import os
 from db.db_interface import DB
-from misc.logic import fetch_user_data
+import api.rapid_sports as sports_api
+from misc.utils import fetch_user_data, map_roles_to_emojis, map_teams_to_emojis    
+from commands import kupong, results
 
 
 load_dotenv()
@@ -43,58 +45,33 @@ async def on_ready():
     print(f'Logged in as {bot.user}')
 
     fetch_user_data(bot=bot, db=db) 
+    map_roles_to_emojis(bot=bot, db=db)
+    map_teams_to_emojis(bot=bot, db=db, auth=os.getenv('API_TOKEN'))
 
-    for emoji in guild.emojis:
-
-    return
-
-@bot.tree.command(name='ukens_kupong', description='Send ukens kupong for de neste dagene')
+@bot.tree.command(name='ukens_kupong', description='Send ukens kupong for de neste dagene.')
 @commands.has_permissions(manage_messages=True)
 async def SendUkensKupong(interaction: discord.Interaction, 
                           days: int, 
                           channel: discord.TextChannel):
+    
+
+    await interaction.response.defer(ephemeral=True)
+    kupong = kupong.Kupong(days=days, db=DB("infobase.db"), channel=channel)
+    await kupong.send()
+    await interaction.followup.send(f"Ukens kupong for de neste {days} dagene er sendt til {channel.mention}.", ephemeral=True)
+
+
+async def SendUkensResultater(interaction: discord.Interaction, channel: discord.TextChannel):
+    await interaction.response.defer(ephemeral=True)
+    results = results.Results(db=DB("infobase.db"), channel=channel)
+    await results.send()
 
 
 
 
 
 
-        await interaction.response.defer(ephemeral=True)
-        emoji_data = file_functions.read_file(logic.team_emojis_file)
 
-        try:
-            await channel.send("Ukens kupong:")
-
-            fixtures = API.get_matches(days)  # Fetch matches for the next x days
-            messages = []
-
-            for fixture in fixtures:
-
-                message_content, home_team_emoji, away_team_emoji = logic.format_match_message(fixture, emoji_data)
-
-                message = await channel.send(message_content)
-
-                messages.append((str(message.id), fixture['match_id']))
-
-                for reaction in (home_team_emoji, '🇺', away_team_emoji):
-                    await message.add_reaction(reaction)
-
-            file_functions.write_file(logic.tracked_messages, messages)
-
-
-            date_start, hour_start, minute_start, messages_id = logic.get_day_hour_minute(days)
-            anyGames = await update_jobs(date_start, hour_start, minute_start, messages_id, channel)
-            if not anyGames:
-                await interaction.followup.send(f"Ingen kamper de neste {days} dagene", ephemeral=True)
-                return
-            await interaction.followup.send("Kupong sendt!", ephemeral=True)
-            return
-
-        except discord.errors.Forbidden:
-            await interaction.followup.send(f"Missing permissions to send message in channel {channel.name}", ephemeral=True)
-        except Exception as e:
-            await interaction.followup.send(f"An error occurred: {e}. Ta kontakt med Runar (trunar)", ephemeral=True)
-            traceback.print_exc()
 
 
 
@@ -102,7 +79,7 @@ async def SendUkensKupong(interaction: discord.Interaction,
 
 @bot.tree.command(name="total_ledertavle", description="Vis totale resultater")
 async def TotalLeaderboard(interaction: discord.Interaction):
-    if logic.check_if_valid_server(interaction.guild_id):
+    if utils.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer(ephemeral=True)
 
         if interaction.guild_id != perms.guild_id:
@@ -110,7 +87,7 @@ async def TotalLeaderboard(interaction: discord.Interaction):
             return
 
         # Sort user scores by points (descending order)
-        scores = file_functions.read_file(logic.user_scores)
+        scores = file_functions.read_file(utils.user_scores)
         guild = interaction.guild
 
         if isinstance(scores, dict):
@@ -122,7 +99,7 @@ async def TotalLeaderboard(interaction: discord.Interaction):
         if leaderboard_message == "Tippekupongen 2024:\n":
             await interaction.followup.send("Vær litt tålmodig da, det ekke registrert poeng enda.")
         else:
-            messages = logic.split_message(leaderboard_message)
+            messages = utils.split_message(leaderboard_message)
             for m in messages:
                 await interaction.followup.send(m, ephemeral=True)
     else:
@@ -134,7 +111,7 @@ async def TotalLeaderboard(interaction: discord.Interaction):
 @bot.tree.command(name="ukens_resultater", description="Vis resultatene fra forrige uke, og totale resultater. Kall denne FØR ukens kupong")
 @commands.has_permissions(manage_messages=True)
 async def SendResults(interaction: discord.Interaction):
-    if logic.check_if_valid_server(interaction.guild_id):
+    if utils.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer()
 
         try:
@@ -143,7 +120,7 @@ async def SendResults(interaction: discord.Interaction):
             print(message)
 
             if message and message.strip():
-                messages = logic.split_message(message)
+                messages = utils.split_message(message)
                 for m in messages:
                     await interaction.followup.send(m)
             else:
@@ -168,11 +145,11 @@ async def SendResults(interaction: discord.Interaction):
 @bot.tree.command(name="lagre_tips_manuelt", description="Kopier meldingen for kampen sine reaksjoner du vil lagre")
 @commands.has_permissions(manage_messages=True)
 async def FindMessageByContent(interaction: discord.Interaction, content: str):
-    if logic.check_if_valid_server(interaction.guild_id):
+    if utils.check_if_valid_server(interaction.guild_id):
         print(f"Searching for message with content: {content}")
         channel = await bot.fetch_channel(channel_id)
         await interaction.response.defer(ephemeral=True)
-        message_data = file_functions.read_file(logic.tracked_messages)  # List of (message_id, match_id)
+        message_data = file_functions.read_file(utils.tracked_messages)  # List of (message_id, match_id)
         found = False
 
         for message_id, _ in message_data:
@@ -189,7 +166,7 @@ async def FindMessageByContent(interaction: discord.Interaction, content: str):
 @bot.tree.command(name="se_scheduled_events", description="Se når kupongen for en kamp blir lagret")
 @commands.has_permissions(manage_messages=True)
 async def print_scheduled_event(interaction: discord.Interaction):
-    jobs = file_functions.read_file(logic.scheduled_jobs)
+    jobs = file_functions.read_file(utils.scheduled_jobs)
     message_ids = [job['message_id'] for job in jobs]
     channel = await bot.fetch_channel(channel_id)
     await interaction.response.defer(ephemeral=True)
@@ -213,11 +190,11 @@ async def print_scheduled_event(interaction: discord.Interaction):
 @bot.tree.command(name='clear_cache', description='Tømmer json-filer')
 @commands.has_permissions(manage_messages=True)
 async def ClearCache(interaction: discord.Integration):
-    if logic.check_if_valid_server(interaction.guild_id):
+    if utils.check_if_valid_server(interaction.guild_id):
         await interaction.response.defer(ephemeral=True)
-        file_functions.clear_file(logic.predictions_file, {})
-        file_functions.clear_file(logic.tracked_messages, [])
-        file_functions.clear_file(logic.scheduled_jobs, [])
+        file_functions.clear_file(utils.predictions_file, {})
+        file_functions.clear_file(utils.tracked_messages, [])
+        file_functions.clear_file(utils.scheduled_jobs, [])
         await interaction.followup.send("Cache tømt", ephemeral=True)
     else:
         await interaction.response.send_message("Denne kommandoen kan kun brukes i en spesifikk server.", ephemeral=True)
@@ -228,7 +205,7 @@ async def ClearCache(interaction: discord.Integration):
 async def CheckIfPredictionIsStored(interaction: discord.Integration):
     await interaction.response.defer(ephemeral=True)
     channel = await bot.fetch_channel(channel_id)
-    predictions_file = file_functions.read_file(logic.predictions_file)
+    predictions_file = file_functions.read_file(utils.predictions_file)
     message_list = []
     for message_id, _ in predictions_file.items():
         message = await channel.fetch_message(int(message_id))
@@ -254,7 +231,7 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
         return False
 
     job_details_list = []  # List to hold details of each job
-    existing_jobs = file_functions.read_file(logic.scheduled_jobs)
+    existing_jobs = file_functions.read_file(utils.scheduled_jobs)
     
     if not isinstance(existing_jobs, list):
             existing_jobs = []
@@ -284,7 +261,7 @@ async def update_jobs(date_start, hour_start, minute_start, message_ids, channel
         job_details = f"Job ID: {message_id}, Scheduled Time: {date} at {hour}:{minute}, Function: {leaderboard.store_predictions.__name__}"
         job_details_list.append(job_details)
 
-    file_functions.write_file(logic.scheduled_jobs, existing_jobs)
+    file_functions.write_file(utils.scheduled_jobs, existing_jobs)
 
     print("Jobs added.")
     for details in job_details_list:
@@ -308,7 +285,7 @@ async def FindLuremuser(
             await interaction.followup.send("❌ Fant ikke meldingen.", ephemeral=True)
             return
 
-        predictions = file_functions.read_file(logic.predictions_file)
+        predictions = file_functions.read_file(utils.predictions_file)
         prediction_data = predictions.get(message_id, {})
 
         late_reactors = []
