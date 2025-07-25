@@ -13,9 +13,25 @@ class Results:
         self._db = db
         self._channel = channel
         self.old_scores = self._db.get_all_scores()
+        self._previous_ranks = self._get_ranks()
         self.match_results = {}
         self.num_fixtures = None
-        self._fetch_match_results()
+
+    def _get_ranks(self) -> dict[int, int]:
+        scores = self._db.get_all_scores()
+        users = []
+        for score in scores:
+            user = self._db.get_user(score.user_id)
+            if user:
+                users.append((score.user_id, score.points, score.weekly_wins))
+
+        users.sort(key=lambda x: (-x[1], -x[2]))  # sort by points DESC, wins DESC
+
+        ranks = {}
+        for i, (user_id, _, _) in enumerate(users):
+            ranks[user_id] = i + 1
+        return ranks
+
 
     def _fetch_match_results(self):
         """Fetches match results and stores them in a dictionary."""
@@ -88,15 +104,48 @@ class Results:
 
         return dict(weekly_points_to_users)
     
-    def _format_total_leaderboard(self, db) -> list[str]:
-        scores = db.get_all_scores()  # list of Score(user_id, points, weekly_wins)
+    def _format_weekly_leaderboard(self) -> str:
+        weekly_scores = self._get_weekly_scores()
+        if not weekly_scores:
+            return "Ingen poeng ble delt ut denne uka."
+
+        lines = []
+        resolved_names: dict[str, str] = {}
+
+        # Sort scores descending
+        lines.append(f"**Av {self.num_fixtures} mulige:**")
+        for score in sorted(weekly_scores.keys(), reverse=True):
+            user_ids = weekly_scores[score]
+            names = []
+
+            for uid in user_ids:
+                user = self._db.get_user(uid)
+                name = user.name
+
+                resolved_names[uid] = name
+                names.append(name)
+
+            lines.append(f"{score} poeng: {', '.join(names)}")
+
+        # Mention winners with @user_display_name
+        top_score = max(weekly_scores.keys())
+        top_user_ids = weekly_scores[top_score]
+        mentions = ', '.join(f"@{resolved_names[uid]}" for uid in top_user_ids)
+
+        lines.append(f"\nGratulerer til ukas vinnere {mentions}!")
+
+        return split_message_blocks(lines)
+
+    
+    def _format_total_leaderboard(self) -> list[str]:
+        scores = self._db.get_all_scores()  # list of Score(user_id, points, weekly_wins)
         leaderboard = []
         for score in scores:
-            user = db.get_user(score.user_id)
+            user = self._db.get_user(score.user_id)
             if user:
                 emoji = f"{user.user_emoji}" if user.user_emoji else ""
                 name = user.user_display_name
-                leaderboard.append((score.points, score.weekly_wins, emoji, name))
+                leaderboard.append((score.points, score.weekly_wins, emoji, name, score.user_id))
 
         # Sort by points DESC, then weekly_wins DESC
         leaderboard.sort(key=lambda x: (-x[0], -x[1]))
@@ -106,26 +155,40 @@ class Results:
         rank = 1
         prev_points = None
         prev_wins = None
-        for i, (points, weekly_wins, emoji, name) in enumerate(leaderboard):
-            # If points and weekly_wins match previous, keep same rank
+        for i, (points, weekly_wins, emoji, name, user_id) in enumerate(leaderboard):
             if (points, weekly_wins) != (prev_points, prev_wins):
-                rank = i + 1  # update visible rank
+                rank = i + 1
                 prev_points, prev_wins = points, weekly_wins
 
-            lines.append(f"{rank} - {emoji} {name}: {points}p (us: {weekly_wins})")
+            movement = ""
+            if self._previous_ranks and user_id in self._previous_ranks:
+                diff = self._previous_ranks[user_id] - rank
+                if diff > 0:
+                    movement = f" (+{diff})"
+                elif diff < 0:
+                    movement = f" (-{diff})"
+                else:
+                    movement = " (0)"
+
+            if weekly_wins > 0:
+                lines.append(f"{rank} - {emoji} {name}: {points}p (us: {weekly_wins}) {movement}")
+            else:
+                lines.append(f"{rank} - {emoji} {name}: {points}p {movement}")
 
         return split_message_blocks(lines)
     
 
     async def send_leaderboard(self):
         """Sends the leaderboard to the specified channel."""
-        total_chunks = self._format_total_leaderboard(self._db)
+        total_chunks = self._format_total_leaderboard()
         for chunk in total_chunks:
             await self._channel.send(chunk)
 
     async def send_results(self):
-        weekly_chunks = self._format_weekly_leaderboard(self.weekly_scores, self._db)
-        total_chunks = self._format_total_leaderboard(self._db)
+        """Sends the match results to the specified channel."""
+        self._fetch_match_results()
+        weekly_chunks = self._format_weekly_leaderboard()
+        total_chunks = self._format_total_leaderboard()
 
         for chunk in weekly_chunks:
             await self.channel.send(chunk)
