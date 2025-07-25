@@ -60,7 +60,7 @@ async def on_ready():
             await guild.leave()
 
     logger.debug(f"Commands in tree: {[cmd.name for cmd in bot.tree.get_commands()]}")
-    
+  
     synced = await bot.tree.sync()
     logger.debug(f"Synced {len(synced)} commands to the tree.")
 

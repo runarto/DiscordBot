@@ -6,6 +6,7 @@ from discord import app_commands
 import os
 import glob
 import shutil
+import subprocess
 
 class AdminCog(commands.Cog, name="Admin"):
     """Administrative commands for bot management"""
@@ -42,6 +43,22 @@ class AdminCog(commands.Cog, name="Admin"):
         shutil.copyfile(latest_backup, self.bot.db_path)
         self.bot.logger.warning(f"Database restored from backup: {os.path.basename(latest_backup)}")
         await interaction.followup.send(f"✅ Database restored from `{os.path.basename(latest_backup)}`.", ephemeral=True)
+
+    @app_commands.command(name='git_push', description='Pushes changes to the git repository.')
+    @app_commands.default_permissions(manage_messages=True)
+    async def git_push(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            subprocess.run(["git", "add", "."], check=True)
+            subprocess.run(["git", "commit", "-m", "Automated commit from Discord bot"], check=True)
+            subprocess.run(["git", "push"], check=True)
+            self.bot.logger.info("Changes pushed to git repository.")
+            await interaction.followup.send("✅ Changes pushed to git repository.", ephemeral=True)
+        except subprocess.CalledProcessError as e:
+            self.bot.logger.error(f"Git command failed: {e}")
+            await interaction.followup.send("❌ Git command failed. Maybe there are no changes?", ephemeral=True)
+
 
 
 async def setup(bot):

@@ -56,6 +56,7 @@ class KupongCog(commands.Cog, name="Kupong"):
             if message.content == content:
                 backup_database(self.bot.db_path)
                 await store_predictions(message, self.bot.logger, self.bot.db)
+                break
         self.bot.logger.info(f"Stored predictions for message {message.content}.")
         await interaction.followup.send(f"Predictions for message {message.id} have been stored.", ephemeral=True)
 

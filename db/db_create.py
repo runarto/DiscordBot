@@ -16,7 +16,7 @@ def create_predictions_table(conn):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS predictions (
-            match_id INTEGER NOT NULL,
+            message_id INTEGER NOT NULL,
             user_id TEXT NOT NULL,
             prediction TEXT NOT NULL,
             PRIMARY KEY (match_id, user_id),

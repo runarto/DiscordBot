@@ -112,7 +112,6 @@ async def store_predictions(message: discord.Message, logger: logging.Logger, db
         - Second reaction: "D" (Draw)
         - Third reaction: "A" (Away win)
     """
-    match_id = message.id
     prediction_labels = ["H", "D", "A"]
 
     reactions = message.reactions[:3]  # Make sure only first 3 are processed
@@ -127,7 +126,7 @@ async def store_predictions(message: discord.Message, logger: logging.Logger, db
                 continue
             try:
                 logger.debug(f"Inserting prediction for user {user.id}: {str(reaction.emoji)}")
-                db.insert_prediction(match_id, str(user.id), prediction_value)
+                db.insert_prediction(message.id, str(user.id), prediction_value)
             except Exception as e:
                 logger.error(f"Failed to insert prediction for user {user.id}: {e}")
 

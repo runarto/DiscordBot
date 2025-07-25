@@ -12,32 +12,43 @@ def insert_match(conn, match_id, message_id, home_team, away_team, kick_off_time
 def get_all_matches(conn):
     return conn.execute("SELECT * FROM matches ORDER BY kick_off_time;").fetchall()
 
-def get_match_by_id(conn, match_id):
-    return conn.execute("SELECT * FROM matches WHERE match_id = ?;", (match_id,)).fetchone()
+def get_match(conn, match_id=None, message_id=None):
+    if match_id and message_id:
+        query = "SELECT * FROM matches WHERE match_id = ? AND message_id = ?;"
+        return conn.execute(query, (match_id, message_id)).fetchone()
+    elif match_id:
+        query = "SELECT * FROM matches WHERE match_id = ?;"
+        return conn.execute(query, (match_id,)).fetchone()
+    elif message_id:
+        query = "SELECT * FROM matches WHERE message_id = ?;"
+        return conn.execute(query, (message_id,)).fetchone()
+    else:
+        raise ValueError("At least one of match_id or message_id must be provided.")
+
 
 # --- Predictions Read/Write ---
 
-def insert_prediction(conn, match_id, user_id, prediction):
+def insert_prediction(conn, message_id, user_id, prediction):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO predictions (match_id, user_id, prediction)
+            INSERT OR REPLACE INTO predictions (message_id, user_id, prediction)
             VALUES (?, ?, ?);
-        """, (match_id, user_id, prediction))
+        """, (message_id, user_id, prediction))
 
 def get_predictions_for_user(conn, user_id):
     return conn.execute("SELECT * FROM predictions WHERE user_id = ?;", (user_id,)).fetchall()
 
-def get_prediction(conn, match_id, user_id):
+def get_prediction(conn, message_id, user_id):
     return conn.execute("""
         SELECT prediction FROM predictions 
-        WHERE match_id = ? AND user_id = ?;
-    """, (match_id, user_id)).fetchone()
+        WHERE message_id = ? AND user_id = ?;
+    """, (message_id, user_id)).fetchone()
 
-def get_all_predictions_for_match(conn, match_id):
+def get_all_predictions_for_match(conn, message_id):
     return conn.execute("""
         SELECT user_id, prediction FROM predictions
-        WHERE match_id = ?;
-    """, (match_id,)).fetchall()
+        WHERE message_id = ?;
+    """, (message_id,)).fetchall()
 
 # --- Scores Read/Write ---
 

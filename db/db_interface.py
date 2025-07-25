@@ -33,23 +33,23 @@ class DB:
         rows = db_rw.get_all_matches(self._conn)
         return [row_to_dataclass(row, Match) for row in rows]
 
-    def get_match_by_id(self, match_id):
-        row = db_rw.get_match_by_id(self._conn, match_id)
+    def get_match_by_id(self, match_id = None, message_id = None):
+        row = db_rw.get_match_by_id(self._conn, match_id, message_id)
         return row_to_dataclass(row, Match) if row else None
 
-    def insert_prediction(self, match_id, user_id, prediction):
-        db_rw.insert_prediction(self._conn, match_id, user_id, prediction)
+    def insert_prediction(self, message_id, user_id, prediction):
+        db_rw.insert_prediction(self._conn, message_id, user_id, prediction)
 
     def get_predictions_for_user(self, user_id):
         rows = db_rw.get_predictions_for_user(self._conn, user_id)
         return [row_to_dataclass(row, Prediction) for row in rows]
 
-    def get_prediction(self, match_id, user_id):
-        row = db_rw.get_prediction(self._conn, match_id, user_id)
+    def get_prediction(self, message_id, user_id):
+        row = db_rw.get_prediction(self._conn, message_id, user_id)
         return row_to_dataclass(row, Prediction) if row else None
 
-    def get_all_predictions_for_match(self, match_id):
-        rows = db_rw.get_all_predictions_for_match(self._conn, match_id)
+    def get_all_predictions_for_match(self, message_id):
+        rows = db_rw.get_all_predictions_for_match(self._conn, message_id)
         return [row_to_dataclass(row, Prediction) for row in rows]
 
     def upsert_score(self, user_id, points_delta=0, win_delta=0):
