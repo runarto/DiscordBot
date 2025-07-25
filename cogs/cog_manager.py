@@ -9,7 +9,7 @@ class CogManager(commands.Cog, name="Manager"):
 
     @commands.command(name="load")
     @commands.is_owner()
-    async def load_cog(self, ctx, extension: str):
+    async def load_cog(self, extension: str):
         """Loads a cog."""
         try:
             await self.bot.load_extension(f'cogs.{extension}')
@@ -39,7 +39,7 @@ class CogManager(commands.Cog, name="Manager"):
 
     @commands.command(name="git_pull")
     @commands.is_owner()
-    async def git_pull_reload(self):
+    async def git_pull_reload(self, ctx):
         """Pulls latest code from Git and reloads all cogs."""
 
         try:
@@ -74,7 +74,7 @@ class CogManager(commands.Cog, name="Manager"):
 
     @commands.command(name="git_push")
     @commands.is_owner()
-    async def git_push(self):
+    async def git_push(self, ctx):
         """Pushes changes to the Git repository."""
         try:
             subprocess.run(["git", "add", "."], check=True)
