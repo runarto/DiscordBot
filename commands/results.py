@@ -120,7 +120,7 @@ class Results:
 
             for uid in user_ids:
                 user = self._db.get_user(uid)
-                name = user.name
+                name = user.user_name
 
                 resolved_names[uid] = name
                 names.append(name)
@@ -144,8 +144,7 @@ class Results:
             user = self._db.get_user(score.user_id)
             if user:
                 emoji = f"{user.user_emoji}" if user.user_emoji else ""
-                name = user.user_display_name
-                leaderboard.append((score.points, score.weekly_wins, emoji, name, score.user_id))
+                leaderboard.append((score.points, score.weekly_wins, emoji, user.user_display_name, user.user_id))
 
         # Sort by points DESC, then weekly_wins DESC
         leaderboard.sort(key=lambda x: (-x[0], -x[1]))
