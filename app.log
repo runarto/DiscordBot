@@ -206,3 +206,25 @@
 2025-07-25 02:17:41,931 - INFO - Loaded: cogs.database
 2025-07-25 02:17:41,934 - INFO - Loaded: cogs.kupong
 2025-07-25 02:17:41,934 - INFO - Loaded: cogs.mapping
+2025-07-25 02:21:27,594 - INFO - Loaded: cogs.cog_manager
+2025-07-25 02:21:27,599 - INFO - Loaded: cogs.admin
+2025-07-25 02:21:27,600 - INFO - Loaded: cogs.database
+2025-07-25 02:21:27,606 - INFO - Loaded: cogs.kupong
+2025-07-25 02:21:27,607 - INFO - Loaded: cogs.mapping
+2025-07-25 02:52:05,753 - INFO - Message sent to <#1055503231582748702>: <:AskerFK:1291297529312579594>
+2025-07-25 12:12:29,637 - INFO - Message sent to <#1055503231582748702>: <:Hoedd:1042525340393812058>
+2025-07-25 19:02:34,633 - INFO - Stored predictions for message <:Rosenborg:1059898578883051561> Rosenborg vs Tromsø <:Tromsoe:1039842401025527868>.
+2025-07-25 19:03:14,600 - INFO - Stored predictions for message <:Rosenborg:1059898578883051561> Rosenborg vs Tromsø <:Tromsoe:1039842401025527868>.
+2025-07-25 19:03:59,193 - INFO - Stored predictions for message <:Rosenborg:1059898578883051561> Rosenborg vs Tromsø <:Tromsoe:1039842401025527868>.
+2025-07-25 19:04:28,381 - INFO - Predictions table flushed.
+2025-07-25 20:48:49,827 - INFO - Stored predictions for message <:Rosenborg:1059898578883051561> Rosenborg vs Tromsø <:Tromsoe:1039842401025527868>.
+2025-07-25 21:07:36,549 - INFO - Loaded: cogs.cog_manager
+2025-07-25 21:07:36,556 - INFO - Loaded: cogs.admin
+2025-07-25 21:07:36,558 - INFO - Loaded: cogs.database
+2025-07-25 21:07:36,628 - INFO - Loaded: cogs.kupong
+2025-07-25 21:07:36,631 - INFO - Loaded: cogs.mapping
+2025-07-25 21:10:24,715 - INFO - Loaded: cogs.cog_manager
+2025-07-25 21:10:24,718 - INFO - Loaded: cogs.admin
+2025-07-25 21:10:24,720 - INFO - Loaded: cogs.database
+2025-07-25 21:10:24,722 - INFO - Loaded: cogs.kupong
+2025-07-25 21:10:24,722 - INFO - Loaded: cogs.mapping
