@@ -81,7 +81,7 @@ class DatabaseCog(commands.Cog, name="Database"):
                 await interaction.followup.send(f"{user.mention} has no prediction for message ID {message.id}.", ephemeral=True)
                 return
 
-            match = self.bot.db.get_match_by_id(prediction.message_id)
+            match = self.bot.db.get_match_by_id(message_id=prediction.message_id)
             if match:
                 await interaction.followup.send(
                     f"{user.mention}'s prediction for {match.home_team} vs {match.away_team}: `{prediction.prediction}`",

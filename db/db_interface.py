@@ -34,7 +34,7 @@ class DB:
         return [row_to_dataclass(row, Match) for row in rows]
 
     def get_match_by_id(self, match_id = None, message_id = None):
-        row = db_rw.get_match_by_id(self._conn, match_id, message_id)
+        row = db_rw.get_match(self._conn, match_id, message_id)
         return row_to_dataclass(row, Match) if row else None
 
     def insert_prediction(self, message_id, user_id, prediction):
@@ -46,6 +46,7 @@ class DB:
 
     def get_prediction(self, message_id, user_id):
         row = db_rw.get_prediction(self._conn, message_id, user_id)
+        print(row)
         return row_to_dataclass(row, Prediction) if row else None
 
     def get_all_predictions_for_match(self, message_id):

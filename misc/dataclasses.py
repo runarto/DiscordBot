@@ -14,7 +14,7 @@ class Match:
 
 @dataclass
 class Prediction:
-    match_id: int
+    message_id: int
     user_id: str
     prediction: str
 
