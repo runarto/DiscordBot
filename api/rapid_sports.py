@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 import requests
 from api.api_utils import generate_headers, validate
+from typing import List
 
-def get_fixture(auth, fixture_id: int):
+def get_fixture(auth: str, fixture_id: int) -> List[dict]:
     """https://www.api-football.com/documentation-v3#tag/Fixtures/operation/get-fixtures"""
     
     """
@@ -19,7 +20,7 @@ def get_fixture(auth, fixture_id: int):
     return validate(requests.get(url, headers=headers, params=query))
 
 
-def get_teams(auth: str):    
+def get_teams(auth: str) -> List[dict]:     
     """https://www.api-football.com/documentation-v3#tag/Teams/operation/get-teams"""
 
     """
@@ -36,7 +37,7 @@ def get_teams(auth: str):
     
     return validate(requests.get(url, headers=headers, params=query))
 
-def get_fixtures(auth: str, x_days: int):
+def get_fixtures(auth: str, x_days: int) -> List[dict]:
     """https://www.api-football.com/documentation-v3#tag/Fixtures/operation/get-fixtures"""
     
     """
@@ -61,7 +62,7 @@ def get_fixtures(auth: str, x_days: int):
     return validate(requests.get(url, headers=headers, params=query))
 
 
-def get_fixture_result(auth: str, match_id: int):
+def get_fixture_result(auth: str, match_id: int) -> List[dict]:
     """https://www.api-football.com/documentation-v3#tag/Fixtures/operation/get-fixtures"""
     
     """

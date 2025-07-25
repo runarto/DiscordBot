@@ -1,9 +1,9 @@
 from sqlite3 import Connection
-from typing import Optional
+from typing import Optional, Union
 
 # --- Matches Read/Write ---
 
-def insert_match(conn: Connection, match_id, message_id, home_team, away_team, kick_off_time):
+def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: str):
     with conn:
         conn.execute("""
             INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time)
@@ -41,30 +41,30 @@ def get_match(conn: Connection, match_id: Optional[int] = None, message_id: Opti
 
 # --- Predictions Read/Write ---
 
-def insert_prediction(conn: Connection, message_id, user_id, prediction):
+def insert_prediction(conn: Connection, message_id: Union[int, str], user_id: Union[int, str], prediction: str):
     with conn:
         conn.execute("""
             INSERT OR REPLACE INTO predictions (message_id, user_id, prediction)
             VALUES (?, ?, ?);
         """, (message_id, user_id, prediction))
 
-def get_predictions_for_user(conn: Connection, user_id):
+def get_predictions_for_user(conn: Connection, user_id: Union[int, str]):
     return conn.execute("""
         SELECT message_id, user_id, prediction 
         FROM predictions 
         WHERE user_id = ?;
     """, (user_id,)).fetchall()
 
-def get_prediction(conn: Connection, message_id, user_id):
+def get_prediction(conn: Connection, message_id: Union[int, str], user_id: Union[int, str]):
     return conn.execute("""
         SELECT message_id, user_id, prediction 
         FROM predictions 
         WHERE message_id = ? AND user_id = ?;
     """, (message_id, user_id)).fetchone()
 
-def get_all_predictions_for_match(conn: Connection, message_id):
+def get_all_predictions_for_match(conn: Connection, message_id: Union[int, str]):
     return conn.execute("""
-        SELECT user_id, prediction 
+        SELECT message_id, user_id, prediction 
         FROM predictions 
         WHERE message_id = ?;
     """, (message_id,)).fetchall()
@@ -72,7 +72,7 @@ def get_all_predictions_for_match(conn: Connection, message_id):
 
 # --- Scores Read/Write ---
 
-def upsert_score(conn: Connection, user_id, points_delta=0, win_delta=0):
+def upsert_score(conn: Connection, user_id: Union[int, str], points_delta: int = 0, win_delta: int = 0):
     with conn:
         conn.execute("""
             INSERT INTO scores (user_id, points, weekly_wins)
@@ -82,7 +82,7 @@ def upsert_score(conn: Connection, user_id, points_delta=0, win_delta=0):
                 weekly_wins = weekly_wins + excluded.weekly_wins;
         """, (user_id, points_delta, win_delta))
 
-def get_user_score(conn: Connection, user_id):
+def get_user_score(conn: Connection, user_id: Union[int, str]):
     return conn.execute("""
         SELECT user_id, points, weekly_wins 
         FROM scores 
@@ -99,14 +99,14 @@ def get_all_scores(conn: Connection):
 
 # --- Users Read/Write ---
 
-def insert_user(conn: Connection, user_id, user_name, user_display_name, user_emoji=None):
+def insert_user(conn: Connection, user_id: Union[int, str], user_name: str, user_display_name: str, user_emoji: str = None):
     with conn:
         conn.execute("""
             INSERT OR REPLACE INTO users (user_id, user_name, user_display_name, user_emoji)
             VALUES (?, ?, ?, ?);
         """, (user_id, user_name, user_display_name, user_emoji))
 
-def get_user(conn: Connection, user_id):
+def get_user(conn: Connection, user_id: Union[int, str]):
     return conn.execute("""
         SELECT user_id, user_name, user_display_name, user_emoji 
         FROM users 
@@ -128,7 +128,7 @@ def get_team_emojis(conn: Connection):
         FROM team_emojis;
     """).fetchall()
 
-def insert_team_emoji(conn: Connection, role_name, emoji):
+def insert_team_emoji(conn: Connection, role_name: str, emoji: str):
     with conn:
         conn.execute("""
             INSERT OR REPLACE INTO team_emojis (role_name, emoji)
@@ -138,14 +138,14 @@ def insert_team_emoji(conn: Connection, role_name, emoji):
 
 # --- Teams Read/Write ---
 
-def insert_team(conn: Connection, team_name_api, team_name_norsk, team_emoji):
+def insert_team(conn: Connection, team_name_api: str, team_name_norsk: str, team_emoji: str):
     with conn:
         conn.execute("""
             INSERT OR REPLACE INTO teams (team_name_api, team_name_norsk, team_emoji)
             VALUES (?, ?, ?);
         """, (team_name_api, team_name_norsk, team_emoji))
 
-def get_team(conn: Connection, team_name_api):
+def get_team(conn: Connection, team_name_api: str):
     return conn.execute("""
         SELECT team_name_api, team_name_norsk, team_emoji 
         FROM teams 

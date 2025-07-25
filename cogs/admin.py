@@ -7,12 +7,14 @@ import os
 import glob
 import shutil
 import subprocess
+from db.db_interface import DB
 
 class AdminCog(commands.Cog, name="Admin"):
     """Administrative commands for bot management"""
     
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot, db: DB):
         self.bot = bot
+        self.db = db
 
     @app_commands.command(name='send_msg', description='Sends a message to a specific channel.')
     @app_commands.default_permissions(manage_messages=True)

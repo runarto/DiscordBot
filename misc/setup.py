@@ -5,7 +5,7 @@ from misc.schedule import Schedule
 
 import logging
 
-def setup_logging():
+def setup_logging() -> logging.Logger:
     logger = logging.getLogger("discord_bot")
     logger.setLevel(logging.DEBUG)  # Set logger to DEBUG so it captures everything
 
@@ -26,18 +26,18 @@ def setup_logging():
     return logger
 
 
-def setup_bot():
+def setup_bot() -> commands.Bot:
     intents = discord.Intents.default()
     intents.members = True
     intents.reactions = True
     intents.message_content = True
     intents.guilds = True
 
-    bot = commands.Bot(command_prefix="/", intents=intents)
+    bot = commands.Bot(command_prefix="!", intents=intents)
     return bot
 
 
-def setup_scheduler(db, channel: discord.TextChannel, logger: logging.Logger):
+def setup_scheduler(db, channel: discord.TextChannel, logger: logging.Logger) -> Schedule:
     """
     Sets up the scheduler for storing predictions.
     """

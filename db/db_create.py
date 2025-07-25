@@ -1,6 +1,8 @@
+from sqlite3 import Connection
 
 
-def create_matches_table(conn):
+
+def create_matches_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS matches (
@@ -12,7 +14,7 @@ def create_matches_table(conn):
         );
         """)
 
-def create_predictions_table(conn):
+def create_predictions_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS predictions (
@@ -24,7 +26,7 @@ def create_predictions_table(conn):
         );
         """)
 
-def create_scores_table(conn):
+def create_scores_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS scores (
@@ -34,7 +36,7 @@ def create_scores_table(conn):
         );
         """)
 
-def create_users_table(conn):
+def create_users_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -45,7 +47,7 @@ def create_users_table(conn):
         );
         """)
 
-def create_team_emojis_table(conn):
+def create_team_emojis_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS team_emojis (
@@ -54,7 +56,7 @@ def create_team_emojis_table(conn):
         );
         """)
 
-def create_teams_table(conn):
+def create_teams_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS teams (

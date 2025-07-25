@@ -6,9 +6,12 @@ import discord
 import logging
 import os
 import shutil
+from discord.ext import commands
+from db.db_interface import DB
 
 
-def check_similarity(input1, input2):
+
+def check_similarity(input1: str, input2: str) -> float:
     return SequenceMatcher(None, input1, input2).ratio()
 
 def split_message_blocks(lines: list[str], max_length: int = 2000) -> list[str]:
@@ -26,7 +29,7 @@ def split_message_blocks(lines: list[str], max_length: int = 2000) -> list[str]:
 
     return blocks
 
-def map_teams_to_emojis(bot, db, auth):
+def map_teams_to_emojis(bot: commands.Bot, db: DB, auth: str):
     teams = sports_api.get_teams(auth)['response']
     emojis = discord_api.get_emojis(bot)
 
@@ -52,7 +55,7 @@ def map_teams_to_emojis(bot, db, auth):
         print("Inserting:", team_name_api, team_name_norsk, team_emoji)
         db.insert_team(team_name_api, team_name_norsk, team_emoji)
 
-def map_roles_to_emojis(bot, db):
+def map_roles_to_emojis(bot: commands.Bot, db: DB) -> dict[str, str]:
     """Maps roles to emojis based on similarity of names, and writes it to DB."""
     roles = discord_api.get_roles(bot)
     emojis = discord_api.get_emojis(bot)
@@ -80,7 +83,7 @@ def map_roles_to_emojis(bot, db):
     return mapping
 
 
-def map_users(bot, db):
+def map_users(bot: commands.Bot, db: DB):
     """
         Fetches username, user-id and top emoji from the guilds and inserts it into the database.
         If user has no mapped role, inserts None for emoji.
@@ -104,7 +107,7 @@ def map_users(bot, db):
             db.insert_user(user.id, user.name, user.display_name, role_emoji)
 
 
-async def store_predictions(message: discord.Message, logger: logging.Logger, db):
+async def store_predictions(message: discord.Message, logger: logging.Logger, db: DB):
     """
     Stores predictions from a message in the database.
     Reactions are assumed to represent:
@@ -140,3 +143,12 @@ async def backup_database(source_path: str, backup_dir: str = "./backups") -> st
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_path = os.path.join(backup_dir, f"backup_{timestamp}.db")
     shutil.copyfile(source_path, backup_path)
+
+async def get_message(db: DB, channel: discord.TextChannel, content: str) -> discord.Message:
+    match_info = db.get_all_matches()
+    for match in match_info:
+        message = await channel.fetch_message(match.message_id)
+        if message.content == content:
+            return message
+        
+    return None

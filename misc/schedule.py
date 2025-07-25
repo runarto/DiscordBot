@@ -1,14 +1,15 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.date import DateTrigger
 from datetime import datetime, timedelta
-from misc.utils import store_predictions
+import misc.utils as utils
+from db.db_interface import DB
 import pytz
 
 import discord
 import logging
 
 class Schedule:
-    def __init__(self, db, channel: discord.TextChannel, logger: logging.Logger):
+    def __init__(self, db: DB, channel: discord.TextChannel, logger: logging.Logger):
         self._db = db
         self._channel = channel
         self._logger = logger
@@ -47,7 +48,7 @@ class Schedule:
     async def _store_predictions_job(self, message_id: int):
         try:
             message = await self._channel.fetch_message(message_id)
-            await store_predictions(message, self._logger, self._db)
+            await utils.store_predictions(message, self._logger, self._db)
             self._logger.debug(f"Stored predictions for message {message_id}")
         except Exception as e:
             self._logger.debug(f"Failed to store predictions for message {message_id}: {e}")

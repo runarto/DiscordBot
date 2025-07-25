@@ -2,12 +2,13 @@ from api.rapid_sports import get_fixtures
 import os
 import logging
 import discord
+from db.db_interface import DB
 
 class Kupong:
     """
     Handles the weekly coupon for matches, fetching fixtures and sending messages to a Discord channel.
     """
-    def __init__(self, days, db, channel: discord.TextChannel, logger: logging.Logger):
+    def __init__(self, days: int, db: DB, channel: discord.TextChannel, logger: logging.Logger):
         self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
@@ -40,7 +41,7 @@ class Kupong:
 
         return sent_msg.id
 
-    async def send_msg(self):
+    async def send_kupong(self):
         await self._channel.send("Ukens kupong:")
         for fixture in self._fixtures:
             msg_id = await self._message(fixture)

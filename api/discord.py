@@ -1,6 +1,8 @@
+from discord.ext import commands
+from typing import List
+import discord
 
-
-def get_members(bot):
+def get_members(bot: commands.Bot) -> List[discord.Member]:
     """Fetches all non-bot members from all guilds the bot is in."""
     members = []
     for guild in bot.guilds:
@@ -9,7 +11,7 @@ def get_members(bot):
                 members.append(member)
     return members
 
-def get_member(bot, user_id):
+def get_member(bot: commands.Bot, user_id: int) -> discord.Member:
     """Fetches a specific member by user_id from all guilds the bot is in."""
     for guild in bot.guilds:
         for member in guild.members:
@@ -17,7 +19,7 @@ def get_member(bot, user_id):
                 return member
     return None
 
-def get_emojis(bot):
+def get_emojis(bot: commands.Bot) -> List[discord.Emoji]:
     """Fetches all emojis from all guilds the bot is in."""
     emojis = []
     for guild in bot.guilds:
@@ -25,7 +27,7 @@ def get_emojis(bot):
             emojis.append(emoji)
     return emojis
 
-def get_roles(bot):
+def get_roles(bot: commands.Bot) -> List[discord.Role]:
     """Fetches all roles from all guilds the bot is in, excluding @everyone and roles with position > 120."""
     roles = []
     for guild in bot.guilds: 

@@ -26,27 +26,22 @@ bot = setup_bot()
 scheduler = setup_scheduler(db=db, channel=discord.Object(id=TIPPEKUPONG_CHANNEL_ID), logger=logger)
 
 # Attach shared instances to bot for cogs to access
-bot.db = db
 bot.logger = logger
 bot.scheduler = scheduler
 bot.db_path = DB_PATH
 
+from cogs.admin import AdminCog
+from cogs.database import DatabaseCog
+from cogs.kupong import KupongCog
+from cogs.mapping import MappingCog
+from cogs.cog_manager import CogManager
+
 async def load_cogs():
-    """Load all cogs"""
-    cogs = [
-        'cogs.cog_manager',
-        'cogs.admin',
-        'cogs.database', 
-        'cogs.kupong',
-        'cogs.mapping'
-    ]
-    
-    for cog in cogs:
-        try:
-            await bot.load_extension(cog)
-            logger.info(f"Loaded: {cog}")
-        except Exception as e:
-            logger.error(f"Failed to load {cog}: {e}")
+    await bot.add_cog(CogManager(bot, db))
+    await bot.add_cog(AdminCog(bot, db))
+    await bot.add_cog(DatabaseCog(bot, db))
+    await bot.add_cog(KupongCog(bot, db))
+    await bot.add_cog(MappingCog(bot, db))
 
 @bot.event
 async def on_ready():

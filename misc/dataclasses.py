@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
+from sqlite3 import Row
 
-def row_to_dataclass(row, dataclass_type):
+def row_to_dataclass(row: Row, dataclass_type: type):
     return dataclass_type(**dict(row))
 
 @dataclass
