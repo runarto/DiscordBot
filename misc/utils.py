@@ -133,6 +133,8 @@ async def store_predictions(message: discord.Message, logger: logging.Logger, db
             except Exception as e:
                 logger.error(f"Failed to insert prediction for user {user.id}: {e}")
 
+    logger.info(f"Stored predictions for message {message.id} with content: {message.content}")
+
 
 async def backup_database(source_path: str, backup_dir: str = "./backups") -> str:
     """
