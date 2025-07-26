@@ -24,14 +24,14 @@ class Schedule:
         for match in matches:
             try:
 
-                if self._db.get_all_predictions_for_match(match.match_id):
+                if self._db.get_all_predictions_for_match(match.message_id):
                     self._logger.debug(f"Match {match.match_id} already has predictions stored, skipping scheduling.")
                     continue
 
                 dt = datetime.fromisoformat(match.kick_off_time)
                 job_time = dt + timedelta(minutes=1) 
 
-                if job_time < datetime.now(tz=pytz.timezone("Europe/Oslo")) and self._db.get_all_predictions_for_match(match.match_id):
+                if job_time < datetime.now(tz=pytz.timezone("Europe/Oslo")) and self._db.get_all_predictions_for_match(match.message_id):
                     continue 
                 else:
                     job_time = datetime.now(tz=pytz.timezone("Europe/Oslo")) + timedelta(minutes=1)
