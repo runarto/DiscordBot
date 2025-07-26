@@ -14,6 +14,7 @@ class Schedule:
         self._channel = channel
         self._logger = logger
         self._scheduler = AsyncIOScheduler(timezone=pytz.timezone("Europe/Oslo"))
+        self._now = datetime.now(tz=pytz.timezone("Europe/Oslo"))
 
     def start(self):
         self._scheduler.start()
@@ -31,10 +32,13 @@ class Schedule:
                 dt = datetime.fromisoformat(match.kick_off_time)
                 job_time = dt + timedelta(minutes=1) 
 
-                if job_time < datetime.now(tz=pytz.timezone("Europe/Oslo")) and self._db.get_all_predictions_for_match(match.message_id):
-                    continue 
-                else:
-                    job_time = datetime.now(tz=pytz.timezone("Europe/Oslo")) + timedelta(minutes=1)
+                # Case 1: Job time is in the past, but no predictions stored
+                if job_time < self._now:
+                    job_time = self._now + timedelta(minutes=1)  # Schedule for 1 minute in the future
+                # Case 2: Job time is in the future, but no predictions stored
+                elif job_time > self._now:
+                    job_time = job_time
+                # Schedule the job      
 
                 self._scheduler.add_job(
                     self._store_predictions_job,
