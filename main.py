@@ -23,11 +23,9 @@ db = DB(DB_PATH)
 load_dotenv()
 logger = setup_logging()
 bot = setup_bot()
-scheduler = setup_scheduler(bot=bot, db=db, channel_id=TIPPEKUPONG_CHANNEL_ID, logger=logger)
 
 # Attach shared instances to bot for cogs to access
 bot.logger = logger
-bot.scheduler = scheduler
 bot.db_path = DB_PATH
 
 from cogs.admin import AdminCog
@@ -60,6 +58,10 @@ async def on_ready():
     logger.debug(f"Synced {len(synced)} commands to the tree.")
 
     logger.debug(f"Logged in as {bot.user}")
+
+    scheduler = await setup_scheduler(bot=bot, db=db, channel_id=TIPPEKUPONG_CHANNEL_ID, logger=logger)
+    bot.scheduler = scheduler
+
     scheduler.start()
 
 async def main():
