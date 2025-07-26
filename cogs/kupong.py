@@ -34,7 +34,7 @@ class KupongCog(commands.Cog, name="Kupong"):
     async def send_ukens_resultater(self, interaction: discord.Interaction, channel: discord.TextChannel):
 
         await interaction.response.defer(ephemeral=True)
-        utils.backup_database(self.bot.db_path)
+        await utils.backup_database(self.bot.db_path)
         res = Results(db=self.db, channel=channel, logger=self.bot.logger)
         await res.send_results()
         self.bot.logger.info(f"Ukens resultater sent to {channel.mention}.")
@@ -62,7 +62,7 @@ class KupongCog(commands.Cog, name="Kupong"):
             await interaction.followup.send("No match found with the specified content.", ephemeral=True)
             return
         
-        utils.backup_database(self.bot.db_path)
+        await utils.backup_database(self.bot.db_path)
         await utils.store_predictions(target_message, self.bot.logger, self.bot.db)
         self.bot.logger.info(f"Stored predictions for message {target_message.id}.")
         await interaction.followup.send(f"Predictions for message {target_message.id} have been stored.", ephemeral=True)
