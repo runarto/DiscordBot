@@ -2,6 +2,7 @@ import logging
 import discord
 from discord.ext import commands
 from misc.schedule import Schedule
+from db.db_interface import DB
 
 import logging
 
@@ -37,8 +38,9 @@ def setup_bot() -> commands.Bot:
     return bot
 
 
-def setup_scheduler(db, channel: discord.TextChannel, logger: logging.Logger) -> Schedule:
+async def setup_scheduler(bot: commands.Bot, db: DB, channel_id: int, logger: logging.Logger) -> Schedule:
     """
     Sets up the scheduler for storing predictions.
     """
+    channel = await bot.fetch_channel(channel_id)
     return Schedule(db, channel, logger)

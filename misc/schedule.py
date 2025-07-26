@@ -31,8 +31,10 @@ class Schedule:
                 dt = datetime.fromisoformat(match.kick_off_time)
                 job_time = dt + timedelta(minutes=1) 
 
-                if job_time < datetime.now(tz=pytz.timezone("Europe/Oslo")):
+                if job_time < datetime.now(tz=pytz.timezone("Europe/Oslo")) and self._db.get_all_predictions_for_match(match.match_id):
                     continue 
+                else:
+                    job_time = datetime.now(tz=pytz.timezone("Europe/Oslo")) + timedelta(minutes=1)
 
                 self._scheduler.add_job(
                     self._store_predictions_job,

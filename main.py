@@ -23,7 +23,7 @@ db = DB(DB_PATH)
 load_dotenv()
 logger = setup_logging()
 bot = setup_bot()
-scheduler = setup_scheduler(db=db, channel=discord.Object(id=TIPPEKUPONG_CHANNEL_ID), logger=logger)
+scheduler = setup_scheduler(bot=bot, db=db, channel_id=TIPPEKUPONG_CHANNEL_ID, logger=logger)
 
 # Attach shared instances to bot for cogs to access
 bot.logger = logger
