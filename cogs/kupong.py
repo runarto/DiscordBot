@@ -21,9 +21,10 @@ class KupongCog(commands.Cog, name="Kupong"):
     async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: discord.TextChannel):
 
         await interaction.response.defer(ephemeral=True)
-        kup = Kupong(days=days, db=self.bot.db, channel=channel, logger=self.bot.logger)
-        self.db.flush_table("matches")
+        kup = Kupong(days=days, db=self.db, channel=channel, logger=self.bot.logger)
         await kup.send_kupong()
+        if self.bot.scheduler.running:
+            self.bot.scheduler.shutdown(wait=False)
         self.bot.scheduler.start()
         self.bot.logger.info(f"Ukens kupong for the next {days} days sent to {channel.mention}.")
         await interaction.followup.send(f"Ukens kupong for de neste {days} dagene er sendt til {channel.mention}.", ephemeral=True)
@@ -34,8 +35,8 @@ class KupongCog(commands.Cog, name="Kupong"):
     async def send_ukens_resultater(self, interaction: discord.Interaction, channel: discord.TextChannel):
 
         await interaction.response.defer(ephemeral=True)
-        await utils.backup_database(self.bot.db_path)
-        res = Results(db=self.db, channel=channel, logger=self.bot.logger)
+        await utils.backup_database(self.db_path)
+        res = Results(bot=self.bot, db=self.db, channel=channel, logger=self.bot.logger)
         await res.send_results()
         self.bot.logger.info(f"Ukens resultater sent to {channel.mention}.")
         await interaction.followup.send(f"Ukens resultater har blitt sendt til {channel.mention}.", ephemeral=True)
@@ -46,7 +47,7 @@ class KupongCog(commands.Cog, name="Kupong"):
     async def send_leaderboard(self, interaction: discord.Interaction, channel: discord.TextChannel):
 
         await interaction.response.defer(ephemeral=True)
-        res = Results(db=self.db, channel=channel, logger=self.bot.logger)
+        res = Results(bot=self.bot, db=self.db, channel=channel, logger=self.bot.logger)
         await res.send_leaderboard()
         self.bot.logger.info(f"Leaderboard sent to {channel.mention}.")
         await interaction.followup.send(f"Leaderboard has been sent to {channel.mention}.", ephemeral=True)
@@ -62,8 +63,8 @@ class KupongCog(commands.Cog, name="Kupong"):
             await interaction.followup.send("No match found with the specified content.", ephemeral=True)
             return
         
-        await utils.backup_database(self.bot.db_path)
-        await utils.store_predictions(target_message, self.bot.logger, self.bot.db)
+        await utils.backup_database(self.db_path)
+        await utils.store_predictions(target_message, self.bot.logger, self.db)
         self.bot.logger.info(f"Stored predictions for message {target_message.id}.")
         await interaction.followup.send(f"Predictions for message {target_message.id} have been stored.", ephemeral=True)
 

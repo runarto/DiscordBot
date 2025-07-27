@@ -1,8 +1,6 @@
 
 # main.py - Clean main file
 import logging
-import discord
-from discord.ext import commands
 import os
 import asyncio
 from dotenv import load_dotenv

@@ -352,3 +352,9 @@ Already up to date.
 2025-07-26 23:00:03,200 - INFO - Changes pushed to Git repository.
 2025-07-27 14:31:01,579 - INFO - Stored predictions for message 1396971037240983595 with content: <:Bryne:1039945160374632489> Bryne vs Viking <:Viking:1039842907894599760>
 2025-07-27 14:31:05,838 - INFO - Stored predictions for message 1396971028772818985 with content: <:Rosenborg:1059898578883051561> Rosenborg vs Tromsø <:Tromsoe:1039842401025527868>
+2025-07-27 21:42:57,956 - INFO - Ukens resultater sent to <#1376622589488664816>.
+2025-07-27 21:54:09,251 - INFO - Ukens resultater sent to <#1376622589488664816>.
+2025-07-27 21:55:20,595 - INFO - Ukens resultater sent to <#1376622589488664816>.
+2025-07-27 21:56:49,793 - INFO - Ukens resultater sent to <#1094933846383923320>.
+2025-07-27 22:06:51,381 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-07-27 22:09:17,632 - INFO - Predictions table flushed.

@@ -1,26 +1,30 @@
 import discord
 import os
 import logging
+import asyncio
 
 from collections import defaultdict
 from api.rapid_sports import get_fixture_result
 from misc.utils import split_message_blocks
+from db.db_interface import DB
+from discord.ext import commands
 
 
 class Results:
-    def __init__(self, db, channel: discord.TextChannel, logger: logging.Logger):
+    def __init__(self, bot: commands.Bot, db: DB, channel: discord.TextChannel, logger: logging.Logger):
+        self._bot = bot
         self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
-        self.old_scores = self._db.get_all_scores()
+        self._matches = self._db.get_all_matches()
+        self._old_scores = self._db.get_all_scores()
         self._previous_ranks = self._get_ranks()
-        self.match_results = {}
-        self.num_fixtures = None
+        self._match_results = {}
+        self._num_fixtures = len(self._matches)
 
     def _get_ranks(self) -> dict[int, int]:
-        scores = self._db.get_all_scores()
         users = []
-        for score in scores:
+        for score in self._old_scores:
             user = self._db.get_user(score.user_id)
             if user:
                 users.append((score.user_id, score.points, score.weekly_wins))
@@ -35,15 +39,18 @@ class Results:
 
     def _fetch_match_results(self):
         """Fetches match results and stores them in a dictionary."""
-        matches = self._db.get_all_matches()
-        self.num_fixtures = len(matches)
+        matches = self._matches
         for match in matches:
             result = self._determine_fixture_result(match.match_id)
             if result != "NA":
-                self.match_results[match.match_id] = result
+                self._match_results[match.match_id] = result
 
     def _determine_fixture_result(self, fixture_id):
-        score = get_fixture_result(self._auth, fixture_id)['response']['score']['fulltime']
+        fixture = get_fixture_result(self._auth, fixture_id)['response'][0]
+        if fixture['fixture']['status']['short'] != "FT":
+            return "NA"
+
+        score = fixture['score']['fulltime']
         home, away = score['home'], score['away']
 
         match (home, away):
@@ -59,12 +66,10 @@ class Results:
     def _increment_score(self):
         """Increments the score for users based on match results."""
 
-
-        fixtures = self._db.get_all_matches()
-        self.num_fixtures = len(fixtures)
+        fixtures = self._matches
         for fixture in fixtures:
-            predictions = self.db.get_all_predictions_for_match(fixture.match_id)
-            result = self.match_results.get(fixture.match_id, "NA")
+            predictions = self._db.get_all_predictions_for_match(fixture.message_id)
+            result = self._match_results.get(fixture.match_id, "NA")
             if result == "NA":
                 continue
 
@@ -72,7 +77,7 @@ class Results:
                 if prediction.prediction == result:
                     self._db.upsert_score(prediction.user_id, points_delta=1)
 
-            weekly_scores = self._get_weekly_scores()
+        weekly_scores = self._get_weekly_scores()
 
         if not weekly_scores:
             return
@@ -87,7 +92,7 @@ class Results:
 
 
     def _get_weekly_scores(self):
-        old_scores = self.old_scores
+        old_scores = self._old_scores
         new_scores = self._db.get_all_scores()
 
         # Map old scores by user_id
@@ -104,7 +109,7 @@ class Results:
 
         return dict(weekly_points_to_users)
     
-    def _format_weekly_leaderboard(self) -> str:
+    async def _format_weekly_leaderboard(self) -> str:
         weekly_scores = self._get_weekly_scores()
         if not weekly_scores:
             return "Ingen poeng ble delt ut denne uka."
@@ -113,26 +118,35 @@ class Results:
         resolved_names: dict[str, str] = {}
 
         # Sort scores descending
-        lines.append(f"**Av {self.num_fixtures} mulige:**")
+        lines.append(f"**Av {self._num_fixtures} mulige:**")
         for score in sorted(weekly_scores.keys(), reverse=True):
             user_ids = weekly_scores[score]
             names = []
 
             for uid in user_ids:
                 user = self._db.get_user(uid)
-                name = user.user_name
+                user_name = user.user_name
+                display_name = user.user_display_name 
 
-                resolved_names[uid] = name
-                names.append(name)
+                resolved_names[uid] = user_name
+                names.append(display_name)
 
             lines.append(f"{score} poeng: {', '.join(names)}")
 
         # Mention winners with @user_display_name
         top_score = max(weekly_scores.keys())
         top_user_ids = weekly_scores[top_score]
-        mentions = ', '.join(f"@{resolved_names[uid]}" for uid in top_user_ids)
+        users = await asyncio.gather(*(self._bot.fetch_user(uid) for uid in top_user_ids))
+        mentions = [user.mention for user in users]
 
-        lines.append(f"\nGratulerer til ukas vinnere {mentions}!")
+        if len(mentions) == 1:
+            mention_str = mentions[0]
+        elif len(mentions) == 2:
+            mention_str = f"{mentions[0]} og {mentions[1]}"
+        else:
+            mention_str = ', '.join(mentions[:-1]) + f" og {mentions[-1]}"
+
+        lines.append(f"\nGratulerer til ukas vinner(e) {mention_str}!")
 
         return split_message_blocks(lines)
 
@@ -165,7 +179,7 @@ class Results:
                 if diff > 0:
                     movement = f" (+{diff})"
                 elif diff < 0:
-                    movement = f" (-{diff})"
+                    movement = f" ({diff})"
                 else:
                     movement = " (0)"
 
@@ -186,14 +200,15 @@ class Results:
     async def send_results(self):
         """Sends the match results to the specified channel."""
         self._fetch_match_results()
-        weekly_chunks = self._format_weekly_leaderboard()
+        self._increment_score()
+        weekly_chunks = await self._format_weekly_leaderboard()
         total_chunks = self._format_total_leaderboard()
 
         for chunk in weekly_chunks:
-            await self.channel.send(chunk)
+            await self._channel.send(chunk)
 
         for chunk in total_chunks:
-            await self.channel.send(chunk)
+            await self._channel.send(chunk)
 
     
 

@@ -44,7 +44,7 @@ def get_fixtures(auth: str, x_days: int) -> List[dict]:
         Fetches match fixtures for the next x_days from the API.
     """
 
-    today_date = datetime.now().strftime("%Y-%m-%d")
+    today_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     new_date = datetime.now() + timedelta(days=x_days)
     formatted_new_date = new_date.strftime("%Y-%m-%d")  
 
@@ -69,13 +69,9 @@ def get_fixture_result(auth: str, match_id: int) -> List[dict]:
         Fetches result for a specific match-id.
     """
 
-    query = {
-        "status": "FT"
-    }
-
-    url = f"https://v3.football.api-sports.io/fixtures?{match_id}"
+    url = f"https://v3.football.api-sports.io/fixtures?id={match_id}"
     headers = generate_headers(auth)
 
-    return validate(requests.get(url, headers=headers, params=query))
+    return validate(requests.get(url, headers=headers))
 
 

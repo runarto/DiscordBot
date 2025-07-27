@@ -6,7 +6,6 @@ from discord import app_commands
 import os
 import glob
 import shutil
-import subprocess
 from db.db_interface import DB
 
 class AdminCog(commands.Cog, name="Admin"):
@@ -42,7 +41,7 @@ class AdminCog(commands.Cog, name="Admin"):
             return
 
         latest_backup = max(backups, key=os.path.getmtime)
-        shutil.copyfile(latest_backup, self.bot.db_path)
+        shutil.copyfile(latest_backup, self.db_path)
         self.bot.logger.warning(f"Database restored from backup: {os.path.basename(latest_backup)}")
         await interaction.followup.send(f"✅ Database restored from `{os.path.basename(latest_backup)}`.", ephemeral=True)
 
