@@ -4,6 +4,7 @@ import logging
 import os
 import asyncio
 from dotenv import load_dotenv
+import discord
 
 from misc.setup import setup_logging, setup_bot, setup_scheduler
 from db.db_interface import DB
@@ -52,6 +53,7 @@ async def on_ready():
 
     logger.debug(f"Commands in tree: {[cmd.name for cmd in bot.tree.get_commands()]}")
   
+    bot.tree.clear_commands(guild=discord.Object(id=GUILD_ID))
     synced = await bot.tree.sync()
     logger.debug(f"Synced {len(synced)} commands to the tree.")
 

@@ -8,6 +8,7 @@ import os
 import shutil
 from discord.ext import commands
 from db.db_interface import DB
+from typing import List
 
 
 
@@ -146,11 +147,80 @@ async def backup_database(source_path: str, backup_dir: str = "./backups") -> st
     backup_path = os.path.join(backup_dir, f"backup_{timestamp}.db")
     shutil.copyfile(source_path, backup_path)
 
-async def get_message(db: DB, channel: discord.TextChannel, content: str) -> discord.Message:
+async def get_message(db: DB, channel: discord.TextChannel, content: str = None, message_id: str = None) -> discord.Message:
     match_info = db.get_all_matches()
     for match in match_info:
         message = await channel.fetch_message(match.message_id)
-        if message.content == content:
+        if (message.content == content) or (message_id and str(message.id) == message_id):
             return message
         
     return None
+
+
+async def format_cheater_report_for_matches(db: DB, message_channel: discord.TextChannel, content: str = None) -> List[str]:
+    """
+    Returns a formatted string report of cheaters for each match.
+    Only includes matches where cheaters are found.
+    """
+
+    if content is not None:
+        # Check only the specified match
+        target_message = await get_message(db, message_channel, content)
+        if not target_message:
+            return []
+
+        cheater_report = await find_cheaters_for_message(target_message, db)
+        if not cheater_report:
+            return []
+        
+        return [f"**Kamp {target_message.content}**:\n{cheater_report}"]
+
+    matches = db.get_all_matches()
+    report_blocks = []
+
+    for match in matches:
+        message = await message_channel.fetch_message(match.message_id)
+        cheater_report = await find_cheaters_for_message(message, db)
+        if not cheater_report:
+            continue
+        block = f"**Kamp {message.content}**:\n{cheater_report}"
+        report_blocks.append(block)
+
+    return report_blocks    
+
+        
+async def find_cheaters_for_message(target_message, db):
+    """
+    Compares stored predictions with current reactions for a message and returns a list of cheaters.
+    Each cheater is represented as a tuple: (user_id, reason).
+    """
+    # --- 1. Stored predictions ---
+    stored_preds_raw = db.get_all_predictions_for_match(target_message.id)
+    stored_predictions = {pred.user_id: pred.prediction for pred in stored_preds_raw}
+
+    # --- 2. Current reactions from message ---
+    reaction_map = {0: "H", 1: "D", 2: "A"}
+    current_reactions = {}
+    for idx, reaction in enumerate(target_message.reactions[:3]):
+        mapped_prediction = reaction_map.get(idx, None)
+        if not mapped_prediction:
+            continue
+        async for user in reaction.users():
+            if not user.bot:
+                current_reactions.setdefault(str(user.id), set()).add(mapped_prediction)
+
+    # --- 3. Compare ---
+    cheaters = []
+    for user_id, reacted_emojis in current_reactions.items():
+        stored = stored_predictions.get(user_id)
+        if not stored:
+            cheaters.append((user_id, "🆕 Reagerte etter kampstart."))
+        elif reacted_emojis != {stored}:
+            reacted_str = ", ".join(reacted_emojis)
+            cheaters.append((user_id, f"🔁 Endra reaksjon (hadde: {stored}, nå: {reacted_str})"))
+
+    # --- 4. Report ---
+    if cheaters:
+        return "\n".join((f"<@{uid}> - {reason}" for uid, reason in cheaters))
+    else :
+        return None

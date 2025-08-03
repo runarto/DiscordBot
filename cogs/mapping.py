@@ -14,6 +14,7 @@ class MappingCog(commands.Cog, name="Mapping"):
     def __init__(self, bot: commands.Bot, db: DB):
         self.bot = bot
         self.db = db
+        self.logger = bot.logger
 
 
     @app_commands.command(name='map_emoji', description='Map roles to emojis one by one.')
@@ -60,9 +61,9 @@ class MappingCog(commands.Cog, name="Mapping"):
     async def map_users(self, interaction: discord.Interaction):
 
         await interaction.response.defer(ephemeral=True)
-        self.bot.logger.debug("Mapping users to their main emoji...")
+        self.logger.debug("Mapping users to their main emoji...")
         utils.map_users(self.bot, self.db)
-        self.bot.logger.info("User fetch complete.")
+        self.logger.info("User fetch complete.")
         await interaction.followup.send("User fetch has been completed.", ephemeral=True)
 
 

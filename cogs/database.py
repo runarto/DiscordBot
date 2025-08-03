@@ -13,6 +13,7 @@ class DatabaseCog(commands.Cog, name="Database"):
     def __init__(self, bot: commands.Bot, db: DB):
         self.bot = bot
         self.db = db
+        self.logger = bot.logger
 
     @app_commands.command(name='flush_table', description='Flush a table in the database.')
     @app_commands.default_permissions(manage_messages=True)
@@ -24,8 +25,9 @@ class DatabaseCog(commands.Cog, name="Database"):
     async def flush_table(self, interaction: discord.Interaction, table: app_commands.Choice[str]):
 
         await interaction.response.defer(ephemeral=True)
+        self.logger.debug(f"Command flush_table called by {interaction.user.name} for table {table.value}.")
         self.db.flush_table(table.value)
-        self.bot.logger.info(f"{table.value.capitalize()} table flushed.")
+        self.logger.info(f"{table.value.capitalize()} table flushed.")
         await interaction.followup.send(f"**{table.value}** table has been flushed.", ephemeral=True)
 
 
@@ -34,17 +36,20 @@ class DatabaseCog(commands.Cog, name="Database"):
     async def add_team_emoji(self, interaction: discord.Interaction, role: discord.Role, emoji: str):
 
         await interaction.response.defer(ephemeral=True)
+        self.logger.debug(f"Command add_team_emoji called by {interaction.user.name} for role {role.name} with emoji {emoji}.")
         self.db.insert_team_emoji(role.name, emoji)
-        self.bot.logger.info("Team emoji added for role: {role.name} with emoji: {emoji}")
+        self.logger.info("Team emoji added for role: {role.name} with emoji: {emoji}")
         await interaction.followup.send("Team emojis have been mapped successfully.", ephemeral=True)
 
     
     @app_commands.command(name='update_user_emoji', description='Update the emoji for a user.')
     @app_commands.default_permissions(manage_messages=True)
     async def update_user_emoji(self, interaction: discord.Interaction, user: discord.User, emoji: str):
+
         await interaction.response.defer(ephemeral=True)
+        self.logger.debug(f"Command update_user_emoji called by {interaction.user.name} for user {user.name} with emoji {emoji}.")
         self.db.insert_user(user.id, user.name, user.display_name, emoji)
-        self.bot.logger.info(f"Updated emoji for {user.mention} to {emoji}.")
+        self.logger.info(f"Updated emoji for {user.mention} to {emoji}.")
         await interaction.followup.send(f"Emoji for {user.mention} has been updated to {emoji}.", ephemeral=True)
 
 
@@ -62,6 +67,7 @@ class DatabaseCog(commands.Cog, name="Database"):
         content: Optional[str] = None
     ):
         await interaction.response.defer(ephemeral=True)
+        self.logger.debug(f"Command get_prediction called by {interaction.user.name} in {channel.mention} for user {user} and content '{content}'.")
 
         if not user and not content:
             await interaction.followup.send("You must specify at least one of `user` or `message_id`.", ephemeral=True)
@@ -130,8 +136,9 @@ class DatabaseCog(commands.Cog, name="Database"):
     async def adjust_score(self, interaction: discord.Interaction, user: discord.User, points: int = 0, wins: int = 0):
 
         await interaction.response.defer(ephemeral=True)
+        self.logger.debug(f"Command adjust_score called by {interaction.user.name} for user {user.name} with points {points} and wins {wins}.")
         self.db.upsert_score(user_id=user.id, points_delta=points, win_delta=wins)
-        self.bot.logger.info(f"Adjusted score for {user.mention}: {points} points, {wins} wins.")
+        self.logger.info(f"Adjusted score for {user.mention}: {points} points, {wins} wins.")
         await interaction.followup.send(f"Adjusted {user.mention}'s score by {points} points and {wins} wins.", ephemeral=True)
 
 
