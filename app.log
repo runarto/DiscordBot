@@ -369,3 +369,43 @@ Already up to date.
 2025-08-03 19:38:32,482 - INFO - Changes pushed to Git repository.
 2025-08-03 22:49:01,031 - INFO - Message sent to <#1376622589488664816>: test
 2025-08-03 23:12:41,169 - INFO - Ukens resultater sent to <#1094933846383923320>.
+2025-08-03 23:52:16,003 - INFO - Matches table flushed.
+2025-08-03 23:52:19,634 - INFO - Predictions table flushed.
+2025-08-04 00:02:34,875 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-08-07 20:27:19,988 - INFO - Message sent to <#1073619138074902639>: <:Brann:1039844066487185429>
+2025-08-07 20:27:54,885 - INFO - Message sent to <#1073619138074902639>: <:trashbrann:820086235296563231>
+2025-08-07 20:31:13,013 - INFO - Message sent to <#1073619138074902639>: <:Viking:1039842907894599760>
+2025-08-07 20:31:55,860 - INFO - Message sent to <#1073619138074902639>: Jeg styrer meg selv. Jeg er KI.
+2025-08-07 20:43:49,772 - INFO - Message sent to <#1073619138074902639>: `[LOG]` 2025-08-07 20:43:19,988 - User <@212247147637112832> deducted 5 points for mod abuse.
+2025-08-09 17:01:02,307 - INFO - Stored predictions for message 1401684509711405056 with content: <:Molde:1039836329502052444> Molde vs Ham-Kam <:Hamkam:1039832337032163358>
+2025-08-09 17:01:06,917 - INFO - Stored predictions for message 1401684509711405056 with content: <:Molde:1039836329502052444> Molde vs Ham-Kam <:Hamkam:1039832337032163358>
+2025-08-09 17:01:06,917 - INFO - Stored predictions for message 1401684509711405056.
+2025-08-09 19:16:01,050 - INFO - Stored predictions for message 1401684519756501042 with content: <:Glimt:1039831920978169857> Bodø/Glimt vs Tromsø <:Tromsoe:1039842401025527868>
+2025-08-10 17:01:01,996 - INFO - Stored predictions for message 1401684527205580890 with content: <:Haugesund:1039832977158443058> Haugesund vs Sarpsborg 08 <:Sarpsborg:1039841407134867516>
+2025-08-10 17:01:06,169 - INFO - Stored predictions for message 1401684534151352370 with content: <:Bryne:1039945160374632489> Bryne vs KFUM Oslo <:KFUM:1039945755814805574>
+2025-08-10 19:16:01,455 - INFO - Stored predictions for message 1401684540820422666 with content: <:Sandefjord:1039840813544378418> Sandefjord vs Viking <:Viking:1039842907894599760>
+2025-08-10 21:08:24,227 - INFO - Message sent to <#1055503231582748702>: git gud
+2025-08-11 10:35:49,282 - INFO - Ukens resultater sent to <#1094933846383923320>.
+2025-08-11 10:36:48,513 - INFO - Matches table flushed.
+2025-08-11 10:36:56,496 - INFO - Predictions table flushed.
+2025-08-11 10:38:20,698 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-08-11 10:44:27,545 - INFO - Message sent to <#1094933846383923320>: Fra og med i dag innføres det **minuspoeng** dersom du åpenbart forsøker å jukse på kupongen 🫨
+2025-08-11 19:31:07,737 - INFO - Adjusted score for <@627642454383788073>: 100 points, 100 wins.
+2025-08-11 19:31:23,222 - INFO - Leaderboard sent to <#1376622589488664816>.
+2025-08-11 19:31:34,618 - INFO - Leaderboard sent to <#1055503231582748702>.
+2025-08-11 19:32:15,356 - INFO - Adjusted score for <@627642454383788073>: -100 points, -100 wins.
+2025-08-12 22:42:47,318 - INFO - Message sent to <#1055503231582748702>: Hva blir mindre hver gang det tar et bad?
+2025-08-12 22:44:07,871 - INFO - Message sent to <#1055503231582748702>: Av og til lurer jeg på hvor gammel <@533306556566077455> er…
+2025-08-15 19:01:01,479 - INFO - Stored predictions for message 1404383232878710835 with content: <:Stroemsgodset:1039841950079143937> Strømsgodset vs Bodø/Glimt <:Glimt:1039831920978169857>
+2025-08-17 14:31:01,359 - INFO - Stored predictions for message 1404383241481490482 with content: <:Tromsoe:1039842401025527868> Tromsø vs Brann <:Brann:1039844066487185429>
+2025-08-17 17:01:05,650 - INFO - Stored predictions for message 1404383249567977554 with content: <:Kristiansund:1039834384854941726> Kristiansund vs Sandefjord <:Sandefjord:1039840813544378418>
+2025-08-17 17:01:05,891 - INFO - Stored predictions for message 1404383256979177472 with content: <:KFUM:1039945755814805574> KFUM Oslo vs Molde <:Molde:1039836329502052444>
+2025-08-17 17:01:06,035 - INFO - Stored predictions for message 1404383264851886150 with content: <:Hamkam:1039832337032163358> Ham-Kam vs Bryne <:Bryne:1039945160374632489>
+2025-08-17 19:16:01,185 - INFO - Stored predictions for message 1404383272070287431 with content: <:Vaalerenga:1039843306043080735> Vålerenga vs Sarpsborg 08 <:Sarpsborg:1039841407134867516>
+2025-08-18 16:05:07,323 - INFO - Ukens resultater sent to <#1094933846383923320>.
+2025-08-18 16:06:13,628 - INFO - Matches table flushed.
+2025-08-18 16:06:19,021 - INFO - Predictions table flushed.
+2025-08-18 16:07:23,517 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-08-18 16:53:52,255 - INFO - Message sent to <#1094933846383923320>: Obs: Brann - FFK er utsatt, og vil dermed ikke tas med i betraktning
+2025-08-18 19:48:16,538 - INFO - Matches table flushed.
+2025-08-18 19:49:45,321 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629> Det vil komme ny kupong så fort API-et som benyttes har oppdatert terminlista med hensyn på de utsatte kampene
