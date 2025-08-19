@@ -26,6 +26,11 @@ class Kupong:
 
     async def _message(self, fixture) -> tuple[str, str, str]:
         """Sends a message for a fixture and returns the message ID."""
+
+        if fixture['fixture']['status']['short'] == 'PST':
+            raise ValueError("Fixture is postponed, cannot send message.")
+
+
         home_team = self._db.get_team(fixture['teams']['home']['name'])
         away_team = self._db.get_team(fixture['teams']['away']['name'])
 
@@ -44,8 +49,11 @@ class Kupong:
     async def send_kupong(self):
         await self._channel.send("Ukens kupong:")
         for fixture in self._fixtures:
-            msg_id = await self._message(fixture)
-            self._add_fixture(fixture, msg_id)
+            try:
+                msg_id = await self._message(fixture)
+                self._add_fixture(fixture, msg_id)
+            except ValueError as e:
+                self._logger.warning(f"Skipping fixture {fixture['fixture']['id']} due to error: {e}")
 
 
 
