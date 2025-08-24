@@ -409,3 +409,26 @@ Already up to date.
 2025-08-18 16:53:52,255 - INFO - Message sent to <#1094933846383923320>: Obs: Brann - FFK er utsatt, og vil dermed ikke tas med i betraktning
 2025-08-18 19:48:16,538 - INFO - Matches table flushed.
 2025-08-18 19:49:45,321 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629> Det vil komme ny kupong så fort API-et som benyttes har oppdatert terminlista med hensyn på de utsatte kampene
+2025-08-19 11:15:54,580 - INFO - Changes pushed to Git repository.
+2025-08-19 11:19:02,669 - INFO - 📥 `git pull` output:
+```
+Updating f46a5ca..775e003
+Fast-forward
+ kupong/kupong.py | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+```
+2025-08-19 11:19:02,832 - INFO - ✅ Reloaded cogs: admin, database, kupong, mapping, cog_manager
+
+2025-08-19 11:19:26,793 - INFO - Matches table flushed.
+2025-08-19 11:19:57,554 - INFO - All match messages deleted in <#1094933846383923320>. Table 'matches' flushed.
+2025-08-19 11:20:54,844 - WARNING - Skipping fixture 1342336 due to error: Fixture is postponed, cannot send message.
+2025-08-19 11:20:54,844 - WARNING - Skipping fixture 1342331 due to error: Fixture is postponed, cannot send message.
+2025-08-19 11:21:13,494 - INFO - All match messages deleted in <#1376622589488664816>. Table 'matches' flushed.
+2025-08-19 11:21:20,584 - WARNING - Skipping fixture 1342336 due to error: Fixture is postponed, cannot send message.
+2025-08-19 11:21:20,584 - WARNING - Skipping fixture 1342331 due to error: Fixture is postponed, cannot send message.
+2025-08-19 11:21:38,544 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-08-21 23:00:17,158 - INFO - Message sent to <#1094933846383923320>: nei
+2025-08-21 23:00:38,734 - INFO - Message sent to <#1073619138074902639>: nei
+2025-08-22 19:01:01,793 - INFO - Stored predictions for message 1407293349144170518 with content: <:KFUM:1039945755814805574> KFUM Oslo vs Ham-Kam <:Hamkam:1039832337032163358>
+2025-08-24 16:49:25,794 - INFO - Stored predictions for message 1407293358862368798 with content: <:Haugesund:1039832977158443058> Haugesund vs Vålerenga <:Vaalerenga:1039843306043080735>
