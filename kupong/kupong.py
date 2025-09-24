@@ -20,7 +20,7 @@ class Kupong:
         match_id = fixture['fixture']['id']
         home_team = fixture['teams']['home']['name']
         away_team = fixture['teams']['away']['name']
-        kick_off_time = fixture['fixture']['date']
+        kick_off_time = fixture['fixture']['date'] 
         self._db.insert_match(match_id, msg_id, home_team, away_team, kick_off_time)
         self._logger.debug(f"Inserted match: {home_team} vs {away_team} with ID: {match_id}")
 

@@ -1,0 +1,1139 @@
+{[
+get: "fixtures"
+parameters: {
+league: "103"
+season: "2025"
+from: "2025-09-01"
+to: "2025-09-24"
+}
+errors: [
+]
+results: 16
+paging: {
+current: 1
+total: 1
+}
+response: [
+{
+fixture: {
+id: 1342346
+referee: "Mohammad Usman Aslam"
+timezone: "UTC"
+date: "2025-09-12T17:00:00+00:00"
+timestamp: 1757696400
+periods: {
+first: 1757696400
+second: 1757700000
+}
+venue: {
+id: 1175
+name: "Aspmyra Stadion"
+city: "Bodø"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 5
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 327
+name: "Bodo/Glimt"
+logo: "https://media.api-sports.io/football/teams/327.png"
+winner: true
+}
+away: {
+id: 320
+name: "Kristiansund BK"
+logo: "https://media.api-sports.io/football/teams/320.png"
+winner: false
+}
+}
+goals: {
+home: 7
+away: 1
+}
+score: {
+halftime: {
+home: 3
+away: 0
+}
+fulltime: {
+home: 7
+away: 1
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342352
+referee: "Daniel Higraff"
+timezone: "UTC"
+date: "2025-09-13T14:00:00+00:00"
+timestamp: 1757772000
+periods: {
+first: 1757772000
+second: 1757775600
+}
+venue: {
+id: 1184
+name: "Aker Stadion"
+city: "Molde"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: null
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 329
+name: "Molde"
+logo: "https://media.api-sports.io/football/teams/329.png"
+winner: false
+}
+away: {
+id: 2149
+name: "Fredrikstad"
+logo: "https://media.api-sports.io/football/teams/2149.png"
+winner: true
+}
+}
+goals: {
+home: 1
+away: 2
+}
+score: {
+halftime: {
+home: 0
+away: 2
+}
+fulltime: {
+home: 1
+away: 2
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342347
+referee: "Rohit Saggi"
+timezone: "UTC"
+date: "2025-09-13T16:00:00+00:00"
+timestamp: 1757779200
+periods: {
+first: 1757779200
+second: 1757782800
+}
+venue: {
+id: 1176
+name: "Brann Stadion"
+city: "Bergen"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 7
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 319
+name: "Brann"
+logo: "https://media.api-sports.io/football/teams/319.png"
+winner: true
+}
+away: {
+id: 326
+name: "Valerenga"
+logo: "https://media.api-sports.io/football/teams/326.png"
+winner: false
+}
+}
+goals: {
+home: 3
+away: 2
+}
+score: {
+halftime: {
+home: 1
+away: 1
+}
+fulltime: {
+home: 3
+away: 2
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342348
+referee: "Mathias Støfringshaug"
+timezone: "UTC"
+date: "2025-09-14T12:30:00+00:00"
+timestamp: 1757853000
+periods: {
+first: 1757853000
+second: 1757856600
+}
+venue: {
+id: 2793
+name: "Bryne Stadion"
+city: "Bryne"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 6
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 2142
+name: "Bryne"
+logo: "https://media.api-sports.io/football/teams/2142.png"
+winner: false
+}
+away: {
+id: 325
+name: "Tromso"
+logo: "https://media.api-sports.io/football/teams/325.png"
+winner: true
+}
+}
+goals: {
+home: 0
+away: 2
+}
+score: {
+halftime: {
+home: 0
+away: 1
+}
+fulltime: {
+home: 0
+away: 2
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342353
+referee: "Sivert Øksnes Amland"
+timezone: "UTC"
+date: "2025-09-14T15:00:00+00:00"
+timestamp: 1757862000
+periods: {
+first: 1757862000
+second: 1757865600
+}
+venue: {
+id: 1193
+name: "Sarpsborg Stadion"
+city: "Sarpsborg"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 7
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 333
+name: "Sarpsborg 08 FF"
+logo: "https://media.api-sports.io/football/teams/333.png"
+winner: true
+}
+away: {
+id: 332
+name: "Sandefjord"
+logo: "https://media.api-sports.io/football/teams/332.png"
+winner: false
+}
+}
+goals: {
+home: 2
+away: 1
+}
+score: {
+halftime: {
+home: 2
+away: 0
+}
+fulltime: {
+home: 2
+away: 1
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342351
+referee: "Eivind Bodding"
+timezone: "UTC"
+date: "2025-09-14T15:00:00+00:00"
+timestamp: 1757862000
+periods: {
+first: 1757862000
+second: 1757865600
+}
+venue: {
+id: 1179
+name: "KFUM Arena"
+city: "Oslo"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 9
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 2143
+name: "KFUM Oslo"
+logo: "https://media.api-sports.io/football/teams/2143.png"
+winner: null
+}
+away: {
+id: 759
+name: "Viking"
+logo: "https://media.api-sports.io/football/teams/759.png"
+winner: null
+}
+}
+goals: {
+home: 2
+away: 2
+}
+score: {
+halftime: {
+home: 2
+away: 1
+}
+fulltime: {
+home: 2
+away: 2
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342349
+referee: "Ola Hobber Nilsen"
+timezone: "UTC"
+date: "2025-09-14T15:00:00+00:00"
+timestamp: 1757862000
+periods: {
+first: 1757862000
+second: 1757865600
+}
+venue: {
+id: 1177
+name: "Briskeby Arena"
+city: "Hamar"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 5
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 2159
+name: "Ham-Kam"
+logo: "https://media.api-sports.io/football/teams/2159.png"
+winner: false
+}
+away: {
+id: 324
+name: "Stromsgodset"
+logo: "https://media.api-sports.io/football/teams/324.png"
+winner: true
+}
+}
+goals: {
+home: 1
+away: 2
+}
+score: {
+halftime: {
+home: 1
+away: 0
+}
+fulltime: {
+home: 1
+away: 2
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342350
+referee: "Stian Røvig Sletner"
+timezone: "UTC"
+date: "2025-09-14T17:15:00+00:00"
+timestamp: 1757870100
+periods: {
+first: 1757870100
+second: 1757873700
+}
+venue: {
+id: 12130
+name: "Haugesund Sparebank Arena"
+city: "Haugesund"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 7
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 21"
+standings: true
+}
+teams: {
+home: {
+id: 328
+name: "Haugesund"
+logo: "https://media.api-sports.io/football/teams/328.png"
+winner: false
+}
+away: {
+id: 331
+name: "Rosenborg"
+logo: "https://media.api-sports.io/football/teams/331.png"
+winner: true
+}
+}
+goals: {
+home: 0
+away: 3
+}
+score: {
+halftime: {
+home: 0
+away: 2
+}
+fulltime: {
+home: 0
+away: 3
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342354
+referee: "Marius Lien"
+timezone: "UTC"
+date: "2025-09-20T12:00:00+00:00"
+timestamp: 1758369600
+periods: {
+first: 1758369600
+second: 1758373200
+}
+venue: {
+id: 2792
+name: "Nye Fredrikstad Stadion"
+city: "Fredrikstad"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 6
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 2149
+name: "Fredrikstad"
+logo: "https://media.api-sports.io/football/teams/2149.png"
+winner: null
+}
+away: {
+id: 2142
+name: "Bryne"
+logo: "https://media.api-sports.io/football/teams/2142.png"
+winner: null
+}
+}
+goals: {
+home: 1
+away: 1
+}
+score: {
+halftime: {
+home: 1
+away: 0
+}
+fulltime: {
+home: 1
+away: 1
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342357
+referee: "Mathias Støfringshaug"
+timezone: "UTC"
+date: "2025-09-20T14:00:00+00:00"
+timestamp: 1758376800
+periods: {
+first: 1758376800
+second: 1758380400
+}
+venue: {
+id: 20418
+name: "Jotun Arena"
+city: "Sandefjord"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 4
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 332
+name: "Sandefjord"
+logo: "https://media.api-sports.io/football/teams/332.png"
+winner: false
+}
+away: {
+id: 319
+name: "Brann"
+logo: "https://media.api-sports.io/football/teams/319.png"
+winner: true
+}
+}
+goals: {
+home: 0
+away: 3
+}
+score: {
+halftime: {
+home: 0
+away: 1
+}
+fulltime: {
+home: 0
+away: 3
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342361
+referee: "Kristoffer Hagenes"
+timezone: "UTC"
+date: "2025-09-20T16:00:00+00:00"
+timestamp: 1758384000
+periods: {
+first: 1758384000
+second: 1758387600
+}
+venue: {
+id: 1203
+name: "Intility Arena"
+city: "Oslo"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 8
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 326
+name: "Valerenga"
+logo: "https://media.api-sports.io/football/teams/326.png"
+winner: null
+}
+away: {
+id: 2143
+name: "KFUM Oslo"
+logo: "https://media.api-sports.io/football/teams/2143.png"
+winner: null
+}
+}
+goals: {
+home: 1
+away: 1
+}
+score: {
+halftime: {
+home: 0
+away: 0
+}
+fulltime: {
+home: 1
+away: 1
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342356
+referee: "Espen Eskås"
+timezone: "UTC"
+date: "2025-09-21T12:30:00+00:00"
+timestamp: 1758457800
+periods: {
+first: 1758457800
+second: 1758461400
+}
+venue: {
+id: 1190
+name: "Lerkendal Stadion"
+city: "Trondheim"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 5
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 331
+name: "Rosenborg"
+logo: "https://media.api-sports.io/football/teams/331.png"
+winner: null
+}
+away: {
+id: 327
+name: "Bodo/Glimt"
+logo: "https://media.api-sports.io/football/teams/327.png"
+winner: null
+}
+}
+goals: {
+home: 1
+away: 1
+}
+score: {
+halftime: {
+home: 0
+away: 1
+}
+fulltime: {
+home: 1
+away: 1
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342355
+referee: "Svein Tore Sinnes"
+timezone: "UTC"
+date: "2025-09-21T15:00:00+00:00"
+timestamp: 1758466800
+periods: {
+first: 1758466800
+second: 1758470400
+}
+venue: {
+id: 19680
+name: "Nordmøre stadion"
+city: "Kristiansund"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 3
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 320
+name: "Kristiansund BK"
+logo: "https://media.api-sports.io/football/teams/320.png"
+winner: true
+}
+away: {
+id: 328
+name: "Haugesund"
+logo: "https://media.api-sports.io/football/teams/328.png"
+winner: false
+}
+}
+goals: {
+home: 2
+away: 0
+}
+score: {
+halftime: {
+home: 1
+away: 0
+}
+fulltime: {
+home: 2
+away: 0
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342358
+referee: "Marius Hansen Grøtta"
+timezone: "UTC"
+date: "2025-09-21T15:00:00+00:00"
+timestamp: 1758466800
+periods: {
+first: 1758466800
+second: 1758470400
+}
+venue: {
+id: 1199
+name: "Marienlyst Stadion"
+city: "Drammen"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 5
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 324
+name: "Stromsgodset"
+logo: "https://media.api-sports.io/football/teams/324.png"
+winner: true
+}
+away: {
+id: 333
+name: "Sarpsborg 08 FF"
+logo: "https://media.api-sports.io/football/teams/333.png"
+winner: false
+}
+}
+goals: {
+home: 2
+away: 1
+}
+score: {
+halftime: {
+home: 1
+away: 1
+}
+fulltime: {
+home: 2
+away: 1
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342359
+referee: "Sigurd Smehus Kringstad"
+timezone: "UTC"
+date: "2025-09-21T15:00:00+00:00"
+timestamp: 1758466800
+periods: {
+first: 1758466800
+second: 1758470400
+}
+venue: {
+id: 19681
+name: "Romssa Arena"
+city: "Tromsø"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 5
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 325
+name: "Tromso"
+logo: "https://media.api-sports.io/football/teams/325.png"
+winner: true
+}
+away: {
+id: 2159
+name: "Ham-Kam"
+logo: "https://media.api-sports.io/football/teams/2159.png"
+winner: false
+}
+}
+goals: {
+home: 1
+away: 0
+}
+score: {
+halftime: {
+home: 0
+away: 0
+}
+fulltime: {
+home: 1
+away: 0
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+}
+}
+}
+{
+fixture: {
+id: 1342360
+referee: "Tore Hansen"
+timezone: "UTC"
+date: "2025-09-21T17:15:00+00:00"
+timestamp: 1758474900
+periods: {
+first: 1758474900
+second: 1758478500
+}
+venue: {
+id: 21732
+name: "Lyse Arena"
+city: "Stavanger"
+}
+status: {
+long: "Match Finished"
+short: "FT"
+elapsed: 90
+extra: 8
+}
+}
+league: {
+id: 103
+name: "Eliteserien"
+country: "Norway"
+logo: "https://media.api-sports.io/football/leagues/103.png"
+flag: "https://media.api-sports.io/flags/no.svg"
+season: 2025
+round: "Regular Season - 22"
+standings: true
+}
+teams: {
+home: {
+id: 759
+name: "Viking"
+logo: "https://media.api-sports.io/football/teams/759.png"
+winner: true
+}
+away: {
+id: 329
+name: "Molde"
+logo: "https://media.api-sports.io/football/teams/329.png"
+winner: false
+}
+}
+goals: {
+home: 1
+away: 0
+}
+score: {
+halftime: {
+home: 0
+away: 0
+}
+fulltime: {
+home: 1
+away: 0
+}
+extratime: {
+home: null
+away: null
+}
+penalty: {
+home: null
+away: null
+]
+}
+}
+}
+]
+}
