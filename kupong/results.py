@@ -124,9 +124,14 @@ class Results:
             names = []
 
             for uid in user_ids:
-                user = self._db.get_user(uid)
-                user_name = user.user_name
-                display_name = user.user_display_name 
+                try:
+                    user = self._db.get_user(uid)
+                    user_name = user.user_name
+                    display_name = user.user_display_name 
+                except AttributeError:
+                    user = await self._bot.fetch_user(uid)
+                    user_name = user.name
+                    display_name = user.display_name
 
                 resolved_names[uid] = user_name
                 names.append(display_name)

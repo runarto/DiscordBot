@@ -62,7 +62,7 @@ async def on_ready():
     scheduler = await setup_scheduler(bot=bot, db=db, channel_id=TIPPEKUPONG_CHANNEL_ID, logger=logger)
     bot.scheduler = scheduler
 
-    scheduler.start()
+    bot.scheduler.start()
 
 async def main():
     await load_cogs()

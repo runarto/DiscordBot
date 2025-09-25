@@ -16,9 +16,15 @@ class Schedule:
         self._scheduler = AsyncIOScheduler(timezone=pytz.timezone("Europe/Oslo"))
         self._now = datetime.now(tz=pytz.timezone("Europe/Oslo"))
 
+    def state(self):
+        return self._scheduler.running
+
     def start(self):
         self._scheduler.start()
         self._schedule_all_matches()
+
+    async def shutdown(self, wait: bool = True):
+        await self._scheduler.shutdown(wait=wait)
 
     def _schedule_all_matches(self):
         matches = self._db.get_all_matches()
