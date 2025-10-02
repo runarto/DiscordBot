@@ -95,11 +95,8 @@ class CogManager(commands.Cog, name="Manager"):
     @commands.is_owner()
     async def reboot_bot(self, ctx):
         """Restarts the bot process."""
-        self.logger.debug("Restarting bot process...")
-        await ctx.send("♻️ Restarting bot...")
+        self.logger.info("Restarting bot process...")
         os.execv(sys.executable, [sys.executable] + sys.argv)
 
-
-# To add this Cog:
 async def setup(bot):
     await bot.add_cog(CogManager(bot))
