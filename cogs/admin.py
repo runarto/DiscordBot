@@ -50,6 +50,5 @@ class AdminCog(commands.Cog, name="Admin"):
         self.logger.warning(f"Database restored from backup: {os.path.basename(latest_backup)}")
         await interaction.followup.send(f"✅ Database restored from `{os.path.basename(latest_backup)}`.", ephemeral=True)
 
-
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))

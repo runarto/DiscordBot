@@ -1,6 +1,8 @@
 from discord.ext import commands
 from db.db_interface import DB
 import subprocess
+import os
+import sys
 
 class CogManager(commands.Cog, name="Manager"):
     def __init__(self, bot: commands.bot, db: DB):
@@ -88,6 +90,14 @@ class CogManager(commands.Cog, name="Manager"):
             self.logger.info("Changes pushed to Git repository.")
         except subprocess.CalledProcessError as e:
             self.logger.info(f"❌ Git command failed: {e}")
+    
+    @commands.command(name="reboot")
+    @commands.is_owner()
+    async def reboot_bot(self, ctx):
+        """Restarts the bot process."""
+        self.logger.debug("Restarting bot process...")
+        await ctx.send("♻️ Restarting bot...")
+        os.execv(sys.executable, [sys.executable] + sys.argv)
 
 
 # To add this Cog:
