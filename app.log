@@ -487,3 +487,9 @@ Fast-forward
 2025-09-28 17:39:30,640 - INFO - Stored predictions for message 1420727558437339138 with content: <:Hamkam:1039832337032163358> Ham-Kam vs Rosenborg <:Rosenborg:1059898578883051561>
 2025-09-28 19:47:50,299 - INFO - Stored predictions for message 1420727567786184746 with content: <:Molde:1039836329502052444> Molde vs Vålerenga <:Vaalerenga:1039843306043080735>
 2025-09-29 20:04:17,801 - INFO - Stored predictions for message 1420727576749670403 with content: <:Haugesund:1039832977158443058> Haugesund vs Sandefjord <:Sandefjord:1039840813544378418>
+2025-10-02 10:45:57,335 - INFO - Message sent to <#1376622589488664816>: test
+2025-10-02 10:46:03,348 - INFO - Restarting bot process...
+2025-10-02 10:46:26,453 - INFO - Message sent to <#1376622589488664816>: test
+2025-10-02 10:47:51,321 - INFO - Updated emoji for <@212247147637112832> to <:Glimt:1039831920978169857>.
+2025-10-02 10:48:22,624 - INFO - Updated emoji for <@533306556566077455> to <:Molde:1039836329502052444>.
+2025-10-02 10:48:42,638 - INFO - Updated emoji for <@268849873485430786> to <:Rosenborg:1059898578883051561>.
