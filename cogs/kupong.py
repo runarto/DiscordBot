@@ -26,8 +26,8 @@ class KupongCog(commands.Cog, name="Kupong"):
         self.logger.debug(f"Command send_ukens_kupong called by {interaction.user.name} in {channel.mention}.")
         kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger)
         await kup.send_kupong()
-        if self.bot.scheduler.state():
-            await self.bot.scheduler.shutdown(wait=False)
+        if self.bot.scheduler.running():
+            self.bot.scheduler.shutdown(wait=True)
         self.bot.scheduler.start()
         self.logger.info(f"Ukens kupong for the next {days} days sent to {channel.mention}.")
         await interaction.followup.send(f"Ukens kupong for de neste {days} dagene er sendt til {channel.mention}.", ephemeral=True)
