@@ -526,3 +526,45 @@ Fast-forward
 2025-11-03 11:05:53,472 - INFO - Ukens resultater sent to <#1094933846383923320>.
 2025-11-03 11:06:10,790 - INFO - Matches table flushed.
 2025-11-03 11:06:14,706 - INFO - Predictions table flushed.
+2025-11-03 11:06:26,210 - INFO - Changes pushed to Git repository.
+2025-11-03 11:35:16,318 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-11-08 15:51:36,753 - INFO - Stored predictions for message 1434853277379596421 with content: <:Sarpsborg:1039841407134867516> Sarpsborg 08 vs Fredrikstad <:Fredrikstad:1039945582917210162>
+2025-11-08 18:08:11,490 - INFO - Stored predictions for message 1434853286690951189 with content: <:Viking:1039842907894599760> Viking vs Ham-Kam <:Hamkam:1039832337032163358>
+2025-11-09 15:02:33,878 - INFO - Stored predictions for message 1434853295263842324 with content: <:Rosenborg:1059898578883051561> Rosenborg vs Vålerenga <:Vaalerenga:1039843306043080735>
+2025-11-09 17:01:05,864 - INFO - Stored predictions for message 1434853323470798888 with content: <:Glimt:1039831920978169857> Bodø/Glimt vs Bryne <:Bryne:1039945160374632489>
+2025-11-09 17:01:11,045 - INFO - Stored predictions for message 1434853323470798888 with content: <:Glimt:1039831920978169857> Bodø/Glimt vs Bryne <:Bryne:1039945160374632489>
+2025-11-09 17:01:11,133 - INFO - Stored predictions for message 1434853313647612027 with content: <:Kristiansund:1039834384854941726> Kristiansund vs Strømsgodset <:Stroemsgodset:1039841950079143937>
+2025-11-09 17:01:11,157 - INFO - Stored predictions for message 1434853331729252423 with content: <:Sandefjord:1039840813544378418> Sandefjord vs Tromsø <:Tromsoe:1039842401025527868>
+2025-11-09 17:01:16,819 - INFO - Stored predictions for message 1434853313647612027 with content: <:Kristiansund:1039834384854941726> Kristiansund vs Strømsgodset <:Stroemsgodset:1039841950079143937>
+2025-11-09 17:01:21,303 - INFO - Stored predictions for message 1434853304420270170 with content: <:Brann:1039844066487185429> Brann vs KFUM Oslo <:KFUM:1039945755814805574>
+2025-11-09 17:01:21,775 - INFO - Stored predictions for message 1434853304420270170 with content: <:Brann:1039844066487185429> Brann vs KFUM Oslo <:KFUM:1039945755814805574>
+2025-11-09 17:01:22,076 - INFO - Stored predictions for message 1434853331729252423 with content: <:Sandefjord:1039840813544378418> Sandefjord vs Tromsø <:Tromsoe:1039842401025527868>
+2025-11-09 19:51:07,375 - INFO - Stored predictions for message 1434853341393064037 with content: <:Haugesund:1039832977158443058> Haugesund vs Molde <:Molde:1039836329502052444>
+2025-11-10 11:20:57,106 - INFO - Ukens resultater sent to <#1094933846383923320>.
+2025-11-10 11:21:13,075 - INFO - Predictions table flushed.
+2025-11-10 11:21:17,378 - INFO - Matches table flushed.
+2025-11-10 11:23:13,517 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-11-21 19:01:01,250 - INFO - Stored predictions for message 1437386975274598561 with content: <:KFUM:1039945755814805574> KFUM Oslo vs Bodø/Glimt <:Glimt:1039831920978169857>
+2025-11-22 14:03:59,032 - INFO - Stored predictions for message 1437386985609105529 with content: <:Tromsoe:1039842401025527868> Tromsø vs Rosenborg <:Rosenborg:1059898578883051561>
+2025-11-22 16:29:53,561 - INFO - Stored predictions for message 1437386994111090718 with content: <:Vaalerenga:1039843306043080735> Vålerenga vs Kristiansund <:Kristiansund:1039834384854941726>
+2025-11-22 18:01:05,675 - INFO - Stored predictions for message 1437387010653421618 with content: <:Molde:1039836329502052444> Molde vs Brann <:Brann:1039844066487185429>
+2025-11-22 18:01:06,079 - INFO - Stored predictions for message 1437387002390773850 with content: <:Stroemsgodset:1039841950079143937> Strømsgodset vs Sandefjord <:Sandefjord:1039840813544378418>
+2025-11-24 14:16:41,923 - INFO - Stored predictions for message 1437387020103057480 with content: <:Bryne:1039945160374632489> Bryne vs Sarpsborg 08 <:Sarpsborg:1039841407134867516>
+2025-11-24 14:16:42,561 - INFO - Stored predictions for message 1437387030039625928 with content: <:Hamkam:1039832337032163358> Ham-Kam vs Haugesund <:Haugesund:1039832977158443058>
+2025-11-24 14:16:42,602 - INFO - Stored predictions for message 1437387039065636977 with content: <:Fredrikstad:1039945582917210162> Fredrikstad vs Viking <:Viking:1039842907894599760>
+2025-11-24 15:01:03,150 - INFO - Ukens resultater sent to <#1094933846383923320>.
+2025-11-24 15:01:22,724 - INFO - Predictions table flushed.
+2025-11-24 15:01:26,191 - INFO - Matches table flushed.
+2025-11-24 15:02:17,635 - INFO - Message sent to <#1094933846383923320>: <@&1272285759943999629>
+2025-11-30 18:56:48,718 - INFO - Stored predictions for message 1442515590639124651 with content: <:Glimt:1039831920978169857> Bodø/Glimt vs Fredrikstad <:Fredrikstad:1039945582917210162>
+2025-11-30 18:56:54,115 - INFO - Stored predictions for message 1442515617331679252 with content: <:Rosenborg:1059898578883051561> Rosenborg vs Strømsgodset <:Stroemsgodset:1039841950079143937>
+2025-11-30 18:56:54,428 - INFO - Stored predictions for message 1442515598801371287 with content: <:Haugesund:1039832977158443058> Haugesund vs Bryne <:Bryne:1039945160374632489>
+2025-11-30 18:56:59,417 - INFO - Stored predictions for message 1442515572939292683 with content: <:Brann:1039844066487185429> Brann vs Ham-Kam <:Hamkam:1039832337032163358>
+2025-11-30 18:56:59,600 - INFO - Stored predictions for message 1442515581801861162 with content: <:Kristiansund:1039834384854941726> Kristiansund vs Tromsø <:Tromsoe:1039842401025527868>
+2025-11-30 18:57:04,326 - INFO - Stored predictions for message 1442515635652530197 with content: <:Sarpsborg:1039841407134867516> Sarpsborg 08 vs Molde <:Molde:1039836329502052444>
+2025-11-30 18:57:04,953 - INFO - Stored predictions for message 1442515626471067793 with content: <:Sandefjord:1039840813544378418> Sandefjord vs KFUM Oslo <:KFUM:1039945755814805574>
+2025-11-30 18:57:05,114 - INFO - Stored predictions for message 1442515644661764167 with content: <:Viking:1039842907894599760> Viking vs Vålerenga <:Vaalerenga:1039843306043080735>
+2025-12-01 13:41:15,830 - INFO - Message sent to <#1094933846383923320>: Etter et langt år med blod, svette og tårer, er årets sesong endelig ferdig. @Derlino startet sterkt, men akkurat som Tromsø, trakk han et for kort strå når det virkelig gjelder. Det samme må sies om @Fjompen. Du samstemmer virkelig med Ranheim. På den andre siden av spekteret, finner vi @mandingo, som har kjempet i toppen på kupongen i hele år. I motsetning til laget han holder med, avgjorde han allerede før siste runde. I motsatt ende av spekteret, finner vi blant annet @thorry98, på 53 poeng. Han viser virkelig ballkunnskap! Det samme må sies om o store serversjef, @geirawsm. Dette er to personer som må steppe opp kunnskapen til neste år. Uansett, så gratulerer vi <@176448172514607104> med seier i årets kupong. Her kommer resten av resultatene.
+2025-12-01 13:42:21,906 - INFO - Message sent to <#1094933846383923320>: Etter et langt år med blod, svette og tårer, er årets sesong endelig ferdig. <@212247147637112832> startet sterkt, men akkurat som Tromsø, trakk han et for kort strå når det virkelig gjelder. Det samme må sies om <@238314251779833856>. Du samstemmer virkelig med Ranheim. På den andre siden av spekteret, finner vi <@176448172514607104>, som har kjempet i toppen på kupongen i hele år. I motsetning til laget han holder med, avgjorde han allerede før siste runde. I motsatt ende av spekteret, finner vi blant annet <@269035446334521344>, på 53 poeng. Han viser virkelig ballkunnskap! Det samme må sies om o store serversjef, <@364182141929521164>. Dette er to personer som må steppe opp kunnskapen til neste år. Uansett, så gratulerer vi <@176448172514607104> med seier i årets kupong. Her kommer resten av årets resultater.
+2025-12-01 13:42:30,977 - INFO - Ukens resultater sent to <#1094933846383923320>.
+2025-12-01 15:15:15,600 - INFO - Message sent to <#1376622589488664816>: <@275572512069517312>
