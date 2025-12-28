@@ -28,11 +28,15 @@ class DB:
         create_team_emojis_table(self._conn)
         create_teams_table(self._conn)
 
-    def insert_match(self, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: Union[str, datetime.datetime]):
-        db_rw.insert_match(self._conn, match_id, message_id, home_team, away_team, kick_off_time)
+    def insert_match(self, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: Union[str, datetime.datetime], league_id: int):
+        db_rw.insert_match(self._conn, match_id, message_id, home_team, away_team, kick_off_time, league_id)
 
-    def get_all_matches(self) -> List[Match]:   
+    def get_all_matches(self) -> List[Match]:
         rows = db_rw.get_all_matches(self._conn)
+        return [row_to_dataclass(row, Match) for row in rows]
+
+    def get_matches_by_league(self, league_id: int) -> List[Match]:
+        rows = db_rw.get_matches_by_league(self._conn, league_id)
         return [row_to_dataclass(row, Match) for row in rows]
 
     def get_match_by_id(self, match_id: Union[int, str] = None, message_id: Union[int, str] = None) -> Match:
@@ -54,15 +58,19 @@ class DB:
         rows = db_rw.get_all_predictions_for_match(self._conn, message_id)
         return [row_to_dataclass(row, Prediction) for row in rows]
 
-    def upsert_score(self, user_id: Union[int, str], points_delta: int = 0, win_delta: int = 0):
-        db_rw.upsert_score(self._conn, user_id, points_delta, win_delta)
+    def upsert_score(self, user_id: Union[int, str], league_id: int, points_delta: int = 0, win_delta: int = 0):
+        db_rw.upsert_score(self._conn, user_id, league_id, points_delta, win_delta)
 
-    def get_user_score(self, user_id: Union[int, str]) -> Score:
-        row = db_rw.get_user_score(self._conn, user_id)
+    def get_user_score(self, user_id: Union[int, str], league_id: int) -> Score:
+        row = db_rw.get_user_score(self._conn, user_id, league_id)
         return row_to_dataclass(row, Score) if row else None
 
     def get_all_scores(self) -> List[Score]:
         rows = db_rw.get_all_scores(self._conn)
+        return [row_to_dataclass(row, Score) for row in rows]
+
+    def get_scores_by_league(self, league_id: int) -> List[Score]:
+        rows = db_rw.get_scores_by_league(self._conn, league_id)
         return [row_to_dataclass(row, Score) for row in rows]
 
     def insert_user(self, user_id: Union[int, str], user_name: Union[int, str], user_display_name: str, user_emoji: str = None):
@@ -87,12 +95,16 @@ class DB:
         with self._conn:
             self._conn.execute("DELETE FROM team_emojis WHERE role_name = ?;", (role_name,))
 
-    def insert_team(self, team_name_api: str, team_name_norsk: str, team_emoji: str):
-        db_rw.insert_team(self._conn, team_name_api, team_name_norsk, team_emoji)
+    def insert_team(self, team_name_api: str, league_id: int, team_name_norsk: str, team_emoji: str):
+        db_rw.insert_team(self._conn, team_name_api, league_id, team_name_norsk, team_emoji)
 
-    def get_team(self, team_name_api: str) -> Team:
-        row = db_rw.get_team(self._conn, team_name_api)
+    def get_team(self, team_name_api: str, league_id: int) -> Team:
+        row = db_rw.get_team(self._conn, team_name_api, league_id)
         return row_to_dataclass(row, Team) if row else None
+
+    def get_teams_by_league(self, league_id: int) -> List[Team]:
+        rows = db_rw.get_teams_by_league(self._conn, league_id)
+        return [row_to_dataclass(row, Team) for row in rows]
     
     def drop_table(self, table_name: str):
         with self._conn:
@@ -101,6 +113,11 @@ class DB:
     def flush_table(self, table_name: str):
         with self._conn:
             self._conn.execute(f"DELETE FROM {table_name};")
+            self._conn.commit()
+
+    def delete_matches_by_league(self, league_id: int):
+        with self._conn:
+            self._conn.execute("DELETE FROM matches WHERE league_id = ?;", (league_id,))
             self._conn.commit()
 
 

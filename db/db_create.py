@@ -10,7 +10,8 @@ def create_matches_table(conn: Connection):
             message_id INTEGER NOT NULL,
             home_team TEXT NOT NULL,
             away_team TEXT NOT NULL,
-            kick_off_time TEXT NOT NULL
+            kick_off_time TEXT NOT NULL,
+            league_id INTEGER NOT NULL
         );
         """)
 
@@ -21,8 +22,7 @@ def create_predictions_table(conn: Connection):
             message_id INTEGER NOT NULL,
             user_id TEXT NOT NULL,
             prediction TEXT NOT NULL,
-            PRIMARY KEY (match_id, user_id),
-            FOREIGN KEY (match_id) REFERENCES matches(match_id)
+            PRIMARY KEY (message_id, user_id)
         );
         """)
 
@@ -30,9 +30,11 @@ def create_scores_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS scores (
-            user_id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            league_id INTEGER NOT NULL,
             points INTEGER NOT NULL DEFAULT 0,
-            weekly_wins INTEGER NOT NULL DEFAULT 0
+            weekly_wins INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY (user_id, league_id)
         );
         """)
 
@@ -60,8 +62,10 @@ def create_teams_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS teams (
-            team_name_api TEXT PRIMARY KEY,
+            team_name_api TEXT NOT NULL,
+            league_id INTEGER NOT NULL,
             team_name_norsk TEXT NOT NULL,
-            team_emoji TEXT NOT NULL
+            team_emoji TEXT NOT NULL,
+            PRIMARY KEY (team_name_api, league_id)
         );
         """)

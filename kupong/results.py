@@ -6,18 +6,22 @@ import asyncio
 from collections import defaultdict
 from api.rapid_sports import get_fixture_result
 from misc.utils import split_message_blocks
+from misc.constants import LEAGUES
 from db.db_interface import DB
 from discord.ext import commands
 
 
 class Results:
-    def __init__(self, bot: commands.Bot, db: DB, channel: discord.TextChannel, logger: logging.Logger):
+    def __init__(self, bot: commands.Bot, db: DB, channel: discord.TextChannel, logger: logging.Logger, league_key: str):
         self._bot = bot
         self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
-        self._matches = self._db.get_all_matches()
-        self._old_scores = self._db.get_all_scores()
+        self._league_key = league_key
+        self._league_config = LEAGUES[league_key]
+        self._league_id = self._league_config["id"]
+        self._matches = self._db.get_matches_by_league(self._league_id)
+        self._old_scores = self._db.get_scores_by_league(self._league_id)
         self._previous_ranks = self._get_ranks()
         self._match_results = {}
         self._num_fixtures = len(self._matches)
@@ -75,7 +79,7 @@ class Results:
 
             for prediction in predictions:
                 if prediction.prediction == result:
-                    self._db.upsert_score(prediction.user_id, points_delta=1)
+                    self._db.upsert_score(prediction.user_id, self._league_id, points_delta=1)
 
         weekly_scores = self._get_weekly_scores()
 
@@ -88,12 +92,12 @@ class Results:
 
         # Award weekly wins
         for user_id in top_users:
-            self._db.upsert_score(user_id, win_delta=1)
+            self._db.upsert_score(user_id, self._league_id, win_delta=1)
 
 
     def _get_weekly_scores(self):
         old_scores = self._old_scores
-        new_scores = self._db.get_all_scores()
+        new_scores = self._db.get_scores_by_league(self._league_id)
 
         # Map old scores by user_id
         old_dict = {s.user_id: s.points for s in old_scores}
@@ -157,7 +161,7 @@ class Results:
 
     
     def _format_total_leaderboard(self) -> list[str]:
-        scores = self._db.get_all_scores()  # list of Score(user_id, points, weekly_wins)
+        scores = self._db.get_scores_by_league(self._league_id)
         leaderboard = []
         for score in scores:
             user = self._db.get_user(score.user_id)
@@ -168,7 +172,8 @@ class Results:
         # Sort by points DESC, then weekly_wins DESC
         leaderboard.sort(key=lambda x: (-x[0], -x[1]))
 
-        lines = ["**Totale poeng:**"]
+        league_name = self._league_config["name"]
+        lines = [f"**Totale poeng ({league_name}):**"]
 
         rank = 1
         prev_points = None

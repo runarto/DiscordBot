@@ -7,10 +7,17 @@ from kupong.kupong import Kupong
 from kupong.results import Results
 import misc.utils as utils
 from db.db_interface import DB
+from misc.constants import LEAGUES, DEFAULT_LEAGUE
+
+# League choices for command autocomplete
+LEAGUE_CHOICES = [
+    app_commands.Choice(name=config["name"], value=key)
+    for key, config in LEAGUES.items()
+]
 
 class KupongCog(commands.Cog, name="Kupong"):
     """Commands for managing kuponger and results"""
-    
+
     def __init__(self, bot: commands.Bot, db: DB):
         self.db_path = bot.db_path
         self.bot = bot
@@ -20,42 +27,48 @@ class KupongCog(commands.Cog, name="Kupong"):
 
     @app_commands.command(name='send_kupong', description='Send ukens kupong for de neste dagene.')
     @app_commands.default_permissions(manage_messages=True)
-    async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: discord.TextChannel):
+    @app_commands.choices(league=LEAGUE_CHOICES)
+    async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
-        self.logger.debug(f"Command send_ukens_kupong called by {interaction.user.name} in {channel.mention}.")
-        kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger)
+        league_name = LEAGUES[league]["name"]
+        self.logger.debug(f"Command send_ukens_kupong called by {interaction.user.name} in {channel.mention} for {league_name}.")
+        kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger, league_key=league)
         await kup.send_kupong()
         if self.bot.scheduler.running():
             self.bot.scheduler.shutdown(wait=True)
         self.bot.scheduler.start()
-        self.logger.info(f"Ukens kupong for the next {days} days sent to {channel.mention}.")
-        await interaction.followup.send(f"Ukens kupong for de neste {days} dagene er sendt til {channel.mention}.", ephemeral=True)
+        self.logger.info(f"Ukens kupong ({league_name}) for the next {days} days sent to {channel.mention}.")
+        await interaction.followup.send(f"Ukens kupong ({league_name}) for de neste {days} dagene er sendt til {channel.mention}.", ephemeral=True)
 
 
     @app_commands.command(name='send_resultater', description='Send ukens resultater for de siste kampene.')
     @app_commands.default_permissions(manage_messages=True)
-    async def send_ukens_resultater(self, interaction: discord.Interaction, channel: discord.TextChannel):
+    @app_commands.choices(league=LEAGUE_CHOICES)
+    async def send_ukens_resultater(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
         await utils.backup_database(self.db_path)
-        self.logger.debug(f"Command send_ukens_resultater called by {interaction.user.name} in {channel.mention}.")
-        res = Results(bot=self.bot, db=self.db, channel=channel, logger=self.logger)
+        league_name = LEAGUES[league]["name"]
+        self.logger.debug(f"Command send_ukens_resultater called by {interaction.user.name} in {channel.mention} for {league_name}.")
+        res = Results(bot=self.bot, db=self.db, channel=channel, logger=self.logger, league_key=league)
         await res.send_results()
-        self.logger.info(f"Ukens resultater sent to {channel.mention}.")
-        await interaction.followup.send(f"Ukens resultater har blitt sendt til {channel.mention}.", ephemeral=True)
+        self.logger.info(f"Ukens resultater ({league_name}) sent to {channel.mention}.")
+        await interaction.followup.send(f"Ukens resultater ({league_name}) har blitt sendt til {channel.mention}.", ephemeral=True)
 
 
     @app_commands.command(name='send_leaderboard', description='Send the total leaderboard.')
     @app_commands.default_permissions(manage_messages=True)
-    async def send_leaderboard(self, interaction: discord.Interaction, channel: discord.TextChannel):
+    @app_commands.choices(league=LEAGUE_CHOICES)
+    async def send_leaderboard(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
-        self.logger.debug(f"Command send_leaderboard called by {interaction.user.name} in {channel.mention}.")
-        res = Results(bot=self.bot, db=self.db, channel=channel, logger=self.logger)
+        league_name = LEAGUES[league]["name"]
+        self.logger.debug(f"Command send_leaderboard called by {interaction.user.name} in {channel.mention} for {league_name}.")
+        res = Results(bot=self.bot, db=self.db, channel=channel, logger=self.logger, league_key=league)
         await res.send_leaderboard()
-        self.logger.info(f"Leaderboard sent to {channel.mention}.")
-        await interaction.followup.send(f"Leaderboard has been sent to {channel.mention}.", ephemeral=True)
+        self.logger.info(f"Leaderboard ({league_name}) sent to {channel.mention}.")
+        await interaction.followup.send(f"Leaderboard ({league_name}) has been sent to {channel.mention}.", ephemeral=True)
 
 
     @app_commands.command(name='store_predictions', description='Store predictions for a specific match.')
@@ -75,23 +88,32 @@ class KupongCog(commands.Cog, name="Kupong"):
         await interaction.followup.send(f"Predictions for message {target_message.id} have been stored.", ephemeral=True)
 
 
-    @app_commands.command(name='delete_messages', description='Delete the match messages and flush the matches table.')
+    @app_commands.command(name='delete_messages', description='Delete the match messages for a specific league.')
     @app_commands.default_permissions(manage_messages=True)
-    async def delete_match_messages(self, interaction: discord.Interaction, channel: discord.TextChannel):
+    @app_commands.choices(league=LEAGUE_CHOICES)
+    async def delete_match_messages(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
-        self.logger.debug(f"Command delete_match_messages called by {interaction.user.name} in {channel.mention}.")
-        info = self.db.get_all_matches()
-        message_ids = [match.message_id for match in info]
+        league_name = LEAGUES[league]["name"]
+        league_id = LEAGUES[league]["id"]
+        self.logger.debug(f"Command delete_match_messages called by {interaction.user.name} in {channel.mention} for {league_name}.")
+        matches = self.db.get_matches_by_league(league_id)
+        message_ids = [match.message_id for match in matches]
 
+        deleted_count = 0
         for msg_id in message_ids:
-            message = await channel.fetch_message(msg_id)
-            await message.delete()
+            try:
+                message = await channel.fetch_message(msg_id)
+                await message.delete()
+                deleted_count += 1
+            except discord.NotFound:
+                self.logger.warning(f"Message {msg_id} not found, skipping.")
 
-        self.db.flush_table("matches")
-        
-        self.logger.info(f"All match messages deleted in {channel.mention}. Table 'matches' flushed.")
-        await interaction.followup.send(f"All match messages have been deleted in {channel.mention}.", ephemeral=True)
+        # Delete matches for this league from DB
+        self.db.delete_matches_by_league(league_id)
+
+        self.logger.info(f"{deleted_count} match messages ({league_name}) deleted in {channel.mention}.")
+        await interaction.followup.send(f"{deleted_count} kampmeldinger ({league_name}) har blitt slettet i {channel.mention}.", ephemeral=True)
 
 
     @app_commands.command(name='find_cheaters', description='Finds users who reacted after start time for a given game.')

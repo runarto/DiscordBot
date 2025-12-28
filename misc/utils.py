@@ -8,6 +8,7 @@ import os
 import shutil
 from discord.ext import commands
 from db.db_interface import DB
+from misc.constants import LEAGUES
 from typing import List
 
 
@@ -30,8 +31,13 @@ def split_message_blocks(lines: list[str], max_length: int = 2000) -> list[str]:
 
     return blocks
 
-def map_teams_to_emojis(bot: commands.Bot, db: DB, auth: str):
-    teams = sports_api.get_teams(auth)['response']
+def map_teams_to_emojis(bot: commands.Bot, db: DB, auth: str, league_key: str):
+    """Maps teams to emojis for a specific league."""
+    league_config = LEAGUES[league_key]
+    league_id = league_config["id"]
+    season = league_config["season"]
+
+    teams = sports_api.get_teams(auth, league_id, season)['response']
     emojis = discord_api.get_emojis(bot)
 
     for team in teams:
@@ -48,13 +54,13 @@ def map_teams_to_emojis(bot: commands.Bot, db: DB, auth: str):
 
         if team_emoji is None:
             team_emoji = input(f"No emoji found for '{team_name_norsk}'. Please enter an emoji: ")
-        
+
         print(repr(team_name_api), repr(team_name_norsk), repr(team_emoji))
         print(f"Type of team_name_api: {type(team_name_api)}")
         print(f"Type of team_name_norsk: {type(team_name_norsk)}")
         print(f"Type of team_emoji: {type(team_emoji)}")
-        print("Inserting:", team_name_api, team_name_norsk, team_emoji)
-        db.insert_team(team_name_api, team_name_norsk, team_emoji)
+        print("Inserting:", team_name_api, league_id, team_name_norsk, team_emoji)
+        db.insert_team(team_name_api, league_id, team_name_norsk, team_emoji)
 
 def map_roles_to_emojis(bot: commands.Bot, db: DB) -> dict[str, str]:
     """Maps roles to emojis based on similarity of names, and writes it to DB."""
@@ -129,6 +135,11 @@ async def store_predictions(message: discord.Message, logger: logging.Logger, db
             if user.bot:
                 continue
             try:
+                # Auto-add user if not in database (without emoji)
+                if not db.get_user(user.id):
+                    db.insert_user(user.id, user.name, user.display_name, None)
+                    logger.debug(f"Auto-added new user {user.id} ({user.display_name})")
+
                 logger.debug(f"Inserting prediction for user {user.id}: {str(reaction.emoji)}")
                 db.insert_prediction(message.id, str(user.id), prediction_value)
             except Exception as e:

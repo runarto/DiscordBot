@@ -3,35 +3,43 @@ from typing import Optional, Union
 
 # --- Matches Read/Write ---
 
-def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: str):
+def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: str, league_id: int):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time)
-            VALUES (?, ?, ?, ?, ?);
-        """, (match_id, message_id, home_team, away_team, kick_off_time))
+            INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time, league_id)
+            VALUES (?, ?, ?, ?, ?, ?);
+        """, (match_id, message_id, home_team, away_team, kick_off_time, league_id))
 
 def get_all_matches(conn: Connection):
-    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time FROM matches ORDER BY kick_off_time;").fetchall()
+    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id FROM matches ORDER BY kick_off_time;").fetchall()
+
+def get_matches_by_league(conn: Connection, league_id: int):
+    return conn.execute("""
+        SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+        FROM matches
+        WHERE league_id = ?
+        ORDER BY kick_off_time;
+    """, (league_id,)).fetchall()
 
 def get_match(conn: Connection, match_id: Optional[int] = None, message_id: Optional[int] = None):
     if match_id and message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time 
-            FROM matches 
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+            FROM matches
             WHERE match_id = ? AND message_id = ?;
         """
         return conn.execute(query, (match_id, message_id)).fetchone()
     elif match_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time 
-            FROM matches 
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+            FROM matches
             WHERE match_id = ?;
         """
         return conn.execute(query, (match_id,)).fetchone()
     elif message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time 
-            FROM matches 
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+            FROM matches
             WHERE message_id = ?;
         """
         return conn.execute(query, (message_id,)).fetchone()
@@ -72,29 +80,37 @@ def get_all_predictions_for_match(conn: Connection, message_id: Union[int, str])
 
 # --- Scores Read/Write ---
 
-def upsert_score(conn: Connection, user_id: Union[int, str], points_delta: int = 0, win_delta: int = 0):
+def upsert_score(conn: Connection, user_id: Union[int, str], league_id: int, points_delta: int = 0, win_delta: int = 0):
     with conn:
         conn.execute("""
-            INSERT INTO scores (user_id, points, weekly_wins)
-            VALUES (?, ?, ?)
-            ON CONFLICT(user_id) DO UPDATE SET 
+            INSERT INTO scores (user_id, league_id, points, weekly_wins)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id, league_id) DO UPDATE SET
                 points = points + excluded.points,
                 weekly_wins = weekly_wins + excluded.weekly_wins;
-        """, (user_id, points_delta, win_delta))
+        """, (user_id, league_id, points_delta, win_delta))
 
-def get_user_score(conn: Connection, user_id: Union[int, str]):
+def get_user_score(conn: Connection, user_id: Union[int, str], league_id: int):
     return conn.execute("""
-        SELECT user_id, points, weekly_wins 
-        FROM scores 
-        WHERE user_id = ?;
-    """, (user_id,)).fetchone()
+        SELECT user_id, league_id, points, weekly_wins
+        FROM scores
+        WHERE user_id = ? AND league_id = ?;
+    """, (user_id, league_id)).fetchone()
 
 def get_all_scores(conn: Connection):
     return conn.execute("""
-        SELECT user_id, points, weekly_wins 
-        FROM scores 
+        SELECT user_id, league_id, points, weekly_wins
+        FROM scores
         ORDER BY points DESC;
     """).fetchall()
+
+def get_scores_by_league(conn: Connection, league_id: int):
+    return conn.execute("""
+        SELECT user_id, league_id, points, weekly_wins
+        FROM scores
+        WHERE league_id = ?
+        ORDER BY points DESC;
+    """, (league_id,)).fetchall()
 
 
 # --- Users Read/Write ---
@@ -138,16 +154,23 @@ def insert_team_emoji(conn: Connection, role_name: str, emoji: str):
 
 # --- Teams Read/Write ---
 
-def insert_team(conn: Connection, team_name_api: str, team_name_norsk: str, team_emoji: str):
+def insert_team(conn: Connection, team_name_api: str, league_id: int, team_name_norsk: str, team_emoji: str):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO teams (team_name_api, team_name_norsk, team_emoji)
-            VALUES (?, ?, ?);
-        """, (team_name_api, team_name_norsk, team_emoji))
+            INSERT OR REPLACE INTO teams (team_name_api, league_id, team_name_norsk, team_emoji)
+            VALUES (?, ?, ?, ?);
+        """, (team_name_api, league_id, team_name_norsk, team_emoji))
 
-def get_team(conn: Connection, team_name_api: str):
+def get_team(conn: Connection, team_name_api: str, league_id: int):
     return conn.execute("""
-        SELECT team_name_api, team_name_norsk, team_emoji 
-        FROM teams 
-        WHERE team_name_api = ?;
-    """, (team_name_api,)).fetchone()
+        SELECT team_name_api, league_id, team_name_norsk, team_emoji
+        FROM teams
+        WHERE team_name_api = ? AND league_id = ?;
+    """, (team_name_api, league_id)).fetchone()
+
+def get_teams_by_league(conn: Connection, league_id: int):
+    return conn.execute("""
+        SELECT team_name_api, league_id, team_name_norsk, team_emoji
+        FROM teams
+        WHERE league_id = ?;
+    """, (league_id,)).fetchall()

@@ -20,45 +20,45 @@ def get_fixture(auth: str, fixture_id: int) -> List[dict]:
     return validate(requests.get(url, headers=headers, params=query))
 
 
-def get_teams(auth: str) -> List[dict]:     
+def get_teams(auth: str, league_id: int, season: int) -> List[dict]:
     """https://www.api-football.com/documentation-v3#tag/Teams/operation/get-teams"""
 
     """
-        Fetches teams from the API.
+        Fetches teams from the API for a specific league and season.
     """
-    
+
     url = "https://v3.football.api-sports.io/teams"
     headers = generate_headers(auth)
 
     query = {
-        "league": 103,
-        "season": 2025,
+        "league": league_id,
+        "season": season,
     }
-    
+
     return validate(requests.get(url, headers=headers, params=query))
 
-def get_fixtures(auth: str, x_days: int) -> List[dict]:
+def get_fixtures(auth: str, x_days: int, league_id: int, season: int) -> List[dict]:
     """https://www.api-football.com/documentation-v3#tag/Fixtures/operation/get-fixtures"""
-    
+
     """
-        Fetches match fixtures for the next x_days from the API.
+        Fetches match fixtures for the next x_days from the API for a specific league.
     """
 
     today_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     new_date = datetime.now() + timedelta(days=x_days)
-    formatted_new_date = new_date.strftime("%Y-%m-%d")  
+    formatted_new_date = new_date.strftime("%Y-%m-%d")
 
     url = "https://v3.football.api-sports.io/fixtures"
     headers = generate_headers(auth)
 
     query = {
-        "league": 103,
-        "season": 2025,
+        "league": league_id,
+        "season": season,
         "timezone": "Europe/Oslo",
         "from": today_date,
-        "to": formatted_new_date 
+        "to": formatted_new_date
     }
-    
+
     return validate(requests.get(url, headers=headers, params=query))
 
 

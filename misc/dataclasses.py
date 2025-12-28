@@ -6,12 +6,19 @@ def row_to_dataclass(row: Row, dataclass_type: type):
     return dataclass_type(**dict(row))
 
 @dataclass
+class League:
+    league_id: int
+    name: str
+    season: int
+
+@dataclass
 class Match:
     match_id: int
     message_id: int
     home_team: str
     away_team: str
     kick_off_time: str
+    league_id: int
 
 @dataclass
 class Prediction:
@@ -22,6 +29,7 @@ class Prediction:
 @dataclass
 class Score:
     user_id: str
+    league_id: int
     points: int = 0
     weekly_wins: int = 0
 
@@ -40,5 +48,6 @@ class TeamEmoji:
 @dataclass
 class Team:
     team_name_api: str
+    league_id: int
     team_name_norsk: str
     team_emoji: str
