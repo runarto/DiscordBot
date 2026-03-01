@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 
@@ -16,4 +17,4 @@ class DiscordLogHandler(logging.Handler):
         log_entry = self.format(record)
         if self.bot.is_ready():
             coro = self.send_to_discord(f"`[LOG]` {log_entry}")
-            self.bot.loop.create_task(coro)
+            asyncio.get_event_loop().create_task(coro)

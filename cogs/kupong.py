@@ -28,12 +28,13 @@ class KupongCog(commands.Cog, name="Kupong"):
     @app_commands.command(name='send_kupong', description='Send ukens kupong for de neste dagene.')
     @app_commands.default_permissions(manage_messages=True)
     @app_commands.choices(league=LEAGUE_CHOICES)
-    async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
+    async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE, include_obos: bool = False):
 
         await interaction.response.defer(ephemeral=True)
         league_name = LEAGUES[league]["name"]
+        secondary_league_key = "OBOS" if include_obos else None
         self.logger.debug(f"Command send_ukens_kupong called by {interaction.user.name} in {channel.mention} for {league_name}.")
-        kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger, league_key=league)
+        kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger, league_key=league, secondary_league_key=secondary_league_key)
         await kup.send_kupong()
         if self.bot.scheduler.running():
             self.bot.scheduler.shutdown(wait=True)

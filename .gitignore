@@ -4,3 +4,6 @@ __pycache__/
 jsonfiles/
 .env
 notes.txt
+.pytest_cache/
+.claude
+app.log

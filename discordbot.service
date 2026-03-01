@@ -1,0 +1,16 @@
+[Unit]
+Description=Discord Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/<your-user>/DiscordBot
+ExecStart=/home/<your-user>/DiscordBot/.venv/bin/python main.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,7 @@
 # League configuration
 LEAGUES = {
-    "ELITE": {"id": 103, "name": "Eliteserien", "season": 2025},
-    "OBOS": {"id": 104, "name": "OBOS-ligaen", "season": 2025},
+    "ELITE": {"id": 103, "name": "Eliteserien", "season": 2026},
+    "OBOS": {"id": 104, "name": "OBOS-ligaen", "season": 2026},
     "CHAMPIONSHIP": {"id": 40, "name": "Championship", "season": 2025},
     "AFCON": {"id": 6, "name": "Afrika-mesterskapet", "season": 2025},
 }

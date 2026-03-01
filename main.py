@@ -42,26 +42,31 @@ async def load_cogs():
 
 @bot.event
 async def on_ready():
-    discord_handler = DiscordLogHandler(bot, LOG_CHANNEL_ID)
-    discord_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
-    logger.addHandler(discord_handler)
+    logger.debug(f"on_ready fired — logged in as {bot.user}")
 
     for guild in bot.guilds:
         if guild.id not in ALLOWED_GUILDS:
             logger.warning(f"Leaving unauthorized guild: {guild.name} ({guild.id})")
             await guild.leave()
 
+    # Guard: only run first-time setup once, even if on_ready fires again on reconnect
+    if getattr(bot, '_initialized', False):
+        logger.info("Reconnected to Discord — skipping first-time setup.")
+        return
+
+    bot._initialized = True
+
+    discord_handler = DiscordLogHandler(bot, LOG_CHANNEL_ID)
+    discord_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+    logger.addHandler(discord_handler)
+
     logger.debug(f"Commands in tree: {[cmd.name for cmd in bot.tree.get_commands()]}")
-  
     bot.tree.clear_commands(guild=discord.Object(id=GUILD_ID))
     synced = await bot.tree.sync()
     logger.debug(f"Synced {len(synced)} commands to the tree.")
 
-    logger.debug(f"Logged in as {bot.user}")
-
     scheduler = await setup_scheduler(bot=bot, db=db, channel_id=TIPPEKUPONG_CHANNEL_ID, logger=logger)
     bot.scheduler = scheduler
-
     bot.scheduler.start()
 
 async def main():
