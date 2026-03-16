@@ -23,7 +23,7 @@ class Schedule:
         self._scheduler.start()
         self._schedule_all_matches()
 
-    def shutdown(self, wait: bool = True):
+    def shutdown(self, wait: bool = False):
         self._scheduler.shutdown(wait=wait)
 
     def _schedule_all_matches(self):

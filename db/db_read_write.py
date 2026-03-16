@@ -168,6 +168,14 @@ def get_team(conn: Connection, team_name_api: str, league_id: int):
         WHERE team_name_api = ? AND league_id = ?;
     """, (team_name_api, league_id)).fetchone()
 
+def get_team_by_name(conn: Connection, team_name_api: str):
+    return conn.execute("""
+        SELECT team_name_api, league_id, team_name_norsk, team_emoji
+        FROM teams
+        WHERE team_name_api = ?
+        LIMIT 1;
+    """, (team_name_api,)).fetchone()
+
 def get_teams_by_league(conn: Connection, league_id: int):
     return conn.execute("""
         SELECT team_name_api, league_id, team_name_norsk, team_emoji

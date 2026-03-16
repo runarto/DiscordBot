@@ -102,6 +102,10 @@ class DB:
         row = db_rw.get_team(self._conn, team_name_api, league_id)
         return row_to_dataclass(row, Team) if row else None
 
+    def get_team_by_name(self, team_name_api: str) -> Team:
+        row = db_rw.get_team_by_name(self._conn, team_name_api)
+        return row_to_dataclass(row, Team) if row else None
+
     def get_teams_by_league(self, league_id: int) -> List[Team]:
         rows = db_rw.get_teams_by_league(self._conn, league_id)
         return [row_to_dataclass(row, Team) for row in rows]

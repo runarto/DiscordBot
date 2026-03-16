@@ -34,10 +34,15 @@ class KupongCog(commands.Cog, name="Kupong"):
         league_name = LEAGUES[league]["name"]
         secondary_league_key = "OBOS" if include_obos else None
         self.logger.debug(f"Command send_ukens_kupong called by {interaction.user.name} in {channel.mention} for {league_name}.")
-        kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger, league_key=league, secondary_league_key=secondary_league_key)
-        await kup.send_kupong()
+        try:
+            kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger, league_key=league, secondary_league_key=secondary_league_key)
+            await kup.send_kupong()
+        except Exception as e:
+            self.logger.error(f"Failed to send kupong: {e}", exc_info=True)
+            await interaction.followup.send(f"Feil ved sending av kupong: {e}", ephemeral=True)
+            return
         if self.bot.scheduler.running():
-            self.bot.scheduler.shutdown(wait=True)
+            self.bot.scheduler.shutdown(wait=False)
         self.bot.scheduler.start()
         self.logger.info(f"Ukens kupong ({league_name}) for the next {days} days sent to {channel.mention}.")
         await interaction.followup.send(f"Ukens kupong ({league_name}) for de neste {days} dagene er sendt til {channel.mention}.", ephemeral=True)

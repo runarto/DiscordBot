@@ -24,7 +24,6 @@ class Results:
         self._old_scores = self._db.get_scores_by_league(self._league_id)
         self._previous_ranks = self._get_ranks()
         self._match_results = {}
-        self._num_fixtures = len(self._matches)
 
     def _get_ranks(self) -> dict[int, int]:
         users = []
@@ -43,15 +42,14 @@ class Results:
 
     def _fetch_match_results(self):
         """Fetches match results and stores them in a dictionary."""
-        matches = self._matches
-        for match in matches:
+        for match in self._matches:
             result = self._determine_fixture_result(match.match_id)
             if result != "NA":
                 self._match_results[match.match_id] = result
 
     def _determine_fixture_result(self, fixture_id):
         fixture = get_fixture_result(self._auth, fixture_id)['response'][0]
-        if fixture['fixture']['status']['short'] != "FT":
+        if fixture['fixture']['status']['short'] not in ['FT', 'AET', 'PEN']:
             return "NA"
 
         score = fixture['score']['fulltime']
@@ -120,9 +118,10 @@ class Results:
 
         lines = []
         resolved_names: dict[str, str] = {}
+        num_fixtures = len(self._match_results)
 
         # Sort scores descending
-        lines.append(f"**Av {self._num_fixtures} mulige:**")
+        lines.append(f"**Av {num_fixtures} mulige:**")
         for score in sorted(weekly_scores.keys(), reverse=True):
             user_ids = weekly_scores[score]
             names = []

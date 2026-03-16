@@ -18,17 +18,26 @@ class AdminCog(commands.Cog, name="Admin"):
 
     @app_commands.command(name='send_msg', description='Sends a message to a specific channel.')
     @app_commands.default_permissions(manage_messages=True)
-    async def send_message(self, interaction: discord.Interaction, channel: discord.TextChannel, message: str):
+    async def send_message(self, interaction: discord.Interaction, channel: discord.TextChannel):
 
-        await interaction.response.defer(ephemeral=True)
-        self.logger.debug(f"Command send_message called by {interaction.user.name} in {channel.mention}.")
-        try:
-            await channel.send(message)
-            self.logger.info(f"Message sent to {channel.mention}: {message}")
-            await interaction.followup.send(f"Message sent to {channel.mention}.", ephemeral=True)
-        except Exception as e:
-            self.logger.error(f"Failed to send message to {channel.mention}: {e}")
-            await interaction.followup.send(f"Failed to send message to {channel.mention}.", ephemeral=True)
+        class MessageModal(discord.ui.Modal, title="Send message"):
+            content = discord.ui.TextInput(
+                label="Message",
+                style=discord.TextStyle.paragraph,
+                required=True,
+                max_length=2000,
+            )
+
+            async def on_submit(modal_self, modal_interaction: discord.Interaction):
+                try:
+                    await channel.send(modal_self.content.value)
+                    self.logger.info(f"Message sent to {channel.mention}: {modal_self.content.value}")
+                    await modal_interaction.response.send_message(f"Message sent to {channel.mention}.", ephemeral=True)
+                except Exception as e:
+                    self.logger.error(f"Failed to send message to {channel.mention}: {e}")
+                    await modal_interaction.response.send_message(f"Failed to send message to {channel.mention}.", ephemeral=True)
+
+        await interaction.response.send_modal(MessageModal())
 
 
     @app_commands.command(name='restore_db', description='Restores the main database from the newest backup.')

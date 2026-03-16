@@ -46,6 +46,9 @@ class Kupong:
         if league_id is None:
             league_id = self._league_id
         team = self._db.get_team(team_name_api, league_id)
+        if not team:
+            # Fallback: try finding the team in any league (e.g. for cup competitions)
+            team = self._db.get_team_by_name(team_name_api)
         if team:
             return team.team_name_norsk, team.team_emoji
         else:
