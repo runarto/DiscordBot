@@ -11,7 +11,8 @@ def create_matches_table(conn: Connection):
             home_team TEXT NOT NULL,
             away_team TEXT NOT NULL,
             kick_off_time TEXT NOT NULL,
-            league_id INTEGER NOT NULL
+            league_id INTEGER NOT NULL,
+            cancelled INTEGER NOT NULL DEFAULT 0
         );
         """)
 
@@ -62,10 +63,9 @@ def create_teams_table(conn: Connection):
     with conn:
         conn.execute("""
         CREATE TABLE IF NOT EXISTS teams (
-            team_name_api TEXT NOT NULL,
+            team_name TEXT NOT NULL,
             league_id INTEGER NOT NULL,
-            team_name_norsk TEXT NOT NULL,
             team_emoji TEXT NOT NULL,
-            PRIMARY KEY (team_name_api, league_id)
+            PRIMARY KEY (team_name, league_id)
         );
         """)

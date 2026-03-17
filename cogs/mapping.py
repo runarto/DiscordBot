@@ -1,12 +1,10 @@
 # =============================================================================
 # cogs/mapping.py - Role and emoji mapping commands
-import os
 import discord
 from discord.ext import commands
 from discord import app_commands
 import asyncio
 import api.discord as discord_api
-import api.rapid_sports as sports_api
 import misc.utils as utils
 from db.db_interface import DB
 from misc.constants import LEAGUES, DEFAULT_LEAGUE
@@ -72,54 +70,40 @@ class MappingCog(commands.Cog, name="Mapping"):
         await interaction.response.defer()
         league_config = LEAGUES[league]
         league_id = league_config["id"]
-        season = league_config["season"]
 
-        teams = sports_api.get_teams(os.getenv("API_TOKEN"), league_id, season)['response']
-        emojis = discord_api.get_emojis(self.bot)
-        already_mapped = {t.team_name_api for t in self.db.get_teams_by_league(league_id)}
-        unmapped = [t for t in teams if t['team']['name'] not in already_mapped]
+        matches = self.db.get_matches_by_league(league_id)
+        if not matches:
+            await interaction.followup.send(f"No matches found for {league_config['name']}. Send a kupong first.")
+            return
+
+        all_team_names = {m.home_team for m in matches} | {m.away_team for m in matches}
+        already_mapped = {t.team_name for t in self.db.get_teams_by_league(league_id)}
+        unmapped = sorted(all_team_names - already_mapped)
 
         if not unmapped:
             await interaction.followup.send(f"All teams for {league_config['name']} are already mapped.")
             return
 
+        emojis = discord_api.get_emojis(self.bot)
         await interaction.followup.send(f"Mapping {len(unmapped)} teams for **{league_config['name']}**. Type `stop` at any time to quit.")
 
         def check(m):
             return m.author == interaction.user and m.channel == interaction.channel
 
-        for team in unmapped:
-            team_name_api = team['team']['name']
+        for team_name in unmapped:
 
-            # Step 1: ask for Norwegian name
-            await interaction.followup.send(f"**{team_name_api}**\nEnter Norwegian name (or `pass` to skip, `stop` to quit):")
-            try:
-                name_msg = await self.bot.wait_for('message', timeout=60.0, check=check)
-            except asyncio.TimeoutError:
-                await interaction.followup.send("⏰ Timed out — mapping stopped.")
-                return
-
-            if name_msg.content.lower() == 'stop':
-                await interaction.followup.send("Mapping stopped.")
-                return
-            if name_msg.content.lower() == 'pass':
-                await name_msg.add_reaction('⏭️')
-                continue
-
-            team_name_norsk = name_msg.content.strip()
-
-            # Step 2: find best emoji match by name similarity
+            # Find best emoji match by name similarity
             best_emoji, best_ratio = None, 0
             for emoji in emojis:
-                ratio = utils.check_similarity(emoji.name.lower(), team_name_norsk.lower())
+                ratio = utils.check_similarity(emoji.name.lower(), team_name.lower())
                 if ratio > best_ratio:
                     best_ratio = ratio
                     best_emoji = f"<:{emoji.name}:{emoji.id}>"
 
             if best_emoji:
-                await interaction.followup.send(f"Best emoji match: {best_emoji}\nType `yes` to confirm or send a different emoji:")
+                await interaction.followup.send(f"**{team_name}**\nBest emoji match: {best_emoji}\nType `yes` to confirm, send a different emoji, or `pass`/`stop`:")
             else:
-                await interaction.followup.send("No emoji match found. Please send an emoji:")
+                await interaction.followup.send(f"**{team_name}**\nNo emoji match found. Please send an emoji (or `pass`/`stop`):")
 
             try:
                 emoji_msg = await self.bot.wait_for('message', timeout=60.0, check=check)
@@ -130,11 +114,14 @@ class MappingCog(commands.Cog, name="Mapping"):
             if emoji_msg.content.lower() == 'stop':
                 await interaction.followup.send("Mapping stopped.")
                 return
+            if emoji_msg.content.lower() == 'pass':
+                await emoji_msg.add_reaction('⏭️')
+                continue
 
             team_emoji = best_emoji if emoji_msg.content.lower() == 'yes' else emoji_msg.content.strip()
-            self.db.insert_team(team_name_api, league_id, team_name_norsk, team_emoji)
+            self.db.insert_team(team_name, league_id, team_emoji)
             await emoji_msg.add_reaction('✅')
-            self.logger.debug(f"Mapped team: {team_name_api} → {team_name_norsk} {team_emoji}")
+            self.logger.debug(f"Mapped team: {team_name} → {team_emoji}")
 
         await interaction.followup.send(f"✅ Team mapping complete for **{league_config['name']}**.")
 

@@ -1,13 +1,30 @@
 import requests
-from typing import List
+from typing import List, Dict, Optional
+import json
+import re
 
-def generate_headers(API_TOKEN: str) -> dict:
+def generate_headers(_: Optional[str] = None) -> dict:
     return {
-        "x-rapidapi-host": "v3.football.api-sports.io",
-        "x-rapidapi-key": API_TOKEN  # Be cautious with your API key
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "nb-NO,nb;q=0.9,en;q=0.8",
     }
 
-def validate(response: requests.Response) -> List[dict]:
-    response.raise_for_status() 
-    return response.json()  # or whatever is appropriate
+
+def validate(response: requests.Response) -> Dict:
+    response.raise_for_status()
+
+    match = re.search(
+        r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+        response.text,
+        re.DOTALL,
+    )
+    if not match:
+        raise ValueError("Could not find __NEXT_DATA__ in FotMob response")
+
+    return json.loads(match.group(1))
 

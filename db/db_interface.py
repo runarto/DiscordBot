@@ -28,8 +28,8 @@ class DB:
         create_team_emojis_table(self._conn)
         create_teams_table(self._conn)
 
-    def insert_match(self, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: Union[str, datetime.datetime], league_id: int):
-        db_rw.insert_match(self._conn, match_id, message_id, home_team, away_team, kick_off_time, league_id)
+    def insert_match(self, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: Union[str, datetime.datetime], league_id: int, cancelled: bool = False):
+        db_rw.insert_match(self._conn, match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled)
 
     def get_all_matches(self) -> List[Match]:
         rows = db_rw.get_all_matches(self._conn)
@@ -95,15 +95,15 @@ class DB:
         with self._conn:
             self._conn.execute("DELETE FROM team_emojis WHERE role_name = ?;", (role_name,))
 
-    def insert_team(self, team_name_api: str, league_id: int, team_name_norsk: str, team_emoji: str):
-        db_rw.insert_team(self._conn, team_name_api, league_id, team_name_norsk, team_emoji)
+    def insert_team(self, team_name: str, league_id: int, team_emoji: str):
+        db_rw.insert_team(self._conn, team_name, league_id, team_emoji)
 
-    def get_team(self, team_name_api: str, league_id: int) -> Team:
-        row = db_rw.get_team(self._conn, team_name_api, league_id)
+    def get_team(self, team_name: str, league_id: int) -> Team:
+        row = db_rw.get_team(self._conn, team_name, league_id)
         return row_to_dataclass(row, Team) if row else None
 
-    def get_team_by_name(self, team_name_api: str) -> Team:
-        row = db_rw.get_team_by_name(self._conn, team_name_api)
+    def get_team_by_name(self, team_name: str) -> Team:
+        row = db_rw.get_team_by_name(self._conn, team_name)
         return row_to_dataclass(row, Team) if row else None
 
     def get_teams_by_league(self, league_id: int) -> List[Team]:

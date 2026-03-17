@@ -1,8 +1,8 @@
 # League configuration
 LEAGUES = {
-    "ELITE": {"id": 103, "name": "Eliteserien", "season": 2026},
-    "OBOS": {"id": 104, "name": "OBOS-ligaen", "season": 2026},
-    "Cupen": {"id": 105, "name": "NM Cupen", "season": 2026}
+    "ELITE": {"id": 59, "name": "Eliteserien", "season": 2026, "slug": "eliteserien"},
+    "OBOS": {"id": 203, "name": "OBOS-ligaen", "season": 2026, "slug": "1-divisjon"},
+    "Cupen": {"id": 105, "name": "NM Cupen", "season": 2026, "slug": "nm-cupen"},
 }
 DEFAULT_LEAGUE = "ELITE"
 

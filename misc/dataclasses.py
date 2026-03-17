@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict
 from sqlite3 import Row
 
 def row_to_dataclass(row: Row, dataclass_type: type):
@@ -18,7 +18,16 @@ class Match:
     home_team: str
     away_team: str
     kick_off_time: str
+    cancelled: bool
     league_id: int
+    
+@dataclass 
+class Result:
+    match_id: int
+    home_team: str
+    away_team: str
+    status: Dict[str, str]
+    result: Optional[str]
 
 @dataclass
 class Prediction:
@@ -47,7 +56,6 @@ class TeamEmoji:
 
 @dataclass
 class Team:
-    team_name_api: str
+    team_name: str
     league_id: int
-    team_name_norsk: str
     team_emoji: str

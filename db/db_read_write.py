@@ -3,19 +3,19 @@ from typing import Optional, Union
 
 # --- Matches Read/Write ---
 
-def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: str, league_id: int):
+def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: str, league_id: int, cancelled: bool = False):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time, league_id)
-            VALUES (?, ?, ?, ?, ?, ?);
-        """, (match_id, message_id, home_team, away_team, kick_off_time, league_id))
+            INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
+        """, (match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled))
 
 def get_all_matches(conn: Connection):
-    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id FROM matches ORDER BY kick_off_time;").fetchall()
+    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id FROM matches ORDER BY kick_off_time;").fetchall()
 
 def get_matches_by_league(conn: Connection, league_id: int):
     return conn.execute("""
-        SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
         FROM matches
         WHERE league_id = ?
         ORDER BY kick_off_time;
@@ -24,21 +24,21 @@ def get_matches_by_league(conn: Connection, league_id: int):
 def get_match(conn: Connection, match_id: Optional[int] = None, message_id: Optional[int] = None):
     if match_id and message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
             FROM matches
             WHERE match_id = ? AND message_id = ?;
         """
         return conn.execute(query, (match_id, message_id)).fetchone()
     elif match_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
             FROM matches
             WHERE match_id = ?;
         """
         return conn.execute(query, (match_id,)).fetchone()
     elif message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, league_id
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
             FROM matches
             WHERE message_id = ?;
         """
@@ -154,31 +154,31 @@ def insert_team_emoji(conn: Connection, role_name: str, emoji: str):
 
 # --- Teams Read/Write ---
 
-def insert_team(conn: Connection, team_name_api: str, league_id: int, team_name_norsk: str, team_emoji: str):
+def insert_team(conn: Connection, team_name: str, league_id: int, team_emoji: str):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO teams (team_name_api, league_id, team_name_norsk, team_emoji)
-            VALUES (?, ?, ?, ?);
-        """, (team_name_api, league_id, team_name_norsk, team_emoji))
+            INSERT OR REPLACE INTO teams (team_name, league_id, team_emoji)
+            VALUES (?, ?, ?);
+        """, (team_name, league_id, team_emoji))
 
-def get_team(conn: Connection, team_name_api: str, league_id: int):
+def get_team(conn: Connection, team_name: str, league_id: int):
     return conn.execute("""
-        SELECT team_name_api, league_id, team_name_norsk, team_emoji
+        SELECT team_name, league_id, team_emoji
         FROM teams
-        WHERE team_name_api = ? AND league_id = ?;
-    """, (team_name_api, league_id)).fetchone()
+        WHERE team_name = ? AND league_id = ?;
+    """, (team_name, league_id)).fetchone()
 
-def get_team_by_name(conn: Connection, team_name_api: str):
+def get_team_by_name(conn: Connection, team_name: str):
     return conn.execute("""
-        SELECT team_name_api, league_id, team_name_norsk, team_emoji
+        SELECT team_name, league_id, team_emoji
         FROM teams
-        WHERE team_name_api = ?
+        WHERE team_name = ?
         LIMIT 1;
-    """, (team_name_api,)).fetchone()
+    """, (team_name,)).fetchone()
 
 def get_teams_by_league(conn: Connection, league_id: int):
     return conn.execute("""
-        SELECT team_name_api, league_id, team_name_norsk, team_emoji
+        SELECT team_name, league_id, team_emoji
         FROM teams
         WHERE league_id = ?;
     """, (league_id,)).fetchall()

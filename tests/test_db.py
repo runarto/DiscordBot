@@ -203,28 +203,28 @@ class TestUsers:
 
 class TestTeams:
     def test_insert_and_retrieve_team(self, db):
-        db.insert_team("Brann", ELITE_LEAGUE_ID, "Brann", "<:Brann:1039844066487185429>")
+        db.insert_team("Brann", ELITE_LEAGUE_ID, "<:Brann:1039844066487185429>")
         team = db.get_team("Brann", ELITE_LEAGUE_ID)
         assert team is not None
-        assert team.team_name_norsk == "Brann"
+        assert team.team_name == "Brann"
         assert team.team_emoji == "<:Brann:1039844066487185429>"
 
     def test_get_team_not_found_returns_none(self, db):
         assert db.get_team("Unknown FC", ELITE_LEAGUE_ID) is None
 
     def test_get_teams_by_league_filters_correctly(self, db):
-        db.insert_team("Brann", ELITE_LEAGUE_ID, "Brann", "<:Brann:123>")
-        db.insert_team("Molde", ELITE_LEAGUE_ID, "Molde", "<:Molde:456>")
-        db.insert_team("TeamA", OBOS_LEAGUE_ID, "TeamA", "🏠")
+        db.insert_team("Brann", ELITE_LEAGUE_ID, "<:Brann:123>")
+        db.insert_team("Molde", ELITE_LEAGUE_ID, "<:Molde:456>")
+        db.insert_team("TeamA", OBOS_LEAGUE_ID, "🏠")
         assert len(db.get_teams_by_league(ELITE_LEAGUE_ID)) == 2
 
     def test_same_team_name_different_leagues_are_separate(self, db):
-        db.insert_team("Brann", ELITE_LEAGUE_ID, "Brann Elite", "<:BrannE:1>")
-        db.insert_team("Brann", OBOS_LEAGUE_ID, "Brann OBOS", "<:BrannO:2>")
-        assert db.get_team("Brann", ELITE_LEAGUE_ID).team_name_norsk == "Brann Elite"
-        assert db.get_team("Brann", OBOS_LEAGUE_ID).team_name_norsk == "Brann OBOS"
+        db.insert_team("Brann", ELITE_LEAGUE_ID, "<:BrannE:1>")
+        db.insert_team("Brann", OBOS_LEAGUE_ID, "<:BrannO:2>")
+        assert db.get_team("Brann", ELITE_LEAGUE_ID).team_emoji == "<:BrannE:1>"
+        assert db.get_team("Brann", OBOS_LEAGUE_ID).team_emoji == "<:BrannO:2>"
 
     def test_insert_replaces_existing_team(self, db):
-        db.insert_team("Brann", ELITE_LEAGUE_ID, "Brann", "<:Old:1>")
-        db.insert_team("Brann", ELITE_LEAGUE_ID, "Brann", "<:New:2>")
+        db.insert_team("Brann", ELITE_LEAGUE_ID, "<:Old:1>")
+        db.insert_team("Brann", ELITE_LEAGUE_ID, "<:New:2>")
         assert db.get_team("Brann", ELITE_LEAGUE_ID).team_emoji == "<:New:2>"

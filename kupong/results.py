@@ -4,8 +4,8 @@ import logging
 import asyncio
 
 from collections import defaultdict
-from api.rapid_sports import get_fixture_result
-from misc.utils import split_message_blocks
+from api.fotmob import get_fixture_result
+from misc.utils import split_message_blocks, interpret_result
 from misc.constants import LEAGUES
 from db.db_interface import DB
 from discord.ext import commands
@@ -47,23 +47,12 @@ class Results:
             if result != "NA":
                 self._match_results[match.match_id] = result
 
-    def _determine_fixture_result(self, fixture_id):
-        fixture = get_fixture_result(self._auth, fixture_id)['response'][0]
-        if fixture['fixture']['status']['short'] not in ['FT', 'AET', 'PEN']:
+    def _determine_fixture_result(self, match_id: int) -> str:
+        fixture = get_fixture_result(match_id=match_id, league_id=self._league_id, slug=self._league_config["slug"])
+        if fixture.status["short"] != "FT":
             return "NA"
 
-        score = fixture['score']['fulltime']
-        home, away = score['home'], score['away']
-
-        match (home, away):
-            case (h, a) if h > a:
-                return "H"
-            case (h, a) if h < a:
-                return "A"
-            case (h, a) if h == a:
-                return "D"
-            case _:
-                return "NA"
+        return interpret_result(fixture.result)
             
     def _increment_score(self):
         """Increments the score for users based on match results."""

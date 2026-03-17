@@ -1,5 +1,5 @@
 from discord.ext import commands
-from typing import List
+from typing import List, Union
 import discord
 
 def get_members(bot: commands.Bot) -> List[discord.Member]:
@@ -11,7 +11,7 @@ def get_members(bot: commands.Bot) -> List[discord.Member]:
                 members.append(member)
     return members
 
-def get_member(bot: commands.Bot, user_id: int) -> discord.Member:
+def get_member(bot: commands.Bot, user_id: int) -> Union[discord.Member, None]:
     """Fetches a specific member by user_id from all guilds the bot is in."""
     for guild in bot.guilds:
         for member in guild.members:

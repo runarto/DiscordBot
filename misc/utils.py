@@ -9,7 +9,7 @@ import shutil
 from discord.ext import commands
 from db.db_interface import DB
 from misc.constants import LEAGUES
-from typing import List
+from typing import List, Optional
 
 
 
@@ -41,26 +41,24 @@ def map_teams_to_emojis(bot: commands.Bot, db: DB, auth: str, league_key: str):
     emojis = discord_api.get_emojis(bot)
 
     for team in teams:
-        team_name_api = team['team']['name']
-        team_name_norsk = str(input("Enter the Norwegian name for the team '{}': ".format(team_name_api)))
+        team_name = team['team']['name']
         team_emoji = None
         highest_ratio = 0
 
         for emoji in emojis:
-            similarity = check_similarity(emoji.name.lower(), team_name_norsk.lower())
+            similarity = check_similarity(emoji.name.lower(), team_name.lower())
             if similarity > highest_ratio:
                 highest_ratio = similarity
                 team_emoji = f"<:{emoji.name}:{emoji.id}>"
 
         if team_emoji is None:
-            team_emoji = input(f"No emoji found for '{team_name_norsk}'. Please enter an emoji: ")
+            team_emoji = input(f"No emoji found for '{team_name}'. Please enter an emoji: ")
 
-        print(repr(team_name_api), repr(team_name_norsk), repr(team_emoji))
-        print(f"Type of team_name_api: {type(team_name_api)}")
-        print(f"Type of team_name_norsk: {type(team_name_norsk)}")
+        print(repr(team_name), repr(team_emoji))
+        print(f"Type of team_name: {type(team_name)}")
         print(f"Type of team_emoji: {type(team_emoji)}")
-        print("Inserting:", team_name_api, league_id, team_name_norsk, team_emoji)
-        db.insert_team(team_name_api, league_id, team_name_norsk, team_emoji)
+        print("Inserting:", team_name, league_id, team_emoji)
+        db.insert_team(team_name, league_id, team_emoji)
 
 def map_roles_to_emojis(bot: commands.Bot, db: DB) -> dict[str, str]:
     """Maps roles to emojis based on similarity of names, and writes it to DB."""
@@ -235,3 +233,24 @@ async def find_cheaters_for_message(target_message, db):
         return "\n".join((f"<@{uid}> - {reason}" for uid, reason in cheaters))
     else :
         return None
+    
+    
+def interpret_result(result_str: Optional[str]) -> str:
+    """Interprets a result string like '2-1' into 'H', 'D', 'A', or 'NA'."""
+    if not result_str:
+        return "NA"
+    try: 
+        home, away = (int(x.strip()) for x in result_str.split("-"))
+
+        match (home, away):
+            case (h, a) if h > a:
+                return "H"
+            case (h, a) if h < a:
+                return "A"
+            case (h, a) if h == a:
+                return "D"
+            case _:
+                return "NA"
+    except Exception as e:
+        print(f"Error interpreting result '{result_str}': {e}")
+        return "NA"

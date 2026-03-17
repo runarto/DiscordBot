@@ -1,7 +1,7 @@
 import pytest
 from db.db_interface import DB
 
-ELITE_LEAGUE_ID = 103
+ELITE_LEAGUE_ID = 59
 OBOS_LEAGUE_ID = 104
 
 
