@@ -34,7 +34,7 @@ class KupongCog(commands.Cog, name="Kupong"):
         league_name = LEAGUES[league]["name"]
         self.logger.debug(f"Command send_ukens_kupong called by {interaction.user.name} in {channel.mention} for {league_name}.")
         try:
-            kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger, league_key=league)
+            kup = Kupong(days=days, db=self.db, channel=channel, logger=self.logger, league_key=league, predictor=getattr(self.bot, 'predictor', None))
             await kup.send_kupong()
         except Exception as e:
             self.logger.error(f"Failed to send kupong: {e}", exc_info=True)

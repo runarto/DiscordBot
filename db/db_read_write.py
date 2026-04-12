@@ -182,3 +182,112 @@ def get_teams_by_league(conn: Connection, league_id: int):
         FROM teams
         WHERE league_id = ?;
     """, (league_id,)).fetchall()
+
+
+# --- Bot Predictions Read/Write ---
+
+def upsert_bot_prediction(conn: Connection, match_id: int, league_id: int,
+                           home_prob: float, draw_prob: float, away_prob: float, outcome: str) -> None:
+    with conn:
+        conn.execute("""
+            INSERT INTO bot_predictions (match_id, league_id, home_prob, draw_prob, away_prob, outcome)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(match_id, league_id) DO UPDATE SET
+                home_prob = excluded.home_prob,
+                draw_prob = excluded.draw_prob,
+                away_prob = excluded.away_prob,
+                outcome   = excluded.outcome;
+        """, (match_id, league_id, home_prob, draw_prob, away_prob, outcome))
+
+def get_bot_prediction(conn: Connection, match_id: int, league_id: int):
+    return conn.execute("""
+        SELECT match_id, league_id, home_prob, draw_prob, away_prob, outcome
+        FROM bot_predictions WHERE match_id = ? AND league_id = ?;
+    """, (match_id, league_id)).fetchone()
+
+def get_all_bot_predictions(conn: Connection):
+    return conn.execute("""
+        SELECT match_id, league_id, home_prob, draw_prob, away_prob, outcome
+        FROM bot_predictions;
+    """).fetchall()
+
+
+# --- Historical Matches Read/Write ---
+
+def insert_historical_match(conn: Connection, match_id: int, league_id: int, season: int,
+                             home_team: str, away_team: str, home_goals: int, away_goals: int,
+                             kick_off_time: str, page_url: str = None, replace: bool = False):
+    with conn:
+        if replace:
+            # Upsert: update all match fields but preserve cached xG so it is
+            # not wiped on every startup when the current season is re-fetched.
+            conn.execute("""
+                INSERT INTO historical_matches
+                    (match_id, league_id, season, home_team, away_team, home_goals, away_goals, kick_off_time, page_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(match_id, league_id) DO UPDATE SET
+                    season       = excluded.season,
+                    home_team    = excluded.home_team,
+                    away_team    = excluded.away_team,
+                    home_goals   = excluded.home_goals,
+                    away_goals   = excluded.away_goals,
+                    kick_off_time = excluded.kick_off_time,
+                    page_url     = excluded.page_url;
+            """, (match_id, league_id, season, home_team, away_team, home_goals, away_goals, kick_off_time, page_url))
+        else:
+            conn.execute("""
+                INSERT OR IGNORE INTO historical_matches
+                    (match_id, league_id, season, home_team, away_team, home_goals, away_goals, kick_off_time, page_url)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+            """, (match_id, league_id, season, home_team, away_team, home_goals, away_goals, kick_off_time, page_url))
+
+def get_historical_matches(conn: Connection) -> list:
+    return conn.execute("""
+        SELECT match_id, league_id, season, home_team, away_team, home_goals, away_goals, kick_off_time,
+               home_xg, away_xg
+        FROM historical_matches
+        ORDER BY kick_off_time;
+    """).fetchall()
+
+def update_page_url(conn: Connection, match_id: int, league_id: int, page_url: str) -> None:
+    """Sets page_url on an existing row only if it is currently NULL."""
+    with conn:
+        conn.execute("""
+            UPDATE historical_matches SET page_url = ?
+            WHERE match_id = ? AND league_id = ? AND page_url IS NULL;
+        """, (page_url, match_id, league_id))
+
+def get_all_eliteserien_matches_for_xg(conn: Connection, league_id: int) -> list:
+    """Returns all Eliteserien historical match rows for xG backfill."""
+    return conn.execute("""
+        SELECT match_id, league_id, home_team, away_team, kick_off_time, home_xg
+        FROM historical_matches
+        WHERE league_id = ?
+        ORDER BY kick_off_time;
+    """, (league_id,)).fetchall()
+
+
+def reset_xg_for_league(conn: Connection, league_id: int) -> None:
+    """Resets all xG values to NULL for the given league."""
+    with conn:
+        conn.execute("""
+            UPDATE historical_matches SET home_xg = NULL, away_xg = NULL
+            WHERE league_id = ?;
+        """, (league_id,))
+
+def update_match_xg(conn: Connection, match_id: int, league_id: int,
+                    home_xg: float, away_xg: float) -> None:
+    with conn:
+        conn.execute("""
+            UPDATE historical_matches
+            SET home_xg = ?, away_xg = ?
+            WHERE match_id = ? AND league_id = ?;
+        """, (home_xg, away_xg, match_id, league_id))
+
+def has_historical_season(conn: Connection, league_id: int, season: int) -> bool:
+    row = conn.execute("""
+        SELECT 1 FROM historical_matches
+        WHERE league_id = ? AND season = ?
+        LIMIT 1;
+    """, (league_id, season)).fetchone()
+    return row is not None

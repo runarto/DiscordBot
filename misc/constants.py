@@ -2,7 +2,7 @@
 LEAGUES = {
     "ELITE": {"id": 59, "name": "Eliteserien", "season": 2026, "slug": "eliteserien"},
     "OBOS": {"id": 203, "name": "OBOS-ligaen", "season": 2026, "slug": "1-divisjon"},
-    "Cupen": {"id": 105, "name": "NM Cupen", "season": 2026, "slug": "nm-cupen"},
+    "Cupen": {"id": 206, "name": "NM Cupen", "season": 2026, "slug": "nm-cupen"},
 }
 DEFAULT_LEAGUE = "ELITE"
 
@@ -19,20 +19,20 @@ GUILD_ID = 1039825091430719559
 ALLOWED_GUILDS = [GUILD_ID]
 
 TEAMS = [
-    "Kristiansund BK",
-    "Tromso", 
+    "Kristiansund",
+    "Tromsø", 
     "Brann",
-    "Sarpsborg 08 FF",
+    "Sarpsborg 08",
     "Viking",
-    "Bodo/Glimt",
-    "ODD Ballklubb",
+    "Bodø/Glimt",
+    "Odd",
     "Haugesund",
     "Sandefjord",
     "Rosenborg",
-    "Stromsgodset",
-    "Ham-Kam",
-    "Lillestrom",
-    "KFUM Oslo",
+    "Strømsgodset",
+    "Hamarkameratene",
+    "Lillestrøm",
+    "KFUM",
     "Fredrikstad",
     "Molde",
     "Moss",
@@ -40,15 +40,15 @@ TEAMS = [
     "Bryne",
     "Raufoss",
     "Ranheim",
-    "jerv",
+    "Jerv",
     "Skeid",
-    "Stabaek",
+    "Stabæk",
     "Sogndal",
-    "Valerenga",
+    "Vålerenga",
     "Start",
     "Aalesund",
-    "Sandnes ULF",
-    "Asane",
+    "Sandnes Ulf",
+    "Åsane",
     "Lyn Fotball",
     "Hei",
 ]
@@ -60,7 +60,7 @@ TEAMS_NORSKE_NAVN = {
     "Sarpsborg 08 FF": "Sarpsborg 08",
     "Viking": "Viking",
     "Bodo/Glimt": "Bodø/Glimt", #5/10
-    "ODD Ballklubb": "Odd", #3/3
+    "Odds Ballklubb": "Odd",
     "Haugesund": "Haugesund", #9/9
     "Sandefjord": "Sandefjord", #10/10
     "Rosenborg": "Rosenborg", #9/9

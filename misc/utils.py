@@ -1,7 +1,7 @@
 from difflib import SequenceMatcher
 from datetime import datetime
 import api.discord as discord_api
-import api.rapid_sports as sports_api
+import api.fotmob as fotmob_api
 import discord
 import logging
 import os
@@ -31,17 +31,16 @@ def split_message_blocks(lines: list[str], max_length: int = 2000) -> list[str]:
 
     return blocks
 
-def map_teams_to_emojis(bot: commands.Bot, db: DB, auth: str, league_key: str):
+def map_teams_to_emojis(bot: commands.Bot, db: DB, league_key: str):
     """Maps teams to emojis for a specific league."""
     league_config = LEAGUES[league_key]
     league_id = league_config["id"]
-    season = league_config["season"]
 
-    teams = sports_api.get_teams(auth, league_id, season)['response']
+    teams = fotmob_api.get_teams(league_id=league_id, season=None, slug=league_config["slug"])
     emojis = discord_api.get_emojis(bot)
 
     for team in teams:
-        team_name = team['team']['name']
+        team_name = team['name']
         team_emoji = None
         highest_ratio = 0
 

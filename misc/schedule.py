@@ -55,7 +55,9 @@ class Schedule:
                     trigger=DateTrigger(run_date=job_time),
                     args=[match.message_id],
                     id=str(match.match_id),
-                    name=f"Store predictions for match {match.match_id}"
+                    name=f"Store predictions for match {match.match_id}",
+                    replace_existing=True,
+                    misfire_grace_time=300
                 )
                 self._logger.debug(f"Scheduled predictions for match {match.match_id} at {job_time}")
             except Exception as e:

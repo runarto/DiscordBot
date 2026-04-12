@@ -4,12 +4,12 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from typing import Optional
-from db.db_interface import DB 
+from db.db_interface import DB
 import misc.utils as utils
 
 class DatabaseCog(commands.Cog, name="Database"):
     """Database synchronization and management commands"""
-    
+
     def __init__(self, bot: commands.Bot, db: DB):
         self.bot = bot
         self.db = db
@@ -41,7 +41,7 @@ class DatabaseCog(commands.Cog, name="Database"):
         self.logger.info("Team emoji added for role: {role.name} with emoji: {emoji}")
         await interaction.followup.send("Team emojis have been mapped successfully.", ephemeral=True)
 
-    
+
     @app_commands.command(name='update_user_emoji', description='Update the emoji for a user.')
     @app_commands.default_permissions(manage_messages=True)
     async def update_user_emoji(self, interaction: discord.Interaction, user: discord.User, emoji: str):
@@ -72,8 +72,8 @@ class DatabaseCog(commands.Cog, name="Database"):
         if not user and not content:
             await interaction.followup.send("You must specify at least one of `user` or `message_id`.", ephemeral=True)
             return
-        
-        
+
+
         message = await utils.get_message(self.db, channel, content)
 
         if not message:
@@ -142,7 +142,7 @@ class DatabaseCog(commands.Cog, name="Database"):
         await interaction.followup.send(f"Adjusted {user.mention}'s score by {points} points and {wins} wins.", ephemeral=True)
 
 
-        
+
 
 async def setup(bot):
     await bot.add_cog(DatabaseCog(bot))

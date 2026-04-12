@@ -2,15 +2,20 @@ from api.fotmob import get_fixtures
 import os
 import logging
 import discord
+from typing import Optional
 from db.db_interface import DB
 from misc.dataclasses import Match
 from misc.constants import LEAGUES, DEFAULT_HOME_EMOJI, DEFAULT_AWAY_EMOJI
+from predictor.base import BasePredictor
+
+_OUTCOME_LABEL = {"H": "H", "D": "U", "A": "B"}
+
 
 class Kupong:
     """
     Handles the weekly coupon for matches, fetching fixtures and sending messages to a Discord channel.
     """
-    def __init__(self, days: int, db: DB, channel: discord.TextChannel, logger: logging.Logger, league_key: str):
+    def __init__(self, days: int, db: DB, channel: discord.TextChannel, logger: logging.Logger, league_key: str, predictor: Optional[BasePredictor] = None):
         self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
@@ -19,6 +24,7 @@ class Kupong:
         self._league_config = LEAGUES[league_key]
         self._league_id = self._league_config["id"]
         self._season = self._league_config["season"]
+        self._predictor = predictor
         self._fixtures = get_fixtures(x_days=days, league_id=self._league_id, slug=self._league_config["slug"])
 
     def _add_fixture(self, fixture: Match, msg_id: int):
@@ -46,11 +52,34 @@ class Kupong:
 
         msg = f"{home_emoji} {home_name} vs {away_name} {away_emoji}\n"
 
+        prediction = None
+        if self._predictor:
+            prediction = self._predictor.predict(fixture.home_team, fixture.away_team)
+            if prediction:
+                h = f"{_OUTCOME_LABEL['H']} {prediction.home_prob:.0%}"
+                d = f"{_OUTCOME_LABEL['D']} {prediction.draw_prob:.0%}"
+                a = f"{_OUTCOME_LABEL['A']} {prediction.away_prob:.0%}"
+                # Bold the predicted outcome
+                parts = []
+                for key, label in [("H", h), ("D", d), ("A", a)]:
+                    parts.append(f"**{label}**" if key == prediction.outcome else label)
+                msg += f"🤖 {' · '.join(parts)}\n"
+
         self._logger.debug(f"Sending message for fixture: {home_name} vs {away_name}")
 
         sent_msg = await self._channel.send(msg)
         for reaction in (home_emoji, '🇺', away_emoji):
             await sent_msg.add_reaction(reaction)
+
+        if prediction:
+            self._db.upsert_bot_prediction(
+                match_id=fixture.match_id,
+                league_id=self._league_id,
+                home_prob=prediction.home_prob,
+                draw_prob=prediction.draw_prob,
+                away_prob=prediction.away_prob,
+                outcome=prediction.outcome,
+            )
 
         self._logger.debug(f"Message sent with ID: {sent_msg.id} for fixture: {home_name} vs {away_name}")
 

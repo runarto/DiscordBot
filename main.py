@@ -6,7 +6,7 @@ import asyncio
 from dotenv import load_dotenv
 import discord
 
-from misc.setup import setup_logging, setup_bot, setup_scheduler
+from misc.setup import setup_logging, setup_bot, setup_scheduler, setup_predictor
 from db.db_interface import DB
 from logger.log import DiscordLogHandler
 
@@ -26,12 +26,14 @@ bot = setup_bot()
 # Attach shared instances to bot for cogs to access
 bot.logger = logger
 bot.db_path = DB_PATH
+bot.db = db
 
 from cogs.admin import AdminCog
 from cogs.database import DatabaseCog
 from cogs.kupong import KupongCog
 from cogs.mapping import MappingCog
 from cogs.cog_manager import CogManager
+from cogs.predictor import PredictorCog
 
 async def load_cogs():
     await bot.add_cog(CogManager(bot, db))
@@ -39,6 +41,7 @@ async def load_cogs():
     await bot.add_cog(DatabaseCog(bot, db))
     await bot.add_cog(KupongCog(bot, db))
     await bot.add_cog(MappingCog(bot, db))
+    await bot.add_cog(PredictorCog(bot))
 
 @bot.event
 async def on_ready():
@@ -51,7 +54,8 @@ async def on_ready():
 
     # Guard: only run first-time setup once, even if on_ready fires again on reconnect
     if getattr(bot, '_initialized', False):
-        logger.info("Reconnected to Discord — skipping first-time setup.")
+        logger.info("Reconnected to Discord — rescheduling missed jobs.")
+        bot.scheduler.reschedule()
         return
 
     bot._initialized = True
@@ -68,6 +72,8 @@ async def on_ready():
     scheduler = await setup_scheduler(bot=bot, db=db, channel_id=TIPPEKUPONG_CHANNEL_ID, logger=logger)
     bot.scheduler = scheduler
     bot.scheduler.start()
+
+    bot.predictor = setup_predictor(logger=logger, db=db)
 
 async def main():
     await load_cogs()

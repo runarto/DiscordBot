@@ -57,6 +57,8 @@ class Results:
     def _increment_score(self):
         """Increments the score for users based on match results."""
 
+        bot_user_id = str(self._bot.user.id)
+
         fixtures = self._matches
         for fixture in fixtures:
             predictions = self._db.get_all_predictions_for_match(fixture.message_id)
@@ -67,6 +69,13 @@ class Results:
             for prediction in predictions:
                 if prediction.prediction == result:
                     self._db.upsert_score(prediction.user_id, self._league_id, points_delta=1)
+
+            # Score the bot from its stored prediction
+            bot_pred = self._db.get_bot_prediction(fixture.match_id, self._league_id)
+            if bot_pred and bot_pred["outcome"] == result:
+                if not self._db.get_user(bot_user_id):
+                    self._db.insert_user(bot_user_id, self._bot.user.name, "🤖 Bot", None)
+                self._db.upsert_score(bot_user_id, self._league_id, points_delta=1)
 
         weekly_scores = self._get_weekly_scores()
 

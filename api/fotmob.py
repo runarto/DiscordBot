@@ -1,181 +1,151 @@
-from datetime import datetime, timedelta, timezone
-from typing import List, Dict, Optional
+import json
+import re
 import requests
-from api.api_utils import generate_headers, validate
+from datetime import datetime, timedelta, timezone
+from typing import List, Dict, Optional, Tuple
+
+from api.api_utils import (
+    generate_headers,
+    fetch_page,
+    fetch_all_pages,
+    fetch_season_pages,
+    extract_league_teams,
+    normalize_match,
+    parse_utc,
+    parse_score,
+)
 from misc.dataclasses import Result, Match
 
 
-BASE_LEAGUE_URL = "https://www.fotmob.com/nb/leagues/{league_id}/fixtures/{slug}?group=by-date&page={page}"
-
-def _extract_all_matches(data: Dict) -> List[Dict]:
-    matches = data.get("props", {}).get("pageProps", {}).get("fixtures", {}).get("allMatches")
-    if matches is None:
-        raise ValueError("Could not find fixtures.allMatches in FotMob payload")
-    return matches
-
-def _extract_league_teams(data: Dict) -> List[Dict]:
-    matches = _extract_all_matches(data)
-
-    teams = {}
-    for m in matches:
-        home = m.get("home", {})
-        away = m.get("away", {})
-
-        if home.get("id"):
-            teams[home["id"]] = {
-                "id": home.get("id"),
-                "name": home.get("name"),
-                "shortName": home.get("shortName"),
-            }
-
-        if away.get("id"):
-            teams[away["id"]] = {
-                "id": away.get("id"),
-                "name": away.get("name"),
-                "shortName": away.get("shortName"),
-            }
-
-    return list(teams.values())
-
-
-def _fotmob_status_to_state(status: Dict) -> str:
-    reason_key = status.get("reason", {}).get("longKey")
-
-    if reason_key == "postponed":
-        return "postponed"
-    if status.get("finished"):
-        return "finished"
-    if status.get("started"):
-        return "live"
-    if status.get("cancelled"):
-        return "cancelled"
-    return "scheduled"
-
-
-def normalize_match(m: Dict) -> Dict:
-    status = m.get("status", {})
-    reason = status.get("reason", {})
-
-    def safe_int(val):
-        try:
-            return int(val)
-        except (TypeError, ValueError):
-            return None
-
-    return {
-        "match_id": safe_int(m.get("id")),
-        "round": safe_int(m.get("round")),
-        "round_name": m.get("roundName"),
-        "home_team_id": safe_int(m.get("home", {}).get("id")),
-        "home_team_name": m.get("home", {}).get("name"),
-        "away_team_id": safe_int(m.get("away", {}).get("id")),
-        "away_team_name": m.get("away", {}).get("name"),
-        "kickoff_utc": status.get("utcTime"),
-        "timezone": status.get("timezone"),
-        "started": status.get("started"),
-        "finished": status.get("finished"),
-        "cancelled": status.get("cancelled"),
-        "status_reason_short": reason.get("short"),
-        "status_reason_long": reason.get("long"),
-        "status_reason_key": reason.get("longKey"),
-        "match_state": _fotmob_status_to_state(status),
-        "page_url": m.get("pageUrl"),
-        "score": status.get("scoreStr"),
-    }
-
-
-def _fetch_page(league_id: int, slug: str, page: int = 0) -> Dict:
-    url = BASE_LEAGUE_URL.format(league_id=league_id, slug=slug, page=page)
-    response = requests.get(url, headers=generate_headers(), timeout=10)
-    return validate(response)
-
-
-def _fetch_all_pages(league_id: int, slug: str, max_pages: int = 10) -> List[Dict]:
-    all_matches = []
-    seen_ids = set()
-
-    for page in range(max_pages):
-        data = _fetch_page(league_id=league_id, slug=slug, page=page)
-        matches = _extract_all_matches(data)
-
-        new_count = 0
-        for m in matches:
-            match_id = m.get("id")
-            if match_id in seen_ids:
-                continue
-            seen_ids.add(match_id)
-            all_matches.append(m)
-            new_count += 1
-
-        if new_count == 0:
-            break
-
-    return all_matches
-
-
-def _parse_utc(dt_str: Optional[str]) -> Optional[datetime]:
-    if not dt_str:
-        return None
-    return datetime.fromisoformat(dt_str.replace("Z", "+00:00")).astimezone(timezone.utc)
+_XG_UNAVAILABLE: Tuple[float, float] = (-1.0, -1.0)
 
 
 def get_fixture(fixture_id: int, league_id: int = 59, slug: str = "eliteserien") -> List[dict]:
-    """
-    Fetches a specific fixture by its ID from FotMob.
-    auth is unused and kept only for interface compatibility.
-    """
-    matches = _fetch_all_pages(league_id=league_id, slug=slug)
-
-    result = [normalize_match(m) for m in matches if int(m.get("id", -1)) == fixture_id]
-    return result
+    matches = fetch_all_pages(league_id=league_id, slug=slug)
+    return [normalize_match(m) for m in matches if int(m.get("id", -1)) == fixture_id]
 
 
 def get_teams(auth: str, league_id: int, season: int, slug: str = "eliteserien") -> List[dict]:
-    """
-    Fetches teams from FotMob for a specific league.
-    season is currently unused because the fixtures page payload does not require it directly.
-    """
-    data = _fetch_page(league_id=league_id, slug=slug, page=0)
-    return _extract_league_teams(data)
+    data = fetch_page(league_id=league_id, slug=slug, page=0)
+    return extract_league_teams(data)
 
 
 def get_fixtures(x_days: int, league_id: int, slug: str = "eliteserien") -> List[Match]:
-    """
-    Fetches fixtures for the next x_days from FotMob for a specific league.
-    season is currently unused.
-    """
     now_utc = datetime.now(timezone.utc)
     end_utc = now_utc + timedelta(days=x_days)
 
-    matches = _fetch_all_pages(league_id=league_id, slug=slug)
+    matches = fetch_all_pages(league_id=league_id, slug=slug)
 
-    filtered = []
+    result = []
     for m in matches:
-        kickoff = _parse_utc(m.get("status", {}).get("utcTime"))
-        if kickoff is None:
+        nm = normalize_match(m)
+        kickoff = parse_utc(nm["kickoff_utc"])
+        if kickoff is None or not (now_utc <= kickoff <= end_utc):
             continue
-        if now_utc <= kickoff <= end_utc:
-            filtered.append(normalize_match(m))
-            
-    matches = []
-    for m in filtered:
-        matches.append(Match(
-            match_id=m["match_id"],
+        result.append(Match(
+            match_id=nm["match_id"],
             message_id=-1,
-            home_team=m["home_team_name"],
-            away_team=m["away_team_name"],
-            kick_off_time=m["kickoff_utc"],
-            cancelled=m["cancelled"],
-            league_id=league_id
+            home_team=nm["home_team_name"],
+            away_team=nm["away_team_name"],
+            kick_off_time=nm["kickoff_utc"],
+            cancelled=nm["cancelled"],
+            league_id=league_id,
         ))
+    return result
 
-    return matches
+
+def get_historical_matches(league_id: int, slug: str, seasons: List[int]) -> List[Dict]:
+    results = []
+    for season in seasons:
+        matches = fetch_season_pages(league_id=league_id, slug=slug, season=season)
+        for m in matches:
+            nm = normalize_match(m)
+            if nm["match_state"] != "finished":
+                continue
+            score = parse_score(nm["score"])
+            if score is None:
+                continue
+            kickoff = parse_utc(nm["kickoff_utc"])
+            if kickoff is None:
+                continue
+            home_goals, away_goals = score
+            results.append({
+                "match_id": nm["match_id"],
+                "home_team": nm["home_team_name"],
+                "away_team": nm["away_team_name"],
+                "home_goals": home_goals,
+                "away_goals": away_goals,
+                "date": kickoff,
+                "league_id": league_id,
+                "page_url": nm["page_url"],
+            })
+    return results
+
+
+def get_remaining_fixtures(league_id: int, slug: str) -> List[Dict]:
+    now_utc = datetime.now(timezone.utc)
+    matches = fetch_all_pages(league_id=league_id, slug=slug)
+    fixtures = []
+    for m in matches:
+        nm = normalize_match(m)
+        if nm["match_state"] != "scheduled":
+            continue
+        kickoff = parse_utc(nm["kickoff_utc"])
+        if kickoff is None or kickoff <= now_utc:
+            continue
+        if nm["home_team_name"] and nm["away_team_name"]:
+            fixtures.append({"home_team": nm["home_team_name"], "away_team": nm["away_team_name"]})
+    return fixtures
+
+
+def get_match_xg(page_url: str, expected_match_id: Optional[int] = None) -> Optional[Tuple[float, float]]:
+    """
+    Fetches xG for a single match from its FotMob page URL.
+
+    Returns:
+        (home_xg, away_xg)   — real xG values (both >= 0)
+        (-1.0, -1.0)         — definitively no data (wrong match or no xG stats)
+        None                 — transient network/parse error; will be retried
+    """
+    slug = page_url.split("#")[0]
+    url = f"https://www.fotmob.com{slug}"
+    try:
+        resp = requests.get(url, headers=generate_headers(), timeout=10)
+        resp.raise_for_status()
+    except requests.RequestException:
+        return None
+
+    script_match = re.search(
+        r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+        resp.text, re.DOTALL,
+    )
+    if not script_match:
+        return None
+
+    try:
+        data = json.loads(script_match.group(1))
+        page_props = data["props"]["pageProps"]
+
+        if expected_match_id is not None:
+            returned_id = page_props.get("general", {}).get("matchId")
+            if returned_id is not None and int(returned_id) != int(expected_match_id):
+                return _XG_UNAVAILABLE
+
+        stat_groups = page_props["content"]["stats"]["Periods"]["All"]["stats"]
+        for group in stat_groups:
+            for stat in group.get("stats", []):
+                if stat.get("key") == "expected_goals":
+                    values = stat.get("stats", [])
+                    if values[0] is None or values[1] is None:
+                        continue
+                    return float(values[0]), float(values[1])
+    except (KeyError, IndexError, TypeError, ValueError):
+        return _XG_UNAVAILABLE
+
+    return _XG_UNAVAILABLE
 
 
 def get_fixture_result(match_id: int, league_id: int = 59, slug: str = "eliteserien") -> Result:
-    """
-    Fetches result/status for a specific match-id from FotMob.
-    """
     result = get_fixture(fixture_id=match_id, league_id=league_id, slug=slug)[0]
     return Result(
         match_id=result["match_id"],
@@ -186,11 +156,5 @@ def get_fixture_result(match_id: int, league_id: int = 59, slug: str = "eliteser
             "long": result["status_reason_long"],
             "key": result["status_reason_key"],
         },
-        result=result["score"]
+        result=result["score"],
     )
-
-
-
-
-
-
