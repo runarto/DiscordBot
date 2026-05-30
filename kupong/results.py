@@ -3,12 +3,34 @@ import os
 import logging
 import asyncio
 
-from collections import defaultdict
+from collections import Counter, defaultdict
 from api.fotmob import get_fixture_result
 from misc.utils import split_message_blocks, interpret_result
 from misc.constants import LEAGUES
 from db.db_interface import DB
 from discord.ext import commands
+
+_PREDICTION_OUTCOMES = ("H", "D", "A")
+_WORLD_CUP_LEAGUE_KEY = "WORLD_CUP"
+
+
+def world_cup_points_by_outcome(predictions) -> dict[str, int]:
+    """
+    Returns VM points per predicted outcome based on popularity.
+
+    Most picked correct outcome gives 1 point, second-most gives 2, and
+    least-picked gives 3. Ties share the same point value.
+    """
+    counts = Counter(
+        prediction.prediction
+        for prediction in predictions
+        if prediction.prediction in _PREDICTION_OUTCOMES
+    )
+    ranked_counts = sorted({count for count in counts.values() if count > 0}, reverse=True)
+    return {
+        outcome: ranked_counts.index(count) + 1
+        for outcome, count in counts.items()
+    }
 
 
 class Results:
@@ -66,12 +88,23 @@ class Results:
             if result == "NA":
                 continue
 
+            points_by_outcome = (
+                world_cup_points_by_outcome(predictions)
+                if self._league_key == _WORLD_CUP_LEAGUE_KEY
+                else {}
+            )
+
             for prediction in predictions:
                 if prediction.prediction == result:
-                    self._db.upsert_score(prediction.user_id, self._league_id, points_delta=1)
+                    points = points_by_outcome.get(result, 1)
+                    self._db.upsert_score(prediction.user_id, self._league_id, points_delta=points)
 
             # Score the bot from its stored prediction
-            bot_pred = self._db.get_bot_prediction(fixture.match_id, self._league_id)
+            bot_pred = (
+                None
+                if self._league_key == _WORLD_CUP_LEAGUE_KEY
+                else self._db.get_bot_prediction(fixture.match_id, self._league_id)
+            )
             if bot_pred and bot_pred["outcome"] == result:
                 if not self._db.get_user(bot_user_id):
                     self._db.insert_user(bot_user_id, self._bot.user.name, "🤖 Bot", None)
@@ -216,14 +249,3 @@ class Results:
 
         for chunk in total_chunks:
             await self._channel.send(chunk)
-
-    
-
-
-
-
-
-
-
-
-

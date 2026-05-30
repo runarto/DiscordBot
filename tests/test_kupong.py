@@ -10,8 +10,10 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 from kupong.kupong import Kupong
-from misc.constants import DEFAULT_HOME_EMOJI, DEFAULT_AWAY_EMOJI
+from misc.constants import COUNTRY_FLAGS, COUNTRY_NORWEGIAN_NAMES, DEFAULT_HOME_EMOJI, DEFAULT_AWAY_EMOJI, LEAGUES
 from conftest import ELITE_LEAGUE_ID, OBOS_LEAGUE_ID
+
+WORLD_CUP_LEAGUE_ID = LEAGUES["WORLD_CUP"]["id"]
 
 
 def make_kupong(db, league_key="ELITE"):
@@ -78,6 +80,41 @@ class TestGetTeamDisplay:
         _, away_emoji = kupong._get_team_display("Molde", is_home=False)
         assert home_emoji != away_emoji
 
+    def test_world_cup_uses_country_flag_fallback(self, db):
+        kupong = make_kupong(db, league_key="WORLD_CUP")
+        name, emoji = kupong._get_team_display("Brazil", is_home=True)
+        assert name == "Brasil"
+        assert emoji == "🇧🇷"
+
+    def test_world_cup_db_mapping_overrides_country_flag(self, db):
+        db.insert_team("Brazil", WORLD_CUP_LEAGUE_ID, "<:Brazil:1>")
+        kupong = make_kupong(db, league_key="WORLD_CUP")
+        name, emoji = kupong._get_team_display("Brazil", is_home=True)
+        assert name == "Brazil"
+        assert emoji == "<:Brazil:1>"
+
+    def test_world_cup_unknown_team_uses_home_away_fallback(self, db):
+        kupong = make_kupong(db, league_key="WORLD_CUP")
+        _, home_emoji = kupong._get_team_display("Unknown FC", is_home=True)
+        _, away_emoji = kupong._get_team_display("Unknown FC", is_home=False)
+        assert home_emoji == DEFAULT_HOME_EMOJI
+        assert away_emoji == DEFAULT_AWAY_EMOJI
+
+    def test_world_cup_country_flags_include_subdivision_flags(self):
+        assert COUNTRY_FLAGS["England"].startswith("🏴")
+        assert COUNTRY_FLAGS["Scotland"].startswith("🏴")
+        assert COUNTRY_FLAGS["Wales"].startswith("🏴")
+
+    def test_world_cup_uses_fotmob_name_translations(self, db):
+        kupong = make_kupong(db, league_key="WORLD_CUP")
+        assert kupong._get_team_display("DR Congo", is_home=True) == ("DR Kongo", "🇨🇩")
+        assert kupong._get_team_display("Turkiye", is_home=True) == ("Tyrkia", "🇹🇷")
+        assert kupong._get_team_display("South Korea", is_home=True) == ("Sør-Korea", "🇰🇷")
+
+    def test_world_cup_translation_map_covers_flag_map(self):
+        missing = sorted(set(COUNTRY_FLAGS) - set(COUNTRY_NORWEGIAN_NAMES))
+        assert missing == []
+
 
 # ---------------------------------------------------------------------------
 # _add_fixture
@@ -130,3 +167,22 @@ class TestKupongInit:
             mock_gf.return_value = []
             Kupong(days=7, db=db, channel=MagicMock(), logger=MagicMock(), league_key="ELITE")
         assert mock_gf.call_count == 1
+
+    def test_world_cup_uses_fotmob_id_and_slug(self, db):
+        with patch("kupong.kupong.get_fixtures") as mock_gf:
+            mock_gf.return_value = []
+            Kupong(days=7, db=db, channel=MagicMock(), logger=MagicMock(), league_key="WORLD_CUP")
+        mock_gf.assert_called_once_with(x_days=7, league_id=77, slug="world-cup")
+
+    def test_world_cup_disables_predictor(self, db):
+        with patch("kupong.kupong.get_fixtures") as mock_gf:
+            mock_gf.return_value = []
+            kupong = Kupong(
+                days=7,
+                db=db,
+                channel=MagicMock(),
+                logger=MagicMock(),
+                league_key="WORLD_CUP",
+                predictor=MagicMock(),
+            )
+        assert kupong._predictor is None

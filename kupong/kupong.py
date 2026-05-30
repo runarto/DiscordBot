@@ -2,11 +2,13 @@ from api.fotmob import get_fixtures
 import os
 import logging
 import discord
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from db.db_interface import DB
 from misc.dataclasses import Match
-from misc.constants import LEAGUES, DEFAULT_HOME_EMOJI, DEFAULT_AWAY_EMOJI
-from predictor.base import BasePredictor
+from misc.constants import COUNTRY_FLAGS, COUNTRY_NORWEGIAN_NAMES, LEAGUES, DEFAULT_HOME_EMOJI, DEFAULT_AWAY_EMOJI
+
+if TYPE_CHECKING:
+    from predictor.base import BasePredictor
 
 _OUTCOME_LABEL = {"H": "H", "D": "U", "A": "B"}
 
@@ -15,7 +17,7 @@ class Kupong:
     """
     Handles the weekly coupon for matches, fetching fixtures and sending messages to a Discord channel.
     """
-    def __init__(self, days: int, db: DB, channel: discord.TextChannel, logger: logging.Logger, league_key: str, predictor: Optional[BasePredictor] = None):
+    def __init__(self, days: int, db: DB, channel: discord.TextChannel, logger: logging.Logger, league_key: str, predictor: Optional["BasePredictor"] = None):
         self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
@@ -24,7 +26,7 @@ class Kupong:
         self._league_config = LEAGUES[league_key]
         self._league_id = self._league_config["id"]
         self._season = self._league_config["season"]
-        self._predictor = predictor
+        self._predictor = None if league_key == "WORLD_CUP" else predictor
         self._fixtures = get_fixtures(x_days=days, league_id=self._league_id, slug=self._league_config["slug"])
 
     def _add_fixture(self, fixture: Match, msg_id: int):
@@ -37,9 +39,14 @@ class Kupong:
         team = self._db.get_team(team_name, self._league_id)
         if team:
             return team.team_name, team.team_emoji
-        else:
-            default_emoji = DEFAULT_HOME_EMOJI if is_home else DEFAULT_AWAY_EMOJI
-            return team_name, default_emoji
+
+        if self._league_key == "WORLD_CUP":
+            flag = COUNTRY_FLAGS.get(team_name)
+            if flag:
+                return COUNTRY_NORWEGIAN_NAMES.get(team_name, team_name), flag
+
+        default_emoji = DEFAULT_HOME_EMOJI if is_home else DEFAULT_AWAY_EMOJI
+        return team_name, default_emoji
 
     async def _message(self, fixture: Match) -> int:
         """Sends a message for a fixture and returns the message ID."""
