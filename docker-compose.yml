@@ -1,0 +1,9 @@
+services:
+  bot:
+    build: .
+    env_file: .env
+    volumes:
+      - ./infobase.db:/app/infobase.db
+      - ./backups:/app/backups
+      - ./app.log:/app/app.log
+    restart: unless-stopped

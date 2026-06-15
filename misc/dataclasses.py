@@ -20,6 +20,7 @@ class Match:
     kick_off_time: str
     cancelled: bool
     league_id: int
+    processed: int = 0
     
 @dataclass 
 class Result:

@@ -12,9 +12,36 @@ def create_matches_table(conn: Connection):
             away_team TEXT NOT NULL,
             kick_off_time TEXT NOT NULL,
             league_id INTEGER NOT NULL,
-            cancelled INTEGER NOT NULL DEFAULT 0
+            cancelled INTEGER NOT NULL DEFAULT 0,
+            processed INTEGER NOT NULL DEFAULT 0
         );
         """)
+    try:
+        conn.execute("ALTER TABLE matches ADD COLUMN processed INTEGER NOT NULL DEFAULT 0;")
+        conn.commit()
+        # First-time migration: mark all past matches as processed using ISO format
+        # comparison so same-day dates are handled correctly.
+        conn.execute("""
+            UPDATE matches SET processed = 1
+            WHERE kick_off_time < strftime('%Y-%m-%dT%H:%M:%SZ', 'now');
+        """)
+        conn.commit()
+    except Exception:
+        pass  # column already exists, migration already ran
+
+    # Always-running idempotent fix: mark matches as processed if they kicked off
+    # >4 hours ago AND have stored predictions (proving the match actually started).
+    # Catches cases where the first-time migration missed same-day matches due to
+    # the datetime() vs strftime() format mismatch.
+    conn.execute("""
+        UPDATE matches SET processed = 1
+        WHERE processed = 0
+        AND kick_off_time < strftime('%Y-%m-%dT%H:%M:%SZ', datetime('now', '-4 hours'))
+        AND EXISTS (
+            SELECT 1 FROM predictions WHERE predictions.message_id = matches.message_id LIMIT 1
+        );
+    """)
+    conn.commit()
 
 def create_predictions_table(conn: Connection):
     with conn:

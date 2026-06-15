@@ -106,3 +106,19 @@ class Kupong:
                 self._logger.warning(f"Skipping fixture {fixture.match_id}: {e}")
             except Exception as e:
                 self._logger.error(f"Failed to send fixture {fixture.match_id}: {e}", exc_info=True)
+
+    async def post_new_fixtures(self) -> int:
+        """Posts only fixtures not already in the DB. Returns count of new messages sent."""
+        existing_ids = {m.match_id for m in self._db.get_matches_by_league(self._league_id)}
+        new_fixtures = [f for f in self._fixtures if f.match_id not in existing_ids]
+
+        for fixture in new_fixtures:
+            try:
+                msg_id = await self._message(fixture)
+                self._add_fixture(fixture, msg_id)
+            except ValueError as e:
+                self._logger.warning(f"Skipping fixture {fixture.match_id}: {e}")
+            except Exception as e:
+                self._logger.error(f"Failed to post fixture {fixture.match_id}: {e}", exc_info=True)
+
+        return len(new_fixtures)

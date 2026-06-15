@@ -225,4 +225,4 @@ async def setup_scheduler(bot: commands.Bot, db: DB, channel_id: int, logger: lo
     Sets up the scheduler for storing predictions.
     """
     channel = await bot.fetch_channel(channel_id)
-    return Schedule(db, channel, logger)
+    return Schedule(db, channel, logger, bot)

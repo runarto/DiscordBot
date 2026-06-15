@@ -43,6 +43,13 @@ class DB:
         rows = db_rw.get_matches_by_league(self._conn, league_id)
         return [row_to_dataclass(row, Match) for row in rows]
 
+    def get_unprocessed_matches_by_league(self, league_id: int) -> List[Match]:
+        rows = db_rw.get_unprocessed_matches_by_league(self._conn, league_id)
+        return [row_to_dataclass(row, Match) for row in rows]
+
+    def mark_match_processed(self, match_id: int) -> None:
+        db_rw.mark_match_processed(self._conn, match_id)
+
     def get_match_by_id(self, match_id: Union[int, str] = None, message_id: Union[int, str] = None) -> Match:
         row = db_rw.get_match(self._conn, match_id, message_id)
         return row_to_dataclass(row, Match) if row else None

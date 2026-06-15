@@ -11,34 +11,46 @@ def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[
         """, (match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled))
 
 def get_all_matches(conn: Connection):
-    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id FROM matches ORDER BY kick_off_time;").fetchall()
+    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed FROM matches ORDER BY kick_off_time;").fetchall()
 
 def get_matches_by_league(conn: Connection, league_id: int):
     return conn.execute("""
-        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
+        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
         FROM matches
         WHERE league_id = ?
         ORDER BY kick_off_time;
     """, (league_id,)).fetchall()
 
+def get_unprocessed_matches_by_league(conn: Connection, league_id: int):
+    return conn.execute("""
+        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
+        FROM matches
+        WHERE league_id = ? AND processed = 0
+        ORDER BY kick_off_time;
+    """, (league_id,)).fetchall()
+
+def mark_match_processed(conn: Connection, match_id: int):
+    with conn:
+        conn.execute("UPDATE matches SET processed = 1 WHERE match_id = ?;", (match_id,))
+
 def get_match(conn: Connection, match_id: Optional[int] = None, message_id: Optional[int] = None):
     if match_id and message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
             FROM matches
             WHERE match_id = ? AND message_id = ?;
         """
         return conn.execute(query, (match_id, message_id)).fetchone()
     elif match_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
             FROM matches
             WHERE match_id = ?;
         """
         return conn.execute(query, (match_id,)).fetchone()
     elif message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
             FROM matches
             WHERE message_id = ?;
         """

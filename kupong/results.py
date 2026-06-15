@@ -42,7 +42,7 @@ class Results:
         self._league_key = league_key
         self._league_config = LEAGUES[league_key]
         self._league_id = self._league_config["id"]
-        self._matches = self._db.get_matches_by_league(self._league_id)
+        self._matches = self._db.get_unprocessed_matches_by_league(self._league_id)
         self._old_scores = self._db.get_scores_by_league(self._league_id)
         self._previous_ranks = self._get_ranks()
         self._match_results = {}
@@ -241,6 +241,11 @@ class Results:
         """Sends the match results to the specified channel."""
         self._fetch_match_results()
         self._increment_score()
+
+        for match in self._matches:
+            if match.match_id in self._match_results:
+                self._db.mark_match_processed(match.match_id)
+
         weekly_chunks = await self._format_weekly_leaderboard()
         total_chunks = self._format_total_leaderboard()
 
