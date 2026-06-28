@@ -1,5 +1,6 @@
 from discord.ext import commands
 from db.db_interface import DB
+from misc.constants import ADMIN_USER_IDS
 import subprocess
 import os
 import sys
@@ -11,7 +12,7 @@ class CogManager(commands.Cog, name="Manager"):
         self.logger = bot.logger
 
     @commands.command(name="load")
-    @commands.is_owner()
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_USER_IDS)
     async def load_cog(self, extension: str):
         """Loads a cog."""
         self.logger.debug(f"Attempting to load cog: {extension}")
@@ -22,7 +23,7 @@ class CogManager(commands.Cog, name="Manager"):
             self.logger.info(f'❌ Failed to load `{extension}`: {e}')
 
     @commands.command(name="unload")
-    @commands.is_owner()
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_USER_IDS)
     async def unload_cog(self, extension: str):
         """Unloads a cog."""
         self.logger.debug(f"Attempting to unload cog: {extension}")
@@ -33,7 +34,7 @@ class CogManager(commands.Cog, name="Manager"):
             self.logger.info(f'❌ Failed to unload `{extension}`: {e}')
 
     @commands.command(name="reload")
-    @commands.is_owner()
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_USER_IDS)
     async def reload_cog(self, extension: str):
         """Reloads a cog."""
         self.logger.debug(f"Attempting to reload cog: {extension}")
@@ -44,7 +45,7 @@ class CogManager(commands.Cog, name="Manager"):
             self.logger.info(f'❌ Failed to reload `{extension}`: {e}')
 
     @commands.command(name="git_pull")
-    @commands.is_owner()
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_USER_IDS)
     async def git_pull_reload(self, ctx):
         """Pulls latest code from Git and reloads all cogs."""
         self.logger.debug("Attempting to pull latest code from Git and reload cogs.")
@@ -79,7 +80,7 @@ class CogManager(commands.Cog, name="Manager"):
 
 
     @commands.command(name="git_push")
-    @commands.is_owner()
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_USER_IDS)
     async def git_push(self, ctx):
         """Pushes changes to the Git repository."""
         self.logger.debug("Attempting to push changes to Git repository.")
@@ -97,11 +98,21 @@ class CogManager(commands.Cog, name="Manager"):
             self.logger.error(f"Git command failed: {e}")
     
     @commands.command(name="reboot")
-    @commands.is_owner()
+    @commands.check(lambda ctx: ctx.author.id in ADMIN_USER_IDS)
     async def reboot_bot(self, ctx):
         """Restarts the bot process."""
         self.logger.info("Restarting bot process...")
         os.execv(sys.executable, [sys.executable] + sys.argv)
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        if isinstance(error, commands.CheckFailure):
+            await ctx.send("You do not have permission to use this command.")
+        elif isinstance(error, commands.CommandNotFound):
+            pass
+        else:
+            await ctx.send(f"Error: {error}")
+            self.logger.error(f"Command error: {error}")
 
 async def setup(bot):
     await bot.add_cog(CogManager(bot))
