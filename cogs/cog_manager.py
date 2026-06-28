@@ -85,11 +85,16 @@ class CogManager(commands.Cog, name="Manager"):
         self.logger.debug("Attempting to push changes to Git repository.")
         try:
             subprocess.run(["git", "add", "."], check=True)
-            subprocess.run(["git", "commit", "-m", "Automated commit from Discord bot"], check=True)
+            commit = subprocess.run(["git", "commit", "-m", "Automated commit from Discord bot"], capture_output=True, text=True)
+            if "nothing to commit" in commit.stdout or commit.returncode != 0:
+                await ctx.send("Nothing to commit.")
+                return
             subprocess.run(["git", "push"], check=True)
+            await ctx.send("Changes pushed to Git repository.")
             self.logger.info("Changes pushed to Git repository.")
         except subprocess.CalledProcessError as e:
-            self.logger.info(f"❌ Git command failed: {e}")
+            await ctx.send(f"Git command failed: {e}")
+            self.logger.error(f"Git command failed: {e}")
     
     @commands.command(name="reboot")
     @commands.is_owner()

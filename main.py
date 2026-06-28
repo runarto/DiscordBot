@@ -68,6 +68,8 @@ async def on_ready():
     guild_obj = discord.Object(id=GUILD_ID)
     bot.tree.copy_global_to(guild=guild_obj)
     synced = await bot.tree.sync(guild=guild_obj)
+    bot.tree.clear_commands(guild=None)
+    await bot.tree.sync()
     logger.debug(f"Synced {len(synced)} commands to the tree.")
 
     scheduler = await setup_scheduler(bot=bot, db=db, channel_id=TIPPEKUPONG_CHANNEL_ID, logger=logger)
