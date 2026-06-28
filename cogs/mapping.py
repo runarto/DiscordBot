@@ -8,6 +8,7 @@ import api.discord as discord_api
 import misc.utils as utils
 from db.db_interface import DB
 from misc.constants import LEAGUES, DEFAULT_LEAGUE
+from misc.checks import is_admin
 
 LEAGUE_CHOICES = [
     app_commands.Choice(name=config["name"], value=key)
@@ -24,7 +25,7 @@ class MappingCog(commands.Cog, name="Mapping"):
 
 
     @app_commands.command(name='map_emoji', description='Map roles to emojis one by one.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def map_emoji(self, interaction: discord.Interaction):
 
         await interaction.response.defer()
@@ -63,7 +64,7 @@ class MappingCog(commands.Cog, name="Mapping"):
     
 
     @app_commands.command(name='map_teams', description='Map teams to Norwegian names and emojis for a league.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
     async def map_teams(self, interaction: discord.Interaction, league: str = DEFAULT_LEAGUE):
 
@@ -127,7 +128,7 @@ class MappingCog(commands.Cog, name="Mapping"):
 
 
     @app_commands.command(name='fetch_users', description='Populates the users table.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def map_users(self, interaction: discord.Interaction):
 
         await interaction.response.defer(ephemeral=True)

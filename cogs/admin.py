@@ -7,6 +7,7 @@ import os
 import glob
 import shutil
 from db.db_interface import DB
+from misc.checks import is_admin
 
 class AdminCog(commands.Cog, name="Admin"):
     """Administrative commands for bot management"""
@@ -17,7 +18,7 @@ class AdminCog(commands.Cog, name="Admin"):
         self.logger = bot.logger
 
     @app_commands.command(name='send_msg', description='Sends a message to a specific channel.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def send_message(self, interaction: discord.Interaction, channel: discord.TextChannel):
 
         class MessageModal(discord.ui.Modal, title="Send message"):
@@ -41,7 +42,7 @@ class AdminCog(commands.Cog, name="Admin"):
 
 
     @app_commands.command(name='restore_db', description='Restores the main database from the newest backup.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def restore_db(self, interaction: discord.Interaction):
         
         await interaction.response.defer(ephemeral=True)

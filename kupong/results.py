@@ -142,10 +142,10 @@ class Results:
 
         return dict(weekly_points_to_users)
     
-    async def _format_weekly_leaderboard(self) -> str:
+    async def _format_weekly_leaderboard(self) -> list[str]:
         weekly_scores = self._get_weekly_scores()
         if not weekly_scores:
-            return "Ingen poeng ble delt ut denne uka."
+            return ["Ingen poeng ble delt ut denne uka."]
 
         lines = []
         resolved_names: dict[str, str] = {}

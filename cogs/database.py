@@ -6,6 +6,7 @@ from discord import app_commands
 from typing import Optional
 from db.db_interface import DB
 import misc.utils as utils
+from misc.checks import is_admin
 
 class DatabaseCog(commands.Cog, name="Database"):
     """Database synchronization and management commands"""
@@ -16,7 +17,7 @@ class DatabaseCog(commands.Cog, name="Database"):
         self.logger = bot.logger
 
     @app_commands.command(name='flush_table', description='Flush a table in the database.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     @app_commands.choices(table=[
         app_commands.Choice(name='matches', value='matches'),
         app_commands.Choice(name='predictions', value='predictions'),
@@ -32,7 +33,7 @@ class DatabaseCog(commands.Cog, name="Database"):
 
 
     @app_commands.command(name='add_team_emoji', description='Maps a team role to an emoji.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def add_team_emoji(self, interaction: discord.Interaction, role: discord.Role, emoji: str):
 
         await interaction.response.defer(ephemeral=True)
@@ -43,7 +44,7 @@ class DatabaseCog(commands.Cog, name="Database"):
 
 
     @app_commands.command(name='update_user_emoji', description='Update the emoji for a user.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def update_user_emoji(self, interaction: discord.Interaction, user: discord.User, emoji: str):
 
         await interaction.response.defer(ephemeral=True)
@@ -54,7 +55,7 @@ class DatabaseCog(commands.Cog, name="Database"):
 
 
     @app_commands.command(name='get_prediction', description='Check predictions based on user and/or message ID.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     @app_commands.describe(
         user="User to fetch predictions for",
         content="Message to inspect predictions for"
@@ -132,7 +133,7 @@ class DatabaseCog(commands.Cog, name="Database"):
 
 
     @app_commands.command(name='adjust_score', description='Manually adjust a user\'s score and wins.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def adjust_score(self, interaction: discord.Interaction, user: discord.User, points: int = 0, wins: int = 0):
 
         await interaction.response.defer(ephemeral=True)

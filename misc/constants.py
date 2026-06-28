@@ -7,6 +7,8 @@ LEAGUES = {
 }
 DEFAULT_LEAGUE = "ELITE"
 
+ADMIN_USER_IDS: set[int] = {275572512069517312}
+
 # Default emojis for teams without custom emojis
 DEFAULT_HOME_EMOJI = "🏠"
 DEFAULT_AWAY_EMOJI = "✈️"

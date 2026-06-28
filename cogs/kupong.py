@@ -8,6 +8,7 @@ from kupong.results import Results
 import misc.utils as utils
 from db.db_interface import DB
 from misc.constants import LEAGUES, DEFAULT_LEAGUE
+from misc.checks import is_admin
 
 # League choices for command autocomplete
 LEAGUE_CHOICES = [
@@ -26,7 +27,7 @@ class KupongCog(commands.Cog, name="Kupong"):
 
 
     @app_commands.command(name='send_kupong', description='Send ukens kupong for de neste dagene.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
     async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
@@ -46,7 +47,7 @@ class KupongCog(commands.Cog, name="Kupong"):
 
 
     @app_commands.command(name='send_resultater', description='Send ukens resultater for de siste kampene.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
     async def send_ukens_resultater(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
@@ -61,7 +62,7 @@ class KupongCog(commands.Cog, name="Kupong"):
 
 
     @app_commands.command(name='send_leaderboard', description='Send the total leaderboard.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
     async def send_leaderboard(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
@@ -75,7 +76,7 @@ class KupongCog(commands.Cog, name="Kupong"):
 
 
     @app_commands.command(name='store_predictions', description='Store predictions for a specific match.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def store_predictions(self, interaction: discord.Interaction, content: str, channel: discord.TextChannel):
 
         await interaction.response.defer(ephemeral=True)
@@ -92,7 +93,7 @@ class KupongCog(commands.Cog, name="Kupong"):
 
 
     @app_commands.command(name='delete_messages', description='Delete the match messages for a specific league.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
     async def delete_match_messages(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
 
@@ -120,7 +121,7 @@ class KupongCog(commands.Cog, name="Kupong"):
 
 
     @app_commands.command(name='find_cheaters', description='Finds users who reacted after start time for a given game.')
-    @app_commands.default_permissions(manage_messages=True)
+    @is_admin()
     async def find_cheaters(self, interaction: discord.Interaction, message_channel: discord.TextChannel, target_channel: discord.TextChannel, content: str = None):
 
         await interaction.response.defer(ephemeral=True)
