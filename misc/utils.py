@@ -183,7 +183,7 @@ async def format_cheater_report_for_matches(db: DB, message_channel: discord.Tex
         
         return [f"**Kamp {target_message.content}**:\n{cheater_report}"]
 
-    matches = db.get_all_matches()
+    matches = [m for m in db.get_all_matches() if m.processed == 1]
     report_blocks = []
 
     for match in matches:
