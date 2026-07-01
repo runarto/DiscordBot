@@ -145,6 +145,36 @@ def get_match_xg(page_url: str, expected_match_id: Optional[int] = None) -> Opti
     return _XG_UNAVAILABLE
 
 
+def get_90min_score(page_url: str) -> Optional[str]:
+    """
+    Fetches the score at 90 minutes from match events.
+    Returns a score string like '1 - 1', or None on failure.
+    Used for matches that went to AET or penalties.
+    """
+    url = f"https://www.fotmob.com{page_url.split('#')[0]}"
+    try:
+        resp = requests.get(url, headers=generate_headers(), timeout=10)
+        resp.raise_for_status()
+        script = re.search(
+            r'<script id="__NEXT_DATA__" type="application/json">(.*?)</script>',
+            resp.text, re.DOTALL,
+        )
+        if not script:
+            return None
+        data = json.loads(script.group(1))
+        events = (
+            data["props"]["pageProps"]["content"]["matchFacts"]["events"]["events"]
+        )
+        for event in events:
+            if event.get("type") == "Half" and event.get("halfStrShort") == "FT":
+                home = event["homeScore"]
+                away = event["awayScore"]
+                return f"{home} - {away}"
+    except Exception:
+        return None
+    return None
+
+
 def get_fixture_result(match_id: int, league_id: int = 59, slug: str = "eliteserien") -> Result:
     result = get_fixture(fixture_id=match_id, league_id=league_id, slug=slug)[0]
     return Result(
@@ -157,4 +187,5 @@ def get_fixture_result(match_id: int, league_id: int = 59, slug: str = "eliteser
             "key": result["status_reason_key"],
         },
         result=result["score"],
+        page_url=result.get("page_url"),
     )

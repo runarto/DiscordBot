@@ -4,7 +4,7 @@ import logging
 import asyncio
 
 from collections import Counter, defaultdict
-from api.fotmob import get_fixture_result
+from api.fotmob import get_fixture_result, get_90min_score
 from misc.utils import split_message_blocks, interpret_result
 from misc.constants import LEAGUES
 from db.db_interface import DB
@@ -71,10 +71,18 @@ class Results:
 
     def _determine_fixture_result(self, match_id: int) -> str:
         fixture = get_fixture_result(match_id=match_id, league_id=self._league_id, slug=self._league_config["slug"])
-        if fixture.status["short"] != "FT":
-            return "NA"
+        status = fixture.status["short"]
 
-        return interpret_result(fixture.result)
+        if status == "FT":
+            return interpret_result(fixture.result)
+
+        # For AET or penalties, fetch the score at 90 minutes from match events
+        if status in ("AET", "Pen") and fixture.page_url:
+            score_90 = get_90min_score(fixture.page_url)
+            if score_90:
+                return interpret_result(score_90)
+
+        return "NA"
             
     def _increment_score(self):
         """Increments the score for users based on match results."""

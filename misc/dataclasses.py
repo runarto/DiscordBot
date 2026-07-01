@@ -22,13 +22,14 @@ class Match:
     league_id: int
     processed: int = 0
     
-@dataclass 
+@dataclass
 class Result:
     match_id: int
     home_team: str
     away_team: str
     status: Dict[str, str]
     result: Optional[str]
+    page_url: Optional[str] = None
 
 @dataclass
 class Prediction:
