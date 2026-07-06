@@ -9,11 +9,13 @@ import pytz
 import discord
 from discord.ext import commands
 import logging
+from typing import Optional, Union
 
 _OSLO = pytz.timezone("Europe/Oslo")
+CouponChannel = Union[discord.TextChannel, discord.Thread]
 
 class Schedule:
-    def __init__(self, db: DB, channel: discord.TextChannel, logger: logging.Logger, bot: commands.Bot):
+    def __init__(self, db: DB, channel: CouponChannel, logger: logging.Logger, bot: commands.Bot):
         self._db = db
         self._channel = channel
         self._logger = logger
@@ -66,7 +68,7 @@ class Schedule:
                 self._scheduler.add_job(
                     self._store_predictions_job,
                     trigger=DateTrigger(run_date=job_time),
-                    args=[match.message_id],
+                    args=[match.message_id, match.channel_id],
                     id=str(match.match_id),
                     name=f"Store predictions for match {match.match_id}",
                     replace_existing=True,
@@ -76,9 +78,12 @@ class Schedule:
             except Exception as e:
                 self._logger.debug(f"Failed to schedule match {match.match_id}: {e}")
 
-    async def _store_predictions_job(self, message_id: int):
+    async def _store_predictions_job(self, message_id: int, channel_id: Optional[int] = None):
         try:
-            message = await self._channel.fetch_message(message_id)
+            channel = self._channel
+            if channel_id and getattr(channel, "id", None) != channel_id:
+                channel = await self._bot.fetch_channel(channel_id)
+            message = await channel.fetch_message(message_id)
             await utils.store_predictions(message, self._logger, self._db)
             self._logger.debug(f"Stored predictions for message {message_id}")
         except Exception as e:
@@ -103,4 +108,3 @@ class Schedule:
                 self._logger.debug("Auto-kupong: no new World Cup fixtures to post.")
         except Exception as e:
             self._logger.error(f"Auto-kupong job failed: {e}", exc_info=True)
-

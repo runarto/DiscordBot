@@ -3,19 +3,19 @@ from typing import Optional, Union
 
 # --- Matches Read/Write ---
 
-def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: str, league_id: int, cancelled: bool = False):
+def insert_match(conn: Connection, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: str, league_id: int, cancelled: bool = False, channel_id: Optional[int] = None):
     with conn:
         conn.execute("""
-            INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled)
-            VALUES (?, ?, ?, ?, ?, ?, ?);
-        """, (match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled))
+            INSERT OR REPLACE INTO matches (match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled, channel_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        """, (match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled, channel_id))
 
 def get_all_matches(conn: Connection):
-    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed FROM matches ORDER BY kick_off_time;").fetchall()
+    return conn.execute("SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed, channel_id FROM matches ORDER BY kick_off_time;").fetchall()
 
 def get_matches_by_league(conn: Connection, league_id: int):
     return conn.execute("""
-        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
+        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed, channel_id
         FROM matches
         WHERE league_id = ?
         ORDER BY kick_off_time;
@@ -23,7 +23,7 @@ def get_matches_by_league(conn: Connection, league_id: int):
 
 def get_unprocessed_matches_by_league(conn: Connection, league_id: int):
     return conn.execute("""
-        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
+        SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed, channel_id
         FROM matches
         WHERE league_id = ? AND processed = 0
         ORDER BY kick_off_time;
@@ -36,21 +36,21 @@ def mark_match_processed(conn: Connection, match_id: int):
 def get_match(conn: Connection, match_id: Optional[int] = None, message_id: Optional[int] = None):
     if match_id and message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed, channel_id
             FROM matches
             WHERE match_id = ? AND message_id = ?;
         """
         return conn.execute(query, (match_id, message_id)).fetchone()
     elif match_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed, channel_id
             FROM matches
             WHERE match_id = ?;
         """
         return conn.execute(query, (match_id,)).fetchone()
     elif message_id:
         query = """
-            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed
+            SELECT match_id, message_id, home_team, away_team, kick_off_time, cancelled, league_id, processed, channel_id
             FROM matches
             WHERE message_id = ?;
         """

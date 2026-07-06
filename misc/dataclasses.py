@@ -21,6 +21,7 @@ class Match:
     cancelled: bool
     league_id: int
     processed: int = 0
+    channel_id: Optional[int] = None
     
 @dataclass
 class Result:

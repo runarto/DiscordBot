@@ -11,7 +11,7 @@ from db.db_create import (
 )
 import db.db_read_write as db_rw
 from misc.dataclasses import Match, Prediction, Score, User, TeamEmoji, Team, row_to_dataclass
-from typing import Union, List
+from typing import Optional, Union, List
 import datetime
 
 
@@ -32,8 +32,8 @@ class DB:
         create_historical_matches_table(self._conn)
         create_bot_predictions_table(self._conn)
 
-    def insert_match(self, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: Union[str, datetime.datetime], league_id: int, cancelled: bool = False):
-        db_rw.insert_match(self._conn, match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled)
+    def insert_match(self, match_id: Union[int, str], message_id: Union[int, str], home_team: str, away_team: str, kick_off_time: Union[str, datetime.datetime], league_id: int, cancelled: bool = False, channel_id: Optional[int] = None):
+        db_rw.insert_match(self._conn, match_id, message_id, home_team, away_team, kick_off_time, league_id, cancelled, channel_id)
 
     def get_all_matches(self) -> List[Match]:
         rows = db_rw.get_all_matches(self._conn)

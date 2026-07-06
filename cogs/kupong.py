@@ -3,6 +3,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from typing import Union
 from kupong.kupong import Kupong
 from kupong.results import Results
 import misc.utils as utils
@@ -15,6 +16,7 @@ LEAGUE_CHOICES = [
     app_commands.Choice(name=config["name"], value=key)
     for key, config in LEAGUES.items()
 ]
+CouponChannel = Union[discord.TextChannel, discord.Thread]
 
 class KupongCog(commands.Cog, name="Kupong"):
     """Commands for managing kuponger and results"""
@@ -29,7 +31,7 @@ class KupongCog(commands.Cog, name="Kupong"):
     @app_commands.command(name='send_kupong', description='Send ukens kupong for de neste dagene.')
     @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
-    async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
+    async def send_ukens_kupong(self, interaction: discord.Interaction, days: int, channel: CouponChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
         league_name = LEAGUES[league]["name"]
@@ -49,7 +51,7 @@ class KupongCog(commands.Cog, name="Kupong"):
     @app_commands.command(name='send_resultater', description='Send ukens resultater for de siste kampene.')
     @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
-    async def send_ukens_resultater(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
+    async def send_ukens_resultater(self, interaction: discord.Interaction, channel: CouponChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
         await utils.backup_database(self.db_path)
@@ -64,7 +66,7 @@ class KupongCog(commands.Cog, name="Kupong"):
     @app_commands.command(name='send_leaderboard', description='Send the total leaderboard.')
     @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
-    async def send_leaderboard(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
+    async def send_leaderboard(self, interaction: discord.Interaction, channel: CouponChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
         league_name = LEAGUES[league]["name"]
@@ -77,11 +79,11 @@ class KupongCog(commands.Cog, name="Kupong"):
 
     @app_commands.command(name='store_predictions', description='Store predictions for a specific match.')
     @is_admin()
-    async def store_predictions(self, interaction: discord.Interaction, content: str, channel: discord.TextChannel):
+    async def store_predictions(self, interaction: discord.Interaction, content: str, channel: CouponChannel):
 
         await interaction.response.defer(ephemeral=True)
         self.logger.debug(f"Command store_predictions called by {interaction.user.name} in {channel.mention}.")
-        target_message = await utils.get_message(self.db, channel, content)
+        target_message = await utils.get_message(self.db, channel, content, bot=self.bot)
         if not target_message:
             await interaction.followup.send("No match found with the specified content.", ephemeral=True)
             return
@@ -95,23 +97,25 @@ class KupongCog(commands.Cog, name="Kupong"):
     @app_commands.command(name='delete_messages', description='Delete the match messages for a specific league.')
     @is_admin()
     @app_commands.choices(league=LEAGUE_CHOICES)
-    async def delete_match_messages(self, interaction: discord.Interaction, channel: discord.TextChannel, league: str = DEFAULT_LEAGUE):
+    async def delete_match_messages(self, interaction: discord.Interaction, channel: CouponChannel, league: str = DEFAULT_LEAGUE):
 
         await interaction.response.defer(ephemeral=True)
         league_name = LEAGUES[league]["name"]
         league_id = LEAGUES[league]["id"]
         self.logger.debug(f"Command delete_match_messages called by {interaction.user.name} in {channel.mention} for {league_name}.")
         matches = self.db.get_matches_by_league(league_id)
-        message_ids = [match.message_id for match in matches]
 
         deleted_count = 0
-        for msg_id in message_ids:
+        for match in matches:
             try:
-                message = await channel.fetch_message(msg_id)
+                message = await utils.fetch_match_message(match, channel, self.bot)
+                if message is None:
+                    self.logger.warning(f"Message {match.message_id} not found, skipping.")
+                    continue
                 await message.delete()
                 deleted_count += 1
             except discord.NotFound:
-                self.logger.warning(f"Message {msg_id} not found, skipping.")
+                self.logger.warning(f"Message {match.message_id} not found, skipping.")
 
         # Delete matches for this league from DB
         self.db.delete_matches_by_league(league_id)
@@ -122,10 +126,10 @@ class KupongCog(commands.Cog, name="Kupong"):
 
     @app_commands.command(name='find_cheaters', description='Finds users who reacted after start time for a given game.')
     @is_admin()
-    async def find_cheaters(self, interaction: discord.Interaction, message_channel: discord.TextChannel, target_channel: discord.TextChannel, content: str = None):
+    async def find_cheaters(self, interaction: discord.Interaction, message_channel: CouponChannel, target_channel: CouponChannel, content: str = None):
 
         await interaction.response.defer(ephemeral=True)
-        reports = await utils.format_cheater_report_for_matches(db=self.db, message_channel=message_channel, content=content)
+        reports = await utils.format_cheater_report_for_matches(db=self.db, message_channel=message_channel, content=content, bot=self.bot)
         print(f"DEBUG: reports = {reports}")
         if reports == []: 
             await interaction.followup.send("No cheaters found for the specified match.", ephemeral=True)

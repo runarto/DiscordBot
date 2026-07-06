@@ -9,6 +9,7 @@ import shutil
 from discord.ext import commands
 from db.db_interface import DB
 from misc.constants import LEAGUES
+from misc.dataclasses import Match
 from typing import List, Optional
 
 
@@ -155,17 +156,30 @@ async def backup_database(source_path: str, backup_dir: str = "./backups") -> st
     backup_path = os.path.join(backup_dir, f"backup_{timestamp}.db")
     shutil.copyfile(source_path, backup_path)
 
-async def get_message(db: DB, channel: discord.TextChannel, content: str = None, message_id: str = None) -> discord.Message:
+async def fetch_match_message(match: Match, default_channel, bot: Optional[commands.Bot] = None) -> Optional[discord.Message]:
+    channel = default_channel
+    if match.channel_id and bot is not None and getattr(default_channel, "id", None) != match.channel_id:
+        channel = await bot.fetch_channel(match.channel_id)
+
+    try:
+        return await channel.fetch_message(match.message_id)
+    except discord.NotFound:
+        return None
+
+
+async def get_message(db: DB, channel, content: str = None, message_id: str = None, bot: Optional[commands.Bot] = None) -> Optional[discord.Message]:
     match_info = db.get_all_matches()
     for match in match_info:
-        message = await channel.fetch_message(match.message_id)
+        message = await fetch_match_message(match, channel, bot)
+        if message is None:
+            continue
         if (message.content == content) or (message_id and str(message.id) == message_id):
             return message
         
     return None
 
 
-async def format_cheater_report_for_matches(db: DB, message_channel: discord.TextChannel, content: str = None) -> List[str]:
+async def format_cheater_report_for_matches(db: DB, message_channel, content: str = None, bot: Optional[commands.Bot] = None) -> List[str]:
     """
     Returns a formatted string report of cheaters for each match.
     Only includes matches where cheaters are found.
@@ -173,7 +187,7 @@ async def format_cheater_report_for_matches(db: DB, message_channel: discord.Tex
 
     if content is not None:
         # Check only the specified match
-        target_message = await get_message(db, message_channel, content)
+        target_message = await get_message(db, message_channel, content, bot=bot)
         if not target_message:
             return []
 
@@ -187,7 +201,9 @@ async def format_cheater_report_for_matches(db: DB, message_channel: discord.Tex
     report_blocks = []
 
     for match in matches:
-        message = await message_channel.fetch_message(match.message_id)
+        message = await fetch_match_message(match, message_channel, bot)
+        if message is None:
+            continue
         cheater_report = await find_cheaters_for_message(message, db)
         if not cheater_report:
             continue

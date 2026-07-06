@@ -3,10 +3,12 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from typing import Optional
+from typing import Optional, Union
 from db.db_interface import DB
 import misc.utils as utils
 from misc.checks import is_admin
+
+CouponChannel = Union[discord.TextChannel, discord.Thread]
 
 class DatabaseCog(commands.Cog, name="Database"):
     """Database synchronization and management commands"""
@@ -63,7 +65,7 @@ class DatabaseCog(commands.Cog, name="Database"):
     async def get_prediction(
         self,
         interaction: discord.Interaction,
-        channel: discord.TextChannel,
+        channel: CouponChannel,
         user: Optional[discord.User] = None,
         content: Optional[str] = None
     ):
@@ -75,7 +77,7 @@ class DatabaseCog(commands.Cog, name="Database"):
             return
 
 
-        message = await utils.get_message(self.db, channel, content)
+        message = await utils.get_message(self.db, channel, content, bot=self.bot)
 
         if not message:
             await interaction.followup.send(f"No message found with content: `{content}`.", ephemeral=True)

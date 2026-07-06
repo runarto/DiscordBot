@@ -2,13 +2,15 @@ from api.fotmob import get_fixtures
 import os
 import logging
 import discord
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Union
 from db.db_interface import DB
 from misc.dataclasses import Match
 from misc.constants import COUNTRY_FLAGS, COUNTRY_NORWEGIAN_NAMES, LEAGUES, DEFAULT_HOME_EMOJI, DEFAULT_AWAY_EMOJI
 
 if TYPE_CHECKING:
     from predictor.base import BasePredictor
+
+CouponChannel = Union[discord.TextChannel, discord.Thread]
 
 _OUTCOME_LABEL = {"H": "H", "D": "U", "A": "B"}
 
@@ -17,7 +19,7 @@ class Kupong:
     """
     Handles the weekly coupon for matches, fetching fixtures and sending messages to a Discord channel.
     """
-    def __init__(self, days: int, db: DB, channel: discord.TextChannel, logger: logging.Logger, league_key: str, predictor: Optional["BasePredictor"] = None):
+    def __init__(self, days: int, db: DB, channel: CouponChannel, logger: logging.Logger, league_key: str, predictor: Optional["BasePredictor"] = None):
         self._auth = os.getenv('API_TOKEN')
         self._db = db
         self._channel = channel
@@ -31,7 +33,16 @@ class Kupong:
 
     def _add_fixture(self, fixture: Match, msg_id: int):
         self._logger.debug(f"Adding fixture: {fixture.match_id} with message ID: {msg_id}")
-        self._db.insert_match(fixture.match_id, msg_id, fixture.home_team, fixture.away_team, fixture.kick_off_time, self._league_id, fixture.cancelled)
+        self._db.insert_match(
+            fixture.match_id,
+            msg_id,
+            fixture.home_team,
+            fixture.away_team,
+            fixture.kick_off_time,
+            self._league_id,
+            fixture.cancelled,
+            channel_id=self._channel.id,
+        )
         self._logger.debug(f"Inserted match: {fixture.home_team} vs {fixture.away_team} with ID: {fixture.match_id}")
 
     def _get_team_display(self, team_name: str, is_home: bool) -> tuple[str, str]:

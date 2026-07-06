@@ -20,10 +20,12 @@ def make_kupong(db, league_key="ELITE"):
     """Helper: construct a Kupong with the API call patched out."""
     with patch("kupong.kupong.get_fixtures") as mock_gf:
         mock_gf.return_value = []
+        channel = MagicMock()
+        channel.id = 202
         return Kupong(
             days=7,
             db=db,
-            channel=MagicMock(),
+            channel=channel,
             logger=MagicMock(),
             league_key=league_key,
         )
@@ -130,6 +132,7 @@ class TestAddFixture:
         assert match.home_team == "Brann"
         assert match.away_team == "Rosenborg"
         assert match.message_id == 101
+        assert match.channel_id == 202
         assert match.kick_off_time == "2026-04-05T15:00:00+02:00"
 
     def test_uses_league_id(self, db):

@@ -13,7 +13,8 @@ def create_matches_table(conn: Connection):
             kick_off_time TEXT NOT NULL,
             league_id INTEGER NOT NULL,
             cancelled INTEGER NOT NULL DEFAULT 0,
-            processed INTEGER NOT NULL DEFAULT 0
+            processed INTEGER NOT NULL DEFAULT 0,
+            channel_id INTEGER
         );
         """)
     try:
@@ -25,6 +26,12 @@ def create_matches_table(conn: Connection):
             UPDATE matches SET processed = 1
             WHERE kick_off_time < strftime('%Y-%m-%dT%H:%M:%SZ', 'now');
         """)
+        conn.commit()
+    except Exception:
+        pass  # column already exists, migration already ran
+
+    try:
+        conn.execute("ALTER TABLE matches ADD COLUMN channel_id INTEGER;")
         conn.commit()
     except Exception:
         pass  # column already exists, migration already ran

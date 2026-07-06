@@ -33,7 +33,7 @@ class TestWorldCupPointsByOutcome:
 
         assert world_cup_points_by_outcome(predictions) == {"H": 1, "D": 2, "A": 3}
 
-    def test_tied_outcomes_share_points(self):
+    def test_tied_most_outcomes_share_one_point_and_least_gets_three(self):
         predictions = [
             prediction("h1", "H"),
             prediction("h2", "H"),
@@ -42,7 +42,26 @@ class TestWorldCupPointsByOutcome:
             prediction("a1", "A"),
         ]
 
-        assert world_cup_points_by_outcome(predictions) == {"H": 1, "D": 1, "A": 2}
+        assert world_cup_points_by_outcome(predictions) == {"H": 1, "D": 1, "A": 3}
+
+    def test_tied_least_outcomes_share_three_points(self):
+        predictions = [
+            prediction("h1", "H"),
+            prediction("h2", "H"),
+            prediction("d1", "D"),
+            prediction("a1", "A"),
+        ]
+
+        assert world_cup_points_by_outcome(predictions) == {"H": 1, "D": 3, "A": 3}
+
+    def test_all_tied_outcomes_share_one_point(self):
+        predictions = [
+            prediction("h1", "H"),
+            prediction("d1", "D"),
+            prediction("a1", "A"),
+        ]
+
+        assert world_cup_points_by_outcome(predictions) == {"H": 1, "D": 1, "A": 1}
 
 
 class TestIncrementScore:

@@ -48,6 +48,16 @@ class TestMatches:
         match = db.get_match_by_id(match_id=1)
         assert match.message_id == 999
 
+    def test_insert_match_without_channel_id_defaults_to_none(self, db):
+        db.insert_match(1, 101, "Brann", "Rosenborg", "2026-04-05T15:00:00+02:00", ELITE_LEAGUE_ID)
+        match = db.get_match_by_id(match_id=1)
+        assert match.channel_id is None
+
+    def test_insert_match_stores_channel_id(self, db):
+        db.insert_match(1, 101, "Brann", "Rosenborg", "2026-04-05T15:00:00+02:00", ELITE_LEAGUE_ID, channel_id=202)
+        match = db.get_match_by_id(match_id=1)
+        assert match.channel_id == 202
+
     def test_get_nonexistent_match_returns_none(self, db):
         assert db.get_match_by_id(match_id=999) is None
 

@@ -2,6 +2,7 @@ import discord
 import os
 import logging
 import asyncio
+from typing import Union
 
 from collections import Counter, defaultdict
 from api.fotmob import get_fixture_result, get_90min_score
@@ -9,6 +10,8 @@ from misc.utils import split_message_blocks, interpret_result
 from misc.constants import LEAGUES
 from db.db_interface import DB
 from discord.ext import commands
+
+CouponChannel = Union[discord.TextChannel, discord.Thread]
 
 _PREDICTION_OUTCOMES = ("H", "D", "A")
 _WORLD_CUP_LEAGUE_KEY = "WORLD_CUP"
@@ -27,6 +30,14 @@ def world_cup_points_by_outcome(predictions) -> dict[str, int]:
         if prediction.prediction in _PREDICTION_OUTCOMES
     )
     ranked_counts = sorted({count for count in counts.values() if count > 0}, reverse=True)
+    if len(ranked_counts) <= 1:
+        return {outcome: 1 for outcome in counts}
+    if len(ranked_counts) == 2:
+        return {
+            outcome: 1 if count == ranked_counts[0] else 3
+            for outcome, count in counts.items()
+        }
+
     return {
         outcome: ranked_counts.index(count) + 1
         for outcome, count in counts.items()
@@ -34,7 +45,7 @@ def world_cup_points_by_outcome(predictions) -> dict[str, int]:
 
 
 class Results:
-    def __init__(self, bot: commands.Bot, db: DB, channel: discord.TextChannel, logger: logging.Logger, league_key: str):
+    def __init__(self, bot: commands.Bot, db: DB, channel: CouponChannel, logger: logging.Logger, league_key: str):
         self._bot = bot
         self._auth = os.getenv('API_TOKEN')
         self._db = db
