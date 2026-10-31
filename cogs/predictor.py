@@ -4,7 +4,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from api.fotmob import get_remaining_fixtures
+from api.fotmob import get_season_state
 from misc.constants import LEAGUES, TEAMS
 from predictor.simulator import Fixture, SeasonSimulator, TeamStanding, format_sim_result, standings_from_rows
 
@@ -69,31 +69,47 @@ class PredictorCog(commands.Cog, name="Predictor"):
         slug = config["slug"]
         season = config["season"]
 
-        # Build current standings from cached historical data
         db = getattr(self.bot, "db", None)
         if db is None:
             await interaction.followup.send("Databasen er ikke tilgjengelig.", ephemeral=True)
             return
 
-        all_rows = db.get_historical_matches()
-        season_rows = [r for r in all_rows if r["league_id"] == league_id and r["season"] == season]
-        standings = standings_from_rows(season_rows)
+        # Fetch results and fixtures together so played matches cannot disappear
+        # between a stale cached table and a live remaining-fixtures response.
+        loop = asyncio.get_event_loop()
+        try:
+            season_rows, raw_fixtures = await loop.run_in_executor(
+                None, get_season_state, league_id, slug, season
+            )
+        except Exception as e:
+            await interaction.followup.send(f"Kunne ikke hente sesongdata: {e}", ephemeral=True)
+            return
 
+        for match in season_rows:
+            db.insert_historical_match(
+                match_id=match["match_id"],
+                league_id=league_id,
+                season=season,
+                home_team=match["home_team"],
+                away_team=match["away_team"],
+                home_goals=match["home_goals"],
+                away_goals=match["away_goals"],
+                kick_off_time=match["date"].isoformat(),
+                page_url=match.get("page_url"),
+                replace=True,
+            )
+
+        standings = standings_from_rows(season_rows)
         if not standings:
             await interaction.followup.send(
                 f"Ingen kampdata funnet for {config['name']} {season}.", ephemeral=True
             )
             return
 
-        # Fetch remaining fixtures from FotMob (blocking network call → executor)
-        loop = asyncio.get_event_loop()
-        try:
-            raw = await loop.run_in_executor(None, get_remaining_fixtures, league_id, slug)
-        except Exception as e:
-            await interaction.followup.send(f"Kunne ikke hente gjenstående kamper: {e}", ephemeral=True)
-            return
-
-        fixtures = [Fixture(home_team=f["home_team"], away_team=f["away_team"]) for f in raw]
+        fixtures = [
+            Fixture(home_team=f["home_team"], away_team=f["away_team"])
+            for f in raw_fixtures
+        ]
 
         # Teams that haven't played yet won't appear in standings_from_rows.
         # Add them with zeroed stats so they're included in the simulation.

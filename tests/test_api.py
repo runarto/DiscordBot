@@ -5,6 +5,7 @@ import requests
 from unittest.mock import MagicMock, patch
 
 from api.api_utils import generate_headers, parse_score, parse_utc, fotmob_status_to_state, normalise_xgscore_name
+from api.fotmob import get_season_state
 
 
 class TestGenerateHeaders:
@@ -78,3 +79,38 @@ class TestNormaliseXgscoreName:
 
     def test_unknown_name_passthrough(self):
         assert normalise_xgscore_name("Rosenborg") == "Rosenborg"
+
+
+class TestGetSeasonState:
+    @patch("api.fotmob.fetch_season_pages")
+    def test_results_and_fixtures_come_from_same_fetch(self, fetch_season_pages):
+        fetch_season_pages.return_value = [
+            {
+                "id": "1",
+                "home": {"name": "Viking"},
+                "away": {"name": "Brann"},
+                "status": {
+                    "finished": True,
+                    "utcTime": "2026-05-01T18:00:00Z",
+                    "scoreStr": "2-1",
+                },
+                "pageUrl": "/matches/viking-vs-brann/1",
+            },
+            {
+                "id": "2",
+                "home": {"name": "Brann"},
+                "away": {"name": "Viking"},
+                "status": {"utcTime": "2099-08-01T18:00:00Z"},
+                "pageUrl": "/matches/brann-vs-viking/2",
+            },
+        ]
+
+        results, fixtures = get_season_state(59, "eliteserien", 2026)
+
+        fetch_season_pages.assert_called_once_with(
+            league_id=59, slug="eliteserien", season=2026
+        )
+        assert len(results) == 1
+        assert results[0]["home_goals"] == 2
+        assert results[0]["away_goals"] == 1
+        assert fixtures == [{"home_team": "Brann", "away_team": "Viking"}]

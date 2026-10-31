@@ -82,6 +82,47 @@ def get_historical_matches(league_id: int, slug: str, seasons: List[int]) -> Lis
     return results
 
 
+def get_season_state(league_id: int, slug: str, season: int) -> Tuple[List[Dict], List[Dict]]:
+    """Fetch played matches and remaining fixtures from one season snapshot."""
+    now_utc = datetime.now(timezone.utc)
+    matches = fetch_season_pages(league_id=league_id, slug=slug, season=season)
+    results = []
+    fixtures = []
+
+    for match in matches:
+        normalized = normalize_match(match)
+        kickoff = parse_utc(normalized["kickoff_utc"])
+
+        if normalized["match_state"] == "finished":
+            score = parse_score(normalized["score"])
+            if score is None or kickoff is None:
+                continue
+            home_goals, away_goals = score
+            results.append({
+                "match_id": normalized["match_id"],
+                "home_team": normalized["home_team_name"],
+                "away_team": normalized["away_team_name"],
+                "home_goals": home_goals,
+                "away_goals": away_goals,
+                "date": kickoff,
+                "league_id": league_id,
+                "page_url": normalized["page_url"],
+            })
+        elif (
+            normalized["match_state"] == "scheduled"
+            and kickoff is not None
+            and kickoff > now_utc
+            and normalized["home_team_name"]
+            and normalized["away_team_name"]
+        ):
+            fixtures.append({
+                "home_team": normalized["home_team_name"],
+                "away_team": normalized["away_team_name"],
+            })
+
+    return results, fixtures
+
+
 def get_remaining_fixtures(league_id: int, slug: str) -> List[Dict]:
     now_utc = datetime.now(timezone.utc)
     matches = fetch_all_pages(league_id=league_id, slug=slug)
